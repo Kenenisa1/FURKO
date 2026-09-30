@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  furko-db:
+    image: postgis/postgis:16-3.4
+    container_name: furko-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: furko_db
+      POSTGRES_USER: furko_user
+      POSTGRES_PASSWORD: furko_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - furko_pgdata:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U furko_user -d furko_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  furko_pgdata:
