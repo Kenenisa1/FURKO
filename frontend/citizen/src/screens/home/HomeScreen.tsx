@@ -9,9 +9,11 @@ import {
   StatusBar,
   ImageBackground,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
+import { PROBLEM_CATEGORIES, STATUS_META } from '../../constants/categories';
 import { FurkoLogo } from '../../components/common/FurkoLogo';
 import { useAuth } from '../../context/AuthContext';
 import { ReportsApi } from '../../services/api';
@@ -26,10 +28,30 @@ interface Props {
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { user } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadReports = async () => {
+    try {
+      const data = await ReportsApi.getMyReports();
+      setReports(data);
+    } catch {
+      // ignore
+    }
+  };
 
   useEffect(() => {
-    ReportsApi.getMyReports().then(setReports).catch(() => {});
+    loadReports();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadReports();
+    setRefreshing(false);
+  };
+
+  // Quick stats
+  const inProgressCount = reports.filter((r) => r.status === 'in_progress').length;
+  const resolvedCount = reports.filter((r) => r.status === 'resolved').length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -67,7 +89,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         {/* Hero Section with Landscape Background matching Image 1 */}
         <ImageBackground
           source={{
@@ -92,7 +118,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
               {/* Hero Action Buttons matching Image 1 */}
               <View style={styles.heroBtnGroup}>
-                {/* 1. Report a problem (Green Pill) */}
+                {/* 1. Report a problem (Green Pill -> Launches Wizard) */}
                 <TouchableOpacity
                   style={styles.reportBtn}
                   onPress={() => navigation.navigate('ReportWizard')}
@@ -105,10 +131,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   <Ionicons name="chevron-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
                 </TouchableOpacity>
 
-                {/* 2. Track a report (White Pill with Blue Border) */}
+                {/* 2. Track a report (White Pill with Blue Border -> Switches to Reports Tab) */}
                 <TouchableOpacity
                   style={styles.trackBtn}
-                  onPress={() => navigation.navigate('MyReports')}
+                  onPress={() => navigation.navigate('ReportsTab')}
                   activeOpacity={0.85}
                 >
                   <Text style={styles.trackBtnText}>Track a report</Text>
@@ -119,7 +145,43 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </ImageBackground>
 
-        {/* Section: How Furko works */}
+        {/* 4 Core Problem Categories Launchpad */}
+        <View style={styles.categoriesSection}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={styles.sectionHeaderTitle}>Select Problem Category</Text>
+            <Text style={styles.sectionHeaderSubtitleLight}>Direct dispatch to responsible office</Text>
+          </View>
+
+          <View style={styles.categoryGrid}>
+            {PROBLEM_CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat.id}
+                style={[styles.categoryCard, { borderLeftColor: cat.color }]}
+                onPress={() => navigation.navigate('ReportWizard', { categoryId: cat.id })}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.categoryIconCircle, { backgroundColor: cat.color + '18' }]}>
+                  <Text style={styles.categoryEmoji}>
+                    {cat.key === 'roads'
+                      ? '🚧'
+                      : cat.key === 'water'
+                      ? '💧'
+                      : cat.key === 'waste'
+                      ? '🗑️'
+                      : '💡'}
+                  </Text>
+                </View>
+                <Text style={styles.categoryName}>{cat.name}</Text>
+                <Text style={styles.categoryLocal}>{cat.nameLocal}</Text>
+                <Text style={styles.categoryInst} numberOfLines={2}>
+                  🏢 {cat.responsibleInstitution}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Section: How Furko works matching Image 1 */}
         <View style={styles.howItWorksSection}>
           <Text style={styles.sectionHeaderTitle}>How Furko works</Text>
           <View style={styles.blueDivider} />
@@ -161,6 +223,41 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </View>
         </View>
+
+        {/* Recent Reports Live Feed Preview */}
+        {reports.length > 0 && (
+          <View style={styles.recentFeedSection}>
+            <View style={styles.recentFeedHeader}>
+              <Text style={styles.sectionHeaderTitle}>Your Active Tickets</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('ReportsTab')}>
+                <Text style={styles.viewAllLink}>View All ({reports.length}) →</Text>
+              </TouchableOpacity>
+            </View>
+
+            {reports.slice(0, 2).map((rep) => {
+              const meta = STATUS_META[rep.status];
+              return (
+                <TouchableOpacity
+                  key={rep.id}
+                  style={styles.recentCard}
+                  onPress={() => navigation.navigate('ReportDetail', { reportId: rep.id })}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.recentCardTop}>
+                    <Text style={styles.recentTracking}>{rep.tracking_number}</Text>
+                    <View style={[styles.recentStatusBadge, { backgroundColor: meta.bg }]}>
+                      <Text style={[styles.recentStatusText, { color: meta.color }]}>
+                        {meta.label}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.recentTitle} numberOfLines={1}>{rep.title}</Text>
+                  <Text style={styles.recentLoc} numberOfLines={1}>📍 {rep.address_text}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
 
         {/* Curved Green Impact Banner matching bottom of Image 1 */}
         <View style={styles.impactWaveContainer}>
@@ -345,10 +442,73 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
+  categoriesSection: {
+    paddingHorizontal: 20,
+    paddingTop: 28,
+    paddingBottom: 8,
+    backgroundColor: '#FFFFFF',
+  },
+  sectionTitleRow: {
+    marginBottom: 16,
+  },
+  sectionHeaderSubtitleLight: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  categoryCard: {
+    width: (width - 52) / 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  categoryIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  categoryEmoji: {
+    fontSize: 22,
+  },
+  categoryName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  categoryLocal: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    marginTop: 1,
+    fontStyle: 'italic',
+  },
+  categoryInst: {
+    fontSize: 11,
+    color: Colors.primary,
+    marginTop: 6,
+    lineHeight: 14,
+    fontWeight: '600',
+  },
   howItWorksSection: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingTop: 32,
+    paddingTop: 28,
     paddingBottom: 28,
     alignItems: 'center',
   },
@@ -404,6 +564,70 @@ const styles = StyleSheet.create({
     height: 1.5,
     backgroundColor: '#111827',
     marginTop: 18,
+  },
+  recentFeedSection: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  recentFeedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  viewAllLink: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  recentCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  recentCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  recentTracking: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.primary,
+    backgroundColor: '#E6F4EA',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  recentStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  recentStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  recentTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  recentLoc: {
+    fontSize: 12,
+    color: '#6B7280',
   },
   impactWaveContainer: {
     backgroundColor: '#008744',
