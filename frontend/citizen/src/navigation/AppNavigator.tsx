@@ -14,6 +14,7 @@ import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { PhoneVerificationScreen } from '../screens/auth/PhoneVerificationScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { HomeScreen } from '../screens/home/HomeScreen';
+import { CategorySelectionScreen } from '../screens/report/CategorySelectionScreen';
 import { ReportWizardScreen } from '../screens/report/ReportWizardScreen';
 import { MyReportsScreen } from '../screens/tracking/MyReportsScreen';
 import { ReportDetailScreen } from '../screens/tracking/ReportDetailScreen';
@@ -133,6 +134,13 @@ export const AppNavigator = () => {
         <Stack.Screen name="MainTabs" component={MainTabs} />
 
         {/* Modal / Push Screens */}
+        <Stack.Screen
+          name="CategorySelection"
+          component={CategorySelectionScreen}
+          options={{
+            animation: 'slide_from_bottom',
+          }}
+        />
         <Stack.Screen
           name="ReportWizard"
           component={ReportWizardScreen}

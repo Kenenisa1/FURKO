@@ -6,11 +6,14 @@ export interface ProblemCategory {
   id: string;
   key: ProblemCategoryId;
   name: string;
-  nameLocal?: string; // Oromo / Amharic translation
+  nameLocal?: string; // Afaan Oromoo translation
+  nameAmharic?: string; // Amharic translation
   description: string;
   icon: string;
   color: string;
   examples: string[];
+  subIssues?: string[];
+  keywords?: string[];
   responsibleInstitution: string;
 }
 

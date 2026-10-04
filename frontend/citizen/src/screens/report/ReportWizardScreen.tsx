@@ -16,6 +16,7 @@ import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES } from '../../constants/categories';
 import { ReportsApi } from '../../services/api';
 import { ProblemCategory } from '../../types';
+import { CategoryCard } from '../../components/report/CategoryCard';
 
 interface Props {
   navigation: any;
@@ -24,14 +25,17 @@ interface Props {
 
 export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
   const initialCategory = route?.params?.categoryId;
+  const initialSubIssue = route?.params?.subIssue;
+  const initialStepParam = route?.params?.initialStep;
 
   // Wizard state: 1 to 5
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState<number>(initialStepParam || 1);
 
   // Step 1: Category
   const [selectedCategory, setSelectedCategory] = useState<ProblemCategory | null>(
     PROBLEM_CATEGORIES.find((c) => c.id === initialCategory) || null
   );
+  const [selectedSubIssue, setSelectedSubIssue] = useState<string | undefined>(initialSubIssue);
 
   // Step 2: Photo
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -44,7 +48,7 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isLocating, setIsLocating] = useState(false);
 
   // Step 4: Description
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(initialSubIssue || '');
   const [description, setDescription] = useState('');
 
   // Step 5: Submission
@@ -209,39 +213,26 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.instruction}>
               Choose the department category for your issue. No need to know which office handles it.
             </Text>
-            {PROBLEM_CATEGORIES.map((cat) => {
-              const isSelected = selectedCategory?.id === cat.id;
-              return (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={[
-                    styles.catSelectCard,
-                    isSelected && { borderColor: cat.color, backgroundColor: cat.color + '0C' },
-                  ]}
-                  onPress={() => setSelectedCategory(cat)}
-                  activeOpacity={0.8}
-                >
-                  <View style={[styles.catSelectIcon, { backgroundColor: cat.color + '20' }]}>
-                    <Text style={{ fontSize: 24 }}>
-                      {cat.key === 'roads'
-                        ? '🚧'
-                        : cat.key === 'water'
-                        ? '💧'
-                        : cat.key === 'waste'
-                        ? '🗑️'
-                        : '💡'}
-                    </Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.catSelectTitle}>{cat.name}</Text>
-                    <Text style={styles.catSelectLocal}>{cat.nameLocal}</Text>
-                    <Text style={styles.catSelectDesc}>{cat.description}</Text>
-                    <Text style={styles.catSelectInst}>🏢 {cat.responsibleInstitution}</Text>
-                  </View>
-                  {isSelected && <Text style={{ color: cat.color, fontSize: 20 }}>✓</Text>}
-                </TouchableOpacity>
-              );
-            })}
+            {PROBLEM_CATEGORIES.map((cat) => (
+              <CategoryCard
+                key={cat.id}
+                category={cat}
+                isSelected={selectedCategory?.id === cat.id}
+                selectedSubIssue={selectedSubIssue}
+                onSelectCategory={(c) => {
+                  setSelectedCategory(c);
+                  if (selectedCategory?.id !== c.id) {
+                    setSelectedSubIssue(undefined);
+                  }
+                }}
+                onSelectSubIssue={(sub) => {
+                  setSelectedSubIssue(sub);
+                  if (!title || title.trim() === '') {
+                    setTitle(sub);
+                  }
+                }}
+              />
+            ))}
           </View>
         )}
 
