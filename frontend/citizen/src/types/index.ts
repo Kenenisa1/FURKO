@@ -69,6 +69,8 @@ export interface Report {
   resolved_at?: string;
   user_rating?: number;
   user_feedback?: string;
+  urgency?: 'low' | 'medium' | 'high' | 'emergency';
+  sub_issue?: string;
   audit_history?: AuditHistoryEntry[];
 }
 
@@ -103,6 +105,8 @@ export interface SubmitReportPayload {
   address_text?: string;
   landmark?: string;
   photo_url?: string;
+  urgency?: 'low' | 'medium' | 'high' | 'emergency';
+  sub_issue?: string;
 }
 
 export interface SubmitFeedbackPayload {

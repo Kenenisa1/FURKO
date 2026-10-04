@@ -64,11 +64,10 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
       return;
     }
 
-    // Advance to next step in Report Wizard
-    navigation.navigate('ReportWizard', {
+    // Advance to Citizen Report Information Form
+    navigation.navigate('ReportForm', {
       categoryId: selectedCategory.id,
       subIssue: selectedSubIssue,
-      initialStep: 2, // Photo Evidence
     });
   };
 

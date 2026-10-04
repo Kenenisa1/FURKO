@@ -198,19 +198,28 @@ export const ReportsApi = {
         'cat-lighting-004': 'Ethiopian Electric Utility (EEU) – Jimma Branch',
       };
 
+      const categoryNames: Record<string, string> = {
+        'cat-roads-001': 'Roads & Streets',
+        'cat-water-002': 'Water & Sewerage',
+        'cat-waste-003': 'Waste Management',
+        'cat-lighting-004': 'Street Lighting & Power',
+      };
+
       const newReport: Report = {
         id: `rep-${Date.now()}`,
         tracking_number: generateTrackingNumber(),
         title: payload.title,
         description: payload.description,
         category_id: payload.category_id,
-        category_name: 'Civic Issue',
+        category_name: categoryNames[payload.category_id] || 'Civic Issue',
         status: 'submitted',
         latitude: payload.latitude,
         longitude: payload.longitude,
         address_text: payload.address_text || 'Jimma City, Ethiopia',
         landmark: payload.landmark,
         photo_url: payload.photo_url,
+        urgency: payload.urgency || 'medium',
+        sub_issue: payload.sub_issue,
         institution_name: categoryMap[payload.category_id] || 'Admin Fallback Queue',
         is_fallback: false,
         submitted_at: new Date().toISOString(),
@@ -220,7 +229,7 @@ export const ReportsApi = {
             status: 'submitted',
             changed_at: new Date().toISOString(),
             actor_role: 'citizen',
-            comment: 'Report submitted successfully.',
+            comment: `Report submitted for ${categoryNames[payload.category_id] || 'Civic Issue'}.`,
           },
         ],
       };
