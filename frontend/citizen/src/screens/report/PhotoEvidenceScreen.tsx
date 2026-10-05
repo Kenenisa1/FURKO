@@ -43,7 +43,7 @@ export const PhotoEvidenceScreen: React.FC<Props> = ({ navigation, route }) => {
             text: 'Proceed Without Photo',
             onPress: () => {
               setIsSkipped(true);
-              navigation.navigate('ReportForm', {
+              navigation.navigate('LocationCapture', {
                 categoryId: category.id,
                 subIssue,
                 photoUri: null,
@@ -56,7 +56,7 @@ export const PhotoEvidenceScreen: React.FC<Props> = ({ navigation, route }) => {
       return;
     }
 
-    navigation.navigate('ReportForm', {
+    navigation.navigate('LocationCapture', {
       categoryId: category.id,
       subIssue,
       photoUri,
