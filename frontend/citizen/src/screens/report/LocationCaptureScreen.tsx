@@ -149,7 +149,7 @@ export const LocationCaptureScreen: React.FC<Props> = ({ navigation, route }) =>
 
   // ─── Navigation ───────────────────────────────────────────────────────────
   const handleConfirm = () => {
-    navigation.navigate('ReportForm', {
+    navigation.navigate('RoutingPreview', {
       categoryId: category.id,
       subIssue,
       photoUri,
