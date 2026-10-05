@@ -17,6 +17,8 @@ import { HomeScreen } from '../screens/home/HomeScreen';
 import { CategorySelectionScreen } from '../screens/report/CategorySelectionScreen';
 import { PhotoEvidenceScreen } from '../screens/report/PhotoEvidenceScreen';
 import { LocationCaptureScreen } from '../screens/report/LocationCaptureScreen';
+import { RoutingPreviewScreen } from '../screens/report/RoutingPreviewScreen';
+import { ReviewSubmitScreen } from '../screens/report/ReviewSubmitScreen';
 import { ReportFormScreen } from '../screens/report/ReportFormScreen';
 import { ReportWizardScreen } from '../screens/report/ReportWizardScreen';
 import { MyReportsScreen } from '../screens/tracking/MyReportsScreen';
@@ -154,6 +156,20 @@ export const AppNavigator = () => {
         <Stack.Screen
           name="LocationCapture"
           component={LocationCaptureScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="RoutingPreview"
+          component={RoutingPreviewScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="ReviewSubmit"
+          component={ReviewSubmitScreen}
           options={{
             animation: 'slide_from_right',
           }}
