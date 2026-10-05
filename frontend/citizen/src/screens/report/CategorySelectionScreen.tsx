@@ -64,8 +64,8 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
       return;
     }
 
-    // Advance to Citizen Report Information Form
-    navigation.navigate('ReportForm', {
+    // Advance to Photo & Evidence Collection (Issue #79)
+    navigation.navigate('PhotoEvidence', {
       categoryId: selectedCategory.id,
       subIssue: selectedSubIssue,
     });

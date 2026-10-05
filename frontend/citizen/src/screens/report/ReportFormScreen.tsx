@@ -79,23 +79,33 @@ export const ReportFormScreen: React.FC<Props> = ({ navigation, route }) => {
   const [description, setDescription] = useState('');
   const [urgency, setUrgency] = useState<UrgencyLevel>('medium');
 
-  // Location State
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [addressText, setAddressText] = useState('Detecting GPS location in Jimma City...');
-  const [landmark, setLandmark] = useState('');
+  // Location State — pre-filled from LocationCaptureScreen if navigated through wizard
+  const routeCoords = route?.params?.coords as { latitude: number; longitude: number } | undefined;
+  const routeAddress = route?.params?.addressText as string | undefined;
+  const routeLandmark = route?.params?.landmark as string | undefined;
+
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(
+    routeCoords ?? null
+  );
+  const [addressText, setAddressText] = useState(
+    routeAddress || 'Detecting GPS location in Jimma City...'
+  );
+  const [landmark, setLandmark] = useState(routeLandmark || '');
   const [isLocating, setIsLocating] = useState(false);
 
-  // Photo State
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [isPhotoSkipped, setIsPhotoSkipped] = useState(false);
+  // Photo State (passed from PhotoEvidenceScreen or captured here)
+  const [photoUri, setPhotoUri] = useState<string | null>(route?.params?.photoUri || null);
+  const [isPhotoSkipped, setIsPhotoSkipped] = useState<boolean>(route?.params?.isPhotoSkipped || false);
 
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedReport, setSubmittedReport] = useState<any | null>(null);
 
-  // Auto-detect GPS on mount
+  // Auto-detect GPS on mount — only if not already provided via wizard params
   useEffect(() => {
-    fetchLocation();
+    if (!routeCoords) {
+      fetchLocation();
+    }
   }, []);
 
   const fetchLocation = async () => {
