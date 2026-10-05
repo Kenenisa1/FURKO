@@ -162,9 +162,9 @@ export const RoutingPreviewScreen: React.FC<Props> = ({ navigation, route }) => 
     ).start();
   }, []);
 
-  // ─── Navigate to final ReportForm ───────────────────────────────────────
+  // ─── Navigate to Review & Submit (Step 5) ───────────────────────────────
   const handleProceed = () => {
-    navigation.navigate('ReportForm', {
+    navigation.navigate('ReviewSubmit', {
       categoryId,
       subIssue,
       photoUri,
