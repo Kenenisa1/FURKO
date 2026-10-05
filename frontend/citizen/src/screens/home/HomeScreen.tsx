@@ -118,10 +118,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
               {/* Hero Action Buttons matching Image 1 */}
               <View style={styles.heroBtnGroup}>
-                {/* 1. Report a problem (Green Pill -> Launches Wizard) */}
+                {/* 1. Report a problem (Green Pill -> Launches What is the problem? / Category Selection) */}
                 <TouchableOpacity
                   style={styles.reportBtn}
-                  onPress={() => navigation.navigate('ReportWizard')}
+                  onPress={() => navigation.navigate('CategorySelection')}
                   activeOpacity={0.85}
                 >
                   <View style={styles.whiteCirclePlus}>
@@ -157,7 +157,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <TouchableOpacity
                 key={cat.id}
                 style={[styles.categoryCard, { borderLeftColor: cat.color }]}
-                onPress={() => navigation.navigate('ReportWizard', { categoryId: cat.id })}
+                onPress={() => navigation.navigate('CategorySelection', { categoryId: cat.id })}
                 activeOpacity={0.8}
               >
                 <View style={[styles.categoryIconCircle, { backgroundColor: cat.color + '18' }]}>

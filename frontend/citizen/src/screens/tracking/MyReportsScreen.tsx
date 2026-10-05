@@ -135,7 +135,7 @@ export const MyReportsScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.headerTitle}>Civic Reports</Text>
         <TouchableOpacity
           style={styles.newReportBtn}
-          onPress={() => navigation.navigate('ReportWizard')}
+          onPress={() => navigation.navigate('CategorySelection')}
           activeOpacity={0.85}
         >
           <Ionicons name="add" size={18} color="#FFFFFF" />
@@ -207,7 +207,7 @@ export const MyReportsScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
             <TouchableOpacity
               style={styles.emptyCta}
-              onPress={() => navigation.navigate('ReportWizard')}
+              onPress={() => navigation.navigate('CategorySelection')}
             >
               <Text style={styles.emptyCtaText}>+ Submit a New Report</Text>
             </TouchableOpacity>
