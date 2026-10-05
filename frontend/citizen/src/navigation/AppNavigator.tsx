@@ -15,6 +15,7 @@ import { PhoneVerificationScreen } from '../screens/auth/PhoneVerificationScreen
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { CategorySelectionScreen } from '../screens/report/CategorySelectionScreen';
+import { PhotoEvidenceScreen } from '../screens/report/PhotoEvidenceScreen';
 import { ReportFormScreen } from '../screens/report/ReportFormScreen';
 import { ReportWizardScreen } from '../screens/report/ReportWizardScreen';
 import { MyReportsScreen } from '../screens/tracking/MyReportsScreen';
@@ -140,6 +141,13 @@ export const AppNavigator = () => {
           component={CategorySelectionScreen}
           options={{
             animation: 'slide_from_bottom',
+          }}
+        />
+        <Stack.Screen
+          name="PhotoEvidence"
+          component={PhotoEvidenceScreen}
+          options={{
+            animation: 'slide_from_right',
           }}
         />
         <Stack.Screen

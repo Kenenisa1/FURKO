@@ -85,9 +85,9 @@ export const ReportFormScreen: React.FC<Props> = ({ navigation, route }) => {
   const [landmark, setLandmark] = useState('');
   const [isLocating, setIsLocating] = useState(false);
 
-  // Photo State
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [isPhotoSkipped, setIsPhotoSkipped] = useState(false);
+  // Photo State (passed from PhotoEvidenceScreen or captured here)
+  const [photoUri, setPhotoUri] = useState<string | null>(route?.params?.photoUri || null);
+  const [isPhotoSkipped, setIsPhotoSkipped] = useState<boolean>(route?.params?.isPhotoSkipped || false);
 
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
