@@ -190,4 +190,11 @@ export const STATUS_META = {
     step: 0,
     description: 'Report could not be processed',
   },
+  reopened: {
+    label: 'Reopened',
+    color: '#7C3AED',
+    bg: '#EDE9FE',
+    step: 2,
+    description: 'Citizen raised a new concern — returned to active queue',
+  },
 };
