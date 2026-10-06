@@ -96,9 +96,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       >
         {/* Hero Section with Landscape Background matching Image 1 */}
         <ImageBackground
-          source={{
-            uri: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop',
-          }}
+          source={require('../../../assets/homebackround.png')}
           style={styles.heroBackground}
           resizeMode="cover"
         >
