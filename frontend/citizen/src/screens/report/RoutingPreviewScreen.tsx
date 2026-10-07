@@ -11,7 +11,7 @@ import {
   Animated,
   Platform,
 } from 'react-native';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES } from '../../constants/categories';
 import { ProblemCategory } from '../../types';
@@ -250,7 +250,7 @@ export const RoutingPreviewScreen: React.FC<Props> = ({ navigation, route }) => 
           {/* Institution detail */}
           <View style={[styles.institutionBanner, { borderLeftColor: category.color }]}>
             <View style={styles.institutionBannerHeader}>
-              <MaterialCommunityIcons name="office-building" size={16} color={category.color} />
+              <Ionicons name="business" size={16} color={category.color} />
               <Text style={[styles.institutionBannerTitle, { color: category.color }]}>
                 Assigned Institution
               </Text>
@@ -422,7 +422,7 @@ export const RoutingPreviewScreen: React.FC<Props> = ({ navigation, route }) => 
 
         {/* ── Privacy Note ── */}
         <View style={styles.privacyNote}>
-          <Feather name="shield" size={13} color="#6B7280" />
+          <Ionicons name="shield-checkmark-outline" size={14} color="#6B7280" />
           <Text style={styles.privacyText}>
             Your name and contact details are never shared publicly. FURKO passes only the
             technical report to the assigned institution.
@@ -435,7 +435,7 @@ export const RoutingPreviewScreen: React.FC<Props> = ({ navigation, route }) => 
       {/* ── Sticky Footer ── */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.editBtn} onPress={() => navigation.goBack()}>
-          <Feather name="edit-2" size={15} color={Colors.primary} />
+          <Ionicons name="create-outline" size={16} color={Colors.primary} />
           <Text style={styles.editBtnText}>Edit Location</Text>
         </TouchableOpacity>
 

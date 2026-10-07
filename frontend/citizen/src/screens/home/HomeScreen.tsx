@@ -11,7 +11,7 @@ import {
   Dimensions,
   RefreshControl,
 } from 'react-native';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES, STATUS_META } from '../../constants/categories';
 import { FurkoLogo } from '../../components/common/FurkoLogo';
@@ -190,7 +190,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             {/* Step 1: Report */}
             <View style={styles.stepCol}>
               <View style={styles.stepIconWrapper}>
-                <Feather name="smartphone" size={28} color="#1E6FE0" />
+                <Ionicons name="phone-portrait-outline" size={28} color="#1E6FE0" />
               </View>
               <Text style={styles.stepTitle}>Report</Text>
               <Text style={styles.stepDesc}>Tell us what happened and where.</Text>
@@ -202,7 +202,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             {/* Step 2: Track */}
             <View style={styles.stepCol}>
               <View style={styles.stepIconWrapper}>
-                <MaterialCommunityIcons name="clipboard-list-outline" size={28} color="#1E6FE0" />
+                <Ionicons name="clipboard-outline" size={28} color="#1E6FE0" />
               </View>
               <Text style={styles.stepTitle}>Track</Text>
               <Text style={styles.stepDesc}>Follow updates and progress</Text>
@@ -214,7 +214,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             {/* Step 3: Resolve */}
             <View style={styles.stepCol}>
               <View style={styles.stepIconWrapper}>
-                <Ionicons name="sync-circle-outline" size={32} color="#1E6FE0" />
+                <Ionicons name="checkmark-circle-outline" size={32} color="#1E6FE0" />
               </View>
               <Text style={styles.stepTitle}>Resolve</Text>
               <Text style={styles.stepDesc}>See action taken on your report</Text>
@@ -270,7 +270,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.statItem}>
-              <MaterialCommunityIcons name="speedometer" size={26} color="#FFFFFF" />
+              <Ionicons name="time-outline" size={26} color="#FFFFFF" />
               <Text style={styles.statNumber}>2300 in progress</Text>
             </View>
 

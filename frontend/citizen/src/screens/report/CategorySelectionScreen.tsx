@@ -217,12 +217,14 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   headlineGroup: {
+    alignItems: 'center',
     marginBottom: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '900',
     color: '#111827',
+    textAlign: 'center',
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -230,6 +232,8 @@ const styles = StyleSheet.create({
     color: '#4B5563',
     marginTop: 6,
     lineHeight: 20,
+    textAlign: 'center',
+    paddingHorizontal: 8,
   },
   searchBar: {
     backgroundColor: '#F3F4F6',

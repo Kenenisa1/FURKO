@@ -45,24 +45,16 @@ export const EvidenceUploader: React.FC<Props> = ({
         onToggleSkip(false);
       }
     } catch {
-      Alert.alert('Error', 'Unable to launch camera. Please try selecting from gallery.');
+      Alert.alert('Error', 'Unable to launch camera. Please try again.');
     }
   };
 
   const handleGallery = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Gallery Permission',
-          'Media library access is needed to select evidence photos.'
-        );
-        return;
-      }
-
       const result = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: true,
         quality: 0.7,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -70,7 +62,7 @@ export const EvidenceUploader: React.FC<Props> = ({
         onToggleSkip(false);
       }
     } catch {
-      Alert.alert('Error', 'Unable to open gallery. Please try again.');
+      Alert.alert('Error', 'Unable to open photo library. Please try again.');
     }
   };
 
@@ -105,11 +97,6 @@ export const EvidenceUploader: React.FC<Props> = ({
               <Text style={styles.actionBtnText}>Retake Photo</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionBtn} onPress={handleGallery} activeOpacity={0.8}>
-              <Ionicons name="images-outline" size={18} color="#374151" />
-              <Text style={styles.actionBtnText}>Choose Other</Text>
-            </TouchableOpacity>
-
             <TouchableOpacity
               style={[styles.actionBtn, styles.deleteBtn]}
               onPress={handleRemove}
@@ -121,25 +108,24 @@ export const EvidenceUploader: React.FC<Props> = ({
           </View>
         </View>
       ) : (
-        /* CAPTURE / PICKER MODE */
+        /* CAPTURE / LIBRARY SELECTION MODE */
         <View style={styles.optionsContainer}>
-          <View style={styles.gridRow}>
-            {/* Take Photo Card */}
-            <TouchableOpacity style={styles.pickCard} onPress={handleCamera} activeOpacity={0.8}>
-              <View style={[styles.iconCircle, { backgroundColor: '#E6F4EA' }]}>
-                <Ionicons name="camera" size={32} color={Colors.primary} />
+          {/* Two-button row: Camera + Gallery */}
+          <View style={styles.captureRow}>
+            <TouchableOpacity style={styles.captureCard} onPress={handleCamera} activeOpacity={0.85}>
+              <View style={styles.cameraCircle}>
+                <Ionicons name="camera" size={32} color="#FFFFFF" />
               </View>
-              <Text style={styles.pickTitle}>Take Photo</Text>
-              <Text style={styles.pickSubtitle}>Snap real-time picture at the site</Text>
+              <Text style={styles.cameraTitle}>Take Photo</Text>
+              <Text style={styles.cameraSubtitle}>Capture live evidence on site</Text>
             </TouchableOpacity>
 
-            {/* Choose from Gallery Card */}
-            <TouchableOpacity style={styles.pickCard} onPress={handleGallery} activeOpacity={0.8}>
-              <View style={[styles.iconCircle, { backgroundColor: '#E8F1FC' }]}>
-                <Ionicons name="images" size={32} color="#1E6FE0" />
+            <TouchableOpacity style={[styles.captureCard, styles.galleryCard]} onPress={handleGallery} activeOpacity={0.85}>
+              <View style={[styles.cameraCircle, styles.galleryCircle]}>
+                <Ionicons name="images" size={32} color="#FFFFFF" />
               </View>
-              <Text style={styles.pickTitle}>Choose Photo</Text>
-              <Text style={styles.pickSubtitle}>Upload saved image from device</Text>
+              <Text style={styles.cameraTitle}>From Gallery</Text>
+              <Text style={styles.cameraSubtitle}>Choose an existing photo</Text>
             </TouchableOpacity>
           </View>
 
@@ -220,7 +206,7 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 10,
     marginTop: 14,
   },
   actionBtn: {
@@ -246,60 +232,88 @@ const styles = StyleSheet.create({
     flex: 0.8,
   },
   actionBtnText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#374151',
   },
   optionsContainer: {
     width: '100%',
+    gap: 14,
   },
-  gridRow: {
+  captureRow: {
     flexDirection: 'row',
     gap: 12,
   },
-  pickCard: {
+  captureCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    paddingVertical: 24,
-    paddingHorizontal: 14,
+    paddingVertical: 22,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 6,
     elevation: 2,
   },
-  iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  galleryCard: {
+    borderColor: Colors.blueAccent || '#1E6FE0',
+  },
+  galleryCircle: {
+    backgroundColor: Colors.blueAccent || '#1E6FE0',
+  },
+  cameraCaptureCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    paddingVertical: 28,
+    paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  pickTitle: {
-    fontSize: 16,
+  cameraCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  cameraTitle: {
+    fontSize: 18,
     fontWeight: '800',
     color: '#111827',
   },
-  pickSubtitle: {
-    fontSize: 11,
+  cameraSubtitle: {
+    fontSize: 13,
     color: '#6B7280',
-    textAlign: 'center',
     marginTop: 4,
-    lineHeight: 15,
+    textAlign: 'center',
   },
   skipCard: {
     backgroundColor: '#F9FAFB',
     borderRadius: 14,
-    padding: 14,
-    marginTop: 14,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    padding: 14,
   },
   skipCardActive: {
     backgroundColor: '#E6F4EA',
@@ -310,13 +324,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   skipTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: '#374151',
   },
   skipSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#6B7280',
-    marginTop: 1,
+    marginTop: 2,
   },
 });

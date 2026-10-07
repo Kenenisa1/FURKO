@@ -14,7 +14,7 @@ import {
   Modal,
   Platform,
 } from 'react-native';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { STATUS_META, PROBLEM_CATEGORIES } from '../../constants/categories';
 import { ReportsApi } from '../../services/api';
@@ -315,7 +315,7 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.card}>
           <Text style={styles.cardHeaderSmall}>Direct Service Routing</Text>
           <View style={styles.instBox}>
-            <MaterialCommunityIcons name="office-building" size={26} color={cat?.color || Colors.primary} />
+            <Ionicons name="business" size={26} color={cat?.color || Colors.primary} />
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.instName}>{report.institution_name}</Text>
               <Text style={styles.instSub}>Assigned Operational Unit & Field Team</Text>

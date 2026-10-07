@@ -173,17 +173,6 @@ export const ReportFormScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handlePickGallery = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      quality: 0.7,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setPhotoUri(result.assets[0].uri);
-      setIsPhotoSkipped(false);
-    }
-  };
-
   const handleSkipPhoto = () => {
     setPhotoUri(null);
     setIsPhotoSkipped(true);
@@ -450,15 +439,9 @@ export const ReportFormScreen: React.FC<Props> = ({ navigation, route }) => {
             ) : (
               <View style={styles.photoButtonGrid}>
                 <TouchableOpacity style={styles.photoBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
-                  <Ionicons name="camera" size={26} color={Colors.primary} />
+                  <Ionicons name="camera" size={28} color={Colors.primary} />
                   <Text style={styles.photoBtnTitle}>Take Photo</Text>
-                  <Text style={styles.photoBtnSubtitle}>Capture on site</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.photoBtn} onPress={handlePickGallery} activeOpacity={0.8}>
-                  <Ionicons name="images" size={26} color="#1E6FE0" />
-                  <Text style={styles.photoBtnTitle}>Choose Gallery</Text>
-                  <Text style={styles.photoBtnSubtitle}>Upload saved image</Text>
+                  <Text style={styles.photoBtnSubtitle}>Capture live evidence on site</Text>
                 </TouchableOpacity>
               </View>
             )}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 
 interface Props {
@@ -21,10 +21,10 @@ export const FurkoLogo: React.FC<Props> = ({
   return (
     <View style={[styles.container, centered && styles.centered]}>
       <View style={styles.iconWrapper}>
-        {/* Stylized Pin / Leaf emblem */}
+        {/* Stylized Pin emblem */}
         <View style={[styles.pinBackground, { width: iconSize + 14, height: iconSize + 14, borderRadius: (iconSize + 14) / 2 }]}>
-          <MaterialCommunityIcons
-            name="map-marker-path"
+          <Ionicons
+            name="location"
             size={iconSize}
             color={Colors.primary}
           />

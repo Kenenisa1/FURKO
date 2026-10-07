@@ -16,7 +16,7 @@ import {
   Animated,
   Modal,
 } from 'react-native';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES } from '../../constants/categories';
 import { ReportsApi } from '../../services/api';
@@ -282,7 +282,7 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
             activeOpacity={0.85}
           >
             <View style={styles.summaryToggleLeft}>
-              <MaterialCommunityIcons name="clipboard-check-outline" size={18} color={Colors.primary} />
+              <Ionicons name="clipboard-outline" size={18} color={Colors.primary} />
               <Text style={styles.summaryToggleText}>Report Summary</Text>
               <View style={styles.summaryBadge}>
                 <Text style={styles.summaryBadgeText}>
@@ -371,7 +371,7 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
               {/* Routing */}
               <View style={styles.summaryItem}>
                 <View style={[styles.summaryIconBox, { backgroundColor: Colors.primary + '15' }]}>
-                  <MaterialCommunityIcons name="office-building" size={16} color={Colors.primary} />
+                  <Ionicons name="business" size={16} color={Colors.primary} />
                 </View>
                 <View style={styles.summaryItemBody}>
                   <Text style={styles.summaryItemLabel}>Routed to</Text>
@@ -530,7 +530,7 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
 
           {/* ── Final Declaration ── */}
           <View style={styles.declarationBox}>
-            <Feather name="shield" size={13} color="#6B7280" />
+            <Ionicons name="shield-checkmark-outline" size={14} color="#6B7280" />
             <Text style={styles.declarationText}>
               By submitting, you confirm this report is accurate. False reports may be rejected.
               Your identity is kept private from the public.
