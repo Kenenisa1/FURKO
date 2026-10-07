@@ -1,21 +1,10 @@
 import { useApp } from '../../context/AppContext.jsx';
+import { Check, X as XIcon, Info } from 'lucide-react';
 
 const ICONS = {
-  success: (
-    <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-    </svg>
-  ),
-  error: (
-    <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  ),
-  info: (
-    <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z" />
-    </svg>
-  ),
+  success: <Check className="w-5 h-5 text-green-600" />,
+  error: <XIcon className="w-5 h-5 text-red-500" />,
+  info: <Info className="w-5 h-5 text-blue-500" />,
 };
 
 const BG = {
@@ -36,9 +25,7 @@ function ToastItem({ toast, onDismiss }) {
         className="flex-shrink-0 text-gray-400 hover:text-gray-600"
         aria-label="Dismiss"
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <XIcon className="w-4 h-4" />
       </button>
     </div>
   );

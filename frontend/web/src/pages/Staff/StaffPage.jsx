@@ -6,6 +6,7 @@ import EmptyState from '../../components/ui/EmptyState.jsx';
 import { getStaff, addStaff, updateStaff } from '../../services/staffService.js';
 import { departments } from '../../data/mockStaff.js';
 import { useApp } from '../../context/AppContext.jsx';
+import { Plus, Search, User, Loader2 } from 'lucide-react';
 
 const ROLES = ['Institution Staff', 'Senior Staff', 'Field Inspector', 'Department Head', 'Administrator'];
 
@@ -94,9 +95,7 @@ export default function StaffPage() {
           onClick={openAdd}
           className="flex items-center gap-2 px-4 py-2 bg-[#1a6b3c] hover:bg-[#145230] text-white text-sm font-semibold rounded-lg transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <Plus className="w-4 h-4" />
           Add Staff
         </button>
       </div>
@@ -105,9 +104,7 @@ export default function StaffPage() {
         {/* Search */}
         <div className="px-6 py-4 border-b border-gray-100">
           <div className="relative max-w-sm">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search by name, department, email..."
@@ -121,7 +118,7 @@ export default function StaffPage() {
         {loading ? (
           <LoadingSpinner />
         ) : filtered.length === 0 ? (
-          <EmptyState icon="👤" title="No staff found" description="No staff members match your search." />
+          <EmptyState icon={<User className="w-12 h-12" />} title="No staff found" description="No staff members match your search." />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -224,7 +221,7 @@ export default function StaffPage() {
           <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">Cancel</button>
           <button onClick={handleSave} disabled={saving}
             className="px-5 py-2 rounded-lg bg-[#1a6b3c] hover:bg-[#145230] text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-2">
-            {saving && <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
+            {saving && <Loader2 className="animate-spin w-4 h-4" />}
             {editTarget ? 'Save Changes' : 'Add Staff'}
           </button>
         </div>

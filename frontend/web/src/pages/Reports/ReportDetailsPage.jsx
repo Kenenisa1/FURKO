@@ -16,6 +16,13 @@ import PhotoGallery from '../../components/ui/PhotoGallery.jsx';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
 import AssignModal from './modals/AssignModal.jsx';
 import ResolveModal from './modals/ResolveModal.jsx';
+import {
+  ArrowLeft,
+  MapPin,
+  Check,
+  CircleCheck,
+  Loader2
+} from 'lucide-react';
 
 function formatDateTime(iso) {
   if (!iso) return '—';
@@ -55,9 +62,7 @@ function MapPlaceholder({ location }) {
       {/* Pin marker */}
       <div className="relative z-10 flex flex-col items-center">
         <div className="w-8 h-8 rounded-full bg-[#1a6b3c] flex items-center justify-center shadow-lg mb-1">
-          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
+          <MapPin className="w-4 h-4 text-white fill-white" />
         </div>
         <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center shadow-sm border border-[#1a6b3c]/20">
           <p className="text-xs font-semibold text-[#1a6b3c]">{location?.kebele}</p>
@@ -102,9 +107,7 @@ function StatusTimeline({ timeline, status }) {
                 }`}
               >
                 {isCompleted ? (
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                 ) : (
                   <span className="text-[10px] font-bold">{i + 1}</span>
                 )}
@@ -281,9 +284,7 @@ export default function ReportDetailsPage() {
           onClick={() => navigate(-1)}
           className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors flex-shrink-0"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeft className="w-4 h-4" />
           Back
         </button>
       </div>
@@ -369,9 +370,7 @@ export default function ReportDetailsPage() {
           {report.resolution && (
             <div className="bg-green-50 rounded-2xl border border-green-200 p-6">
               <div className="flex items-center gap-2 mb-4">
-                <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <CircleCheck className="w-5 h-5 text-green-600" />
                 <h2 className="text-base font-semibold text-green-800">Resolution</h2>
               </div>
               <p className="text-sm text-gray-800 mb-3 leading-relaxed">{report.resolution.description}</p>
@@ -557,12 +556,7 @@ export default function ReportDetailsPage() {
             disabled={actionLoading}
             className="px-5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-2"
           >
-            {actionLoading && (
-              <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-            )}
+            {actionLoading && <Loader2 className="animate-spin w-4 h-4" />}
             Redirect Report
           </button>
         </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Camera, ArrowLeft, ArrowRight, X } from 'lucide-react';
 
 export default function PhotoGallery({ photos = [] }) {
   const [lightbox, setLightbox] = useState(null);
@@ -6,10 +7,7 @@ export default function PhotoGallery({ photos = [] }) {
   if (!photos.length) {
     return (
       <div className="flex items-center gap-2 text-gray-400 text-sm py-4">
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
+        <Camera className="w-5 h-5" />
         No photos attached
       </div>
     );
@@ -51,16 +49,16 @@ export default function PhotoGallery({ photos = [] }) {
             <div className="flex items-center justify-between mt-3">
               <button
                 onClick={() => setLightbox((l) => (l > 0 ? l - 1 : photos.length - 1))}
-                className="px-4 py-2 bg-white/20 text-white rounded-lg text-sm hover:bg-white/30"
+                className="px-4 py-2 bg-white/20 text-white rounded-lg text-sm hover:bg-white/30 flex items-center gap-2"
               >
-                ← Prev
+                <ArrowLeft className="w-4 h-4" /> Prev
               </button>
               <span className="text-white text-sm">{lightbox + 1} / {photos.length}</span>
               <button
                 onClick={() => setLightbox((l) => (l < photos.length - 1 ? l + 1 : 0))}
-                className="px-4 py-2 bg-white/20 text-white rounded-lg text-sm hover:bg-white/30"
+                className="px-4 py-2 bg-white/20 text-white rounded-lg text-sm hover:bg-white/30 flex items-center gap-2"
               >
-                Next →
+                Next <ArrowRight className="w-4 h-4" />
               </button>
             </div>
             <button
@@ -68,9 +66,7 @@ export default function PhotoGallery({ photos = [] }) {
               onClick={() => setLightbox(null)}
               aria-label="Close"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>

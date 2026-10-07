@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Breadcrumb from '../../components/ui/Breadcrumb.jsx';
 import { useApp } from '../../context/AppContext.jsx';
+import { ChevronDown, Check, CircleHelp, Mail } from 'lucide-react';
 
 const FAQ = [
   { q: 'How do I accept a new report?', a: 'Open the report from the inbox, review the details, then click "Accept Report" in the Actions panel. You will be asked to confirm the action.' },
@@ -17,9 +18,7 @@ function FAQItem({ q, a }) {
     <div className="border-b border-gray-100 last:border-0">
       <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between py-4 text-left gap-4 hover:text-[#1a6b3c] transition-colors">
         <span className="text-sm font-medium text-gray-800">{q}</span>
-        <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && <p className="text-sm text-gray-600 pb-4 leading-relaxed">{a}</p>}
     </div>
@@ -62,9 +61,7 @@ export default function SupportPage() {
             <p className="text-sm text-gray-500 mb-4">Experiencing a bug or technical problem? Let us know and we'll get it fixed.</p>
             {submitted ? (
               <div className="flex items-center gap-2 p-4 bg-green-50 rounded-xl border border-green-200">
-                <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
                 <p className="text-sm text-green-800">Issue submitted. Our team will review it within 24 hours.</p>
               </div>
             ) : (
@@ -90,9 +87,7 @@ export default function SupportPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 rounded-xl bg-[#e8f5ee] flex items-center justify-center">
-                <svg className="w-5 h-5 text-[#1a6b3c]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+                <CircleHelp className="w-5 h-5 text-[#1a6b3c]" />
               </div>
               <h3 className="text-sm font-semibold text-gray-800">Help Center</h3>
             </div>
@@ -103,9 +98,7 @@ export default function SupportPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+                <Mail className="w-5 h-5 text-blue-600" />
               </div>
               <h3 className="text-sm font-semibold text-gray-800">Contact Administrator</h3>
             </div>

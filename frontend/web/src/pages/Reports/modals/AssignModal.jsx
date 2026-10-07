@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../../../components/ui/Modal.jsx';
 import { assignReport } from '../../../services/reportService.js';
 import { mockStaff, departments } from '../../../data/mockStaff.js';
+import { Loader2 } from 'lucide-react';
 
 export default function AssignModal({ isOpen, onClose, report, onAssigned }) {
   const [form, setForm] = useState({
@@ -140,12 +141,7 @@ export default function AssignModal({ isOpen, onClose, report, onAssigned }) {
           disabled={loading}
           className="px-5 py-2 rounded-lg bg-[#1a6b3c] hover:bg-[#145230] text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-2"
         >
-          {loading && (
-            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-            </svg>
-          )}
+          {loading && <Loader2 className="animate-spin w-4 h-4" />}
           Assign Report
         </button>
       </div>

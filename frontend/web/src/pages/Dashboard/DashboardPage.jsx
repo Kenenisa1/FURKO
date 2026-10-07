@@ -6,6 +6,7 @@ import ReportTable from '../../components/reports/ReportTable.jsx';
 import FilterBar from '../../components/reports/FilterBar.jsx';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
 import { useState, useMemo } from 'react';
+import { FileText, FilePlus, Clock3, ClipboardCheck, CircleCheck } from 'lucide-react';
 
 const TAB_STATUSES = {
   all:           null,
@@ -76,35 +77,35 @@ export default function DashboardPage() {
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Total Reports:</p>
         <div className="flex flex-wrap gap-3">
           <SummaryCard
-            icon="📄"
+            icon={<FileText className="w-6 h-6" />}
             label="total reports"
             count={counts.total}
             color="blue"
             onClick={() => { setActiveTab('all'); navigate('/reports'); }}
           />
           <SummaryCard
-            icon="➕"
+            icon={<FilePlus className="w-6 h-6" />}
             label="New"
             count={counts.new}
             color="red"
             onClick={() => setActiveTab('new')}
           />
           <SummaryCard
-            icon="🕐"
+            icon={<Clock3 className="w-6 h-6" />}
             label="In progress"
             count={counts.inProgress}
             color="orange"
             onClick={() => setActiveTab('in-progress')}
           />
           <SummaryCard
-            icon="🔍"
+            icon={<ClipboardCheck className="w-6 h-6" />}
             label="Under Review"
             count={counts.underReview}
             color="yellow"
             onClick={() => setActiveTab('under-review')}
           />
           <SummaryCard
-            icon="✅"
+            icon={<CircleCheck className="w-6 h-6" />}
             label="Resolved"
             count={counts.resolved}
             color="green"

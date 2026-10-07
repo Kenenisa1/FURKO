@@ -2,28 +2,24 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login as authLogin } from '../../services/authService.js';
 import { useApp } from '../../context/AppContext.jsx';
-
-// FURKO logo SVG mark
-function FurkoLogo({ size = 48 }) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div
-        className="rounded-xl bg-[#e8f5ee] flex items-center justify-center border-2 border-[#1a6b3c]/20"
-        style={{ width: size, height: size }}
-      >
-        <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 40 48" fill="none">
-          <path d="M20 2C20 2 8 10 8 22C8 30 13 36 20 38C27 36 32 30 32 22C32 10 20 2 20 2Z" fill="#1a6b3c" />
-          <circle cx="20" cy="30" r="3" fill="white" />
-          <path d="M14 20C14 20 17 16 20 16C23 16 26 20 26 20" stroke="white" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      </div>
-      <div className="text-center">
-        <p className="font-black text-[#1a6b3c] text-xl tracking-tight leading-none">FURKO</p>
-        <p className="text-[#1a6b3c]/50 text-[8px] tracking-widest uppercase">Report · Track · Resolve</p>
-      </div>
-    </div>
-  );
-}
+import {
+  Building2,
+  Mail,
+  LockKeyhole,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ShieldCheck,
+  ChevronDown,
+  Loader2,
+  CircleX,
+  FileText,
+  UserCheck,
+  TrendingUp,
+  Users
+} from 'lucide-react';
+import furkoLogo from '../../assets/furko-logo.jpg';
+import jimmaCityImage from '../../assets/jimma-city.jpg';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -58,8 +54,12 @@ export default function LoginPage() {
         {/* ── Left: Form ── */}
         <div className="w-full md:w-[420px] flex-shrink-0 p-10 flex flex-col justify-center">
           {/* Logo */}
-          <div className="mb-8">
-            <FurkoLogo size={52} />
+          <div className="mb-8 flex justify-center">
+            <img 
+              src={furkoLogo} 
+              alt="FURKO" 
+              className="h-16 w-auto object-contain"
+            />
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Institution / Government Login</h1>
@@ -68,17 +68,13 @@ export default function LoginPage() {
           {/* Institution selector */}
           <div className="flex items-center gap-3 p-3 rounded-xl border border-[#1a6b3c]/30 bg-[#f5f9f6] mb-6">
             <div className="w-9 h-9 rounded-lg bg-[#1a6b3c]/10 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-[#1a6b3c]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3M9 7h1m-1 4h1m4-4h1m-1 4h1M9 16h6" />
-              </svg>
+              <Building2 className="w-5 h-5 text-[#1a6b3c]" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold text-gray-900">Jimma City Administration</p>
               <p className="text-xs text-gray-500">Government Institution</p>
             </div>
-            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            <ChevronDown className="w-4 h-4 text-gray-400" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -88,9 +84,7 @@ export default function LoginPage() {
                 Email Address
               </label>
               <div className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   id="email"
                   type="email"
@@ -110,9 +104,7 @@ export default function LoginPage() {
                 Password
               </label>
               <div className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+                <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   id="password"
                   type={showPass ? 'text' : 'password'}
@@ -130,14 +122,9 @@ export default function LoginPage() {
                   aria-label={showPass ? 'Hide password' : 'Show password'}
                 >
                   {showPass ? (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
+                    <EyeOff className="w-4 h-4" />
                   ) : (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
+                    <Eye className="w-4 h-4" />
                   )}
                 </button>
               </div>
@@ -162,9 +149,7 @@ export default function LoginPage() {
             {/* Error */}
             {error && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
-                <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <CircleX className="w-4 h-4 text-red-500 flex-shrink-0" />
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
@@ -176,16 +161,11 @@ export default function LoginPage() {
               className="w-full py-2.5 bg-[#1a6b3c] hover:bg-[#145230] text-white font-semibold rounded-lg text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
             >
               {loading ? (
-                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
+                <Loader2 className="animate-spin w-4 h-4" />
               ) : (
                 <>
                   Login
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
@@ -215,9 +195,7 @@ export default function LoginPage() {
 
           {/* Security note */}
           <div className="flex items-center gap-2 mt-5">
-            <svg className="w-4 h-4 text-[#1a6b3c] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
+            <ShieldCheck className="w-4 h-4 text-[#1a6b3c] flex-shrink-0" />
             <p className="text-xs text-gray-500">
               Secure access for authorized government and institution staff only
             </p>
@@ -232,7 +210,7 @@ export default function LoginPage() {
           {/* City image */}
           <div className="absolute inset-0">
             <img
-              src="https://images.unsplash.com/photo-1565799557186-b23dbe5f83f7?w=800&h=600&fit=crop"
+              src={jimmaCityImage}
               alt="Jimma City"
               className="w-full h-full object-cover opacity-30"
             />
@@ -253,13 +231,13 @@ export default function LoginPage() {
             <div className="bg-[#145230]/70 backdrop-blur-sm rounded-2xl p-6">
               <div className="grid grid-cols-4 gap-4 text-center">
                 {[
-                  { icon: '📋', label: 'View\nReports' },
-                  { icon: '✅', label: 'Assign &\nManage Tasks' },
-                  { icon: '📊', label: 'Track\nProgress' },
-                  { icon: '👥', label: 'Serve Your\nCommunity' },
+                  { icon: <FileText className="w-5 h-5" />, label: 'View\nReports' },
+                  { icon: <UserCheck className="w-5 h-5" />, label: 'Assign &\nManage Tasks' },
+                  { icon: <TrendingUp className="w-5 h-5" />, label: 'Track\nProgress' },
+                  { icon: <Users className="w-5 h-5" />, label: 'Serve Your\nCommunity' },
                 ].map((item) => (
                   <div key={item.label} className="flex flex-col items-center gap-2">
-                    <div className="w-10 h-10 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center text-lg">
+                    <div className="w-10 h-10 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center text-white">
                       {item.icon}
                     </div>
                     <p className="text-white/80 text-[10px] leading-snug whitespace-pre-line">{item.label}</p>

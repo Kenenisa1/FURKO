@@ -2,6 +2,15 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { logout as authLogout } from '../../services/authService.js';
+import {
+  Building2,
+  Bell,
+  ChevronDown,
+  FileText,
+  RotateCw,
+  Forward,
+  CircleCheck
+} from 'lucide-react';
 
 function timeAgo(isoString) {
   const diff = Date.now() - new Date(isoString).getTime();
@@ -49,9 +58,7 @@ export default function TopBar({ pageTitle }) {
       {/* Left: institution + page */}
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-[#e8f5ee] flex items-center justify-center">
-          <svg className="w-5 h-5 text-[#1a6b3c]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3M9 7h1m-1 4h1m4-4h1m-1 4h1M9 16h6" />
-          </svg>
+          <Building2 className="w-5 h-5 text-[#1a6b3c]" />
         </div>
         <div>
           <p className="text-sm font-semibold text-gray-900 leading-none">
@@ -73,9 +80,7 @@ export default function TopBar({ pageTitle }) {
             className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
             aria-label="Notifications"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
+            <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
               <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                 {unreadCount > 9 ? '9+' : unreadCount}
@@ -111,10 +116,10 @@ export default function TopBar({ pageTitle }) {
                       className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 ${!n.read ? 'bg-green-50/40' : ''}`}
                     >
                       <span className={`mt-0.5 w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs ${NOTIF_ICON_COLOR[n.type] || 'bg-gray-100 text-gray-500'}`}>
-                        {n.type === 'new_report'    && '📋'}
-                        {n.type === 'status_update' && '🔄'}
-                        {n.type === 'redirect'      && '↩️'}
-                        {n.type === 'resolved'      && '✅'}
+                        {n.type === 'new_report'    && <FileText className="w-4 h-4" />}
+                        {n.type === 'status_update' && <RotateCw className="w-4 h-4" />}
+                        {n.type === 'redirect'      && <Forward className="w-4 h-4" />}
+                        {n.type === 'resolved'      && <CircleCheck className="w-4 h-4" />}
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-gray-800">{n.title}</p>
@@ -143,9 +148,7 @@ export default function TopBar({ pageTitle }) {
               <p className="text-xs font-semibold text-gray-800 leading-none">{currentUser?.name}</p>
               <p className="text-[10px] text-gray-400">{currentUser?.role}</p>
             </div>
-            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
           </button>
 
           {userOpen && (

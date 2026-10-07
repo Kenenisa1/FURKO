@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import PriorityBadge from '../ui/PriorityBadge.jsx';
 import EmptyState from '../ui/EmptyState.jsx';
+import { Image } from 'lucide-react';
 
 function timeAgo(isoString) {
   if (!isoString) return '—';
@@ -29,7 +30,7 @@ export default function ReportTable({ reports }) {
   if (!reports || reports.length === 0) {
     return (
       <EmptyState
-        icon="📋"
+        icon={<Image className="w-12 h-12" />}
         title="No reports found"
         description="No reports match the current filters. Try adjusting your search or filter criteria."
       />
@@ -73,9 +74,7 @@ export default function ReportTable({ reports }) {
                     />
                   ) : (
                     <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-400">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
+                      <Image className="w-5 h-5" />
                     </div>
                   )}
                   <div className="min-w-0">
