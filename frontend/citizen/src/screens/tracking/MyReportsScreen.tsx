@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,43 +9,216 @@ import {
   RefreshControl,
   SafeAreaView,
   StatusBar,
+  Platform,
 } from 'react-native';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { STATUS_META, PROBLEM_CATEGORIES } from '../../constants/categories';
 import { ReportsApi } from '../../services/api';
-import { Report } from '../../types';
+import { Report, ReportStatus } from '../../types';
 
 interface Props {
   navigation: any;
 }
 
-const FILTER_TABS: { key: string; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'in_progress', label: 'In Progress' },
-  { key: 'under_review', label: 'In Review' },
-  { key: 'resolved', label: 'Resolved' },
-  { key: 'submitted', label: 'Submitted' },
+// ─── Filter tab definition ────────────────────────────────────────────────────
+const FILTER_TABS: {
+  key: string;
+  label: string;
+  statuses: ReportStatus[] | 'all';
+}[] = [
+  { key: 'all',        label: 'All',         statuses: 'all' },
+  { key: 'submitted',  label: 'Submitted',   statuses: ['submitted'] },
+  { key: 'active',     label: 'In Progress', statuses: ['under_review', 'in_progress'] },
+  { key: 'resolved',   label: 'Resolved',    statuses: ['resolved'] },
+  { key: 'reopened',   label: 'Reopened',    statuses: ['reopened'] },
+  { key: 'rejected',   label: 'Rejected',    statuses: ['rejected'] },
 ];
 
+// ─── Category icon helper ─────────────────────────────────────────────────────
+const categoryEmoji = (key?: string) => {
+  switch (key) {
+    case 'roads':    return '🚧';
+    case 'water':    return '💧';
+    case 'waste':    return '🗑️';
+    case 'lighting': return '💡';
+    default:         return '📋';
+  }
+};
+
+// ─── Urgency config ───────────────────────────────────────────────────────────
+const URGENCY_COLOR: Record<string, string> = {
+  low: '#16A34A',
+  medium: '#D97706',
+  high: '#EA580C',
+  emergency: '#DC2626',
+};
+
+// ─── Progress bar helper ──────────────────────────────────────────────────────
+const STATUS_STEP: Record<ReportStatus, number> = {
+  submitted:    1,
+  under_review: 2,
+  in_progress:  3,
+  resolved:     4,
+  rejected:     0,
+  reopened:     2,
+};
+
+const ProgressBar = ({ status }: { status: ReportStatus }) => {
+  const step = STATUS_STEP[status] ?? 1;
+  const total = 4;
+  const isRejected = status === 'rejected';
+
+  return (
+    <View style={pb.container}>
+      {Array.from({ length: total }).map((_, i) => {
+        const filled = !isRejected && i < step;
+        return (
+          <View
+            key={i}
+            style={[
+              pb.segment,
+              { flex: 1 },
+              filled ? pb.filled : pb.empty,
+              isRejected && pb.rejected,
+              i > 0 && { marginLeft: 3 },
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+};
+
+const pb = StyleSheet.create({
+  container: { flexDirection: 'row', height: 4, borderRadius: 2, marginTop: 8, marginBottom: 2 },
+  segment:   { borderRadius: 2 },
+  filled:    { backgroundColor: Colors.primary },
+  empty:     { backgroundColor: '#E5E7EB' },
+  rejected:  { backgroundColor: '#FCA5A5' },
+});
+
+// ─── Report Card ──────────────────────────────────────────────────────────────
+const ReportCard = ({
+  item,
+  onPress,
+}: {
+  item: Report;
+  onPress: () => void;
+}) => {
+  const meta = STATUS_META[item.status] ?? STATUS_META.submitted;
+  const cat = PROBLEM_CATEGORIES.find((c) => c.id === item.category_id);
+  const urgColor = item.urgency ? URGENCY_COLOR[item.urgency] : undefined;
+
+  const submittedDate = new Date(item.submitted_at);
+  const daysAgo = Math.floor(
+    (Date.now() - submittedDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const dateLabel =
+    daysAgo === 0
+      ? 'Today'
+      : daysAgo === 1
+      ? 'Yesterday'
+      : `${daysAgo}d ago`;
+
+  return (
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+      {/* ── Card header row ── */}
+      <View style={styles.cardHeader}>
+        <View style={styles.trackingGroup}>
+          <Text style={styles.categoryEmoji}>{categoryEmoji(cat?.key)}</Text>
+          <Text style={styles.trackingText}>{item.tracking_number}</Text>
+        </View>
+        <View style={styles.badgeRow}>
+          {item.urgency === 'emergency' && (
+            <View style={styles.emergencyBadge}>
+              <Ionicons name="flash" size={10} color="#DC2626" />
+              <Text style={styles.emergencyBadgeText}>EMG</Text>
+            </View>
+          )}
+          <View style={[styles.statusBadge, { backgroundColor: meta.bg }]}>
+            <Text style={[styles.statusBadgeText, { color: meta.color }]}>
+              {meta.label}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* ── Title ── */}
+      <Text style={styles.cardTitle} numberOfLines={2}>
+        {item.title}
+      </Text>
+
+      {/* ── Sub-issue chip ── */}
+      {item.sub_issue && (
+        <View style={[styles.subIssuePill, { backgroundColor: (cat?.color ?? Colors.primary) + '18' }]}>
+          <Text style={[styles.subIssuePillText, { color: cat?.color ?? Colors.primary }]}>
+            {item.sub_issue}
+          </Text>
+        </View>
+      )}
+
+      {/* ── Location ── */}
+      <View style={styles.locationRow}>
+        <Ionicons name="location-outline" size={13} color="#9CA3AF" />
+        <Text style={styles.cardLocation} numberOfLines={1}>
+          {item.address_text || 'Jimma City'}
+        </Text>
+        {item.landmark ? (
+          <Text style={styles.landmarkText} numberOfLines={1}>
+            · {item.landmark}
+          </Text>
+        ) : null}
+      </View>
+
+      {/* ── Progress bar ── */}
+      <ProgressBar status={item.status} />
+
+      {/* ── Card footer ── */}
+      <View style={styles.cardFooter}>
+        <Text style={styles.instText} numberOfLines={1}>
+          🏢 {item.institution_name}
+        </Text>
+        <View style={styles.footerRight}>
+          {urgColor && item.urgency !== 'low' && (
+            <View style={[styles.urgencyDot, { backgroundColor: urgColor }]} />
+          )}
+          <Text style={styles.dateText}>{dateLabel}</Text>
+          <Ionicons name="chevron-forward" size={14} color="#D1D5DB" />
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 export const MyReportsScreen: React.FC<Props> = ({ navigation }) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     try {
       const data = await ReportsApi.getMyReports();
       setReports(data);
     } catch {
-      // ignore
+      // silently ignore — mock data handles offline
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadReports();
-  }, []);
+  }, [loadReports]);
+
+  // Re-fetch when screen comes back into focus (e.g. after submitting a new report)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', loadReports);
+    return unsubscribe;
+  }, [navigation, loadReports]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -53,263 +226,258 @@ export const MyReportsScreen: React.FC<Props> = ({ navigation }) => {
     setRefreshing(false);
   };
 
+  // ── Filtering ──────────────────────────────────────────────────────────────
+  const tabDef = FILTER_TABS.find((t) => t.key === selectedFilter) || FILTER_TABS[0];
+
   const filteredReports = reports.filter((r) => {
-    // Status filter
-    if (selectedFilter !== 'all' && r.status !== selectedFilter) {
-      return false;
-    }
-    // Search query
+    if (tabDef.statuses !== 'all' && !tabDef.statuses.includes(r.status)) return false;
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      const matchTracking = r.tracking_number?.toLowerCase().includes(query);
-      const matchTitle = r.title?.toLowerCase().includes(query);
-      const matchAddress = r.address_text?.toLowerCase().includes(query);
-      const matchInst = r.institution_name?.toLowerCase().includes(query);
-      return matchTracking || matchTitle || matchAddress || matchInst;
+      const q = searchQuery.toLowerCase();
+      return (
+        r.tracking_number?.toLowerCase().includes(q) ||
+        r.title?.toLowerCase().includes(q) ||
+        r.address_text?.toLowerCase().includes(q) ||
+        r.institution_name?.toLowerCase().includes(q) ||
+        r.sub_issue?.toLowerCase().includes(q)
+      );
     }
     return true;
   });
 
-  const renderItem = ({ item }: { item: Report }) => {
-    const meta = STATUS_META[item.status] || STATUS_META.submitted;
-    const cat = PROBLEM_CATEGORIES.find((c) => c.id === item.category_id);
-
-    return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigation.navigate('ReportDetail', { reportId: item.id })}
-        activeOpacity={0.8}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.trackingGroup}>
-            <Text style={styles.categoryEmojiSmall}>
-              {cat?.key === 'roads'
-                ? '🚧'
-                : cat?.key === 'water'
-                ? '💧'
-                : cat?.key === 'waste'
-                ? '🗑️'
-                : '💡'}
-            </Text>
-            <Text style={styles.trackingText}>{item.tracking_number}</Text>
-          </View>
-
-          <View style={[styles.statusBadge, { backgroundColor: meta.bg }]}>
-            <Text style={[styles.statusBadgeText, { color: meta.color }]}>
-              {meta.label}
-            </Text>
-          </View>
-        </View>
-
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-
-        <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={14} color="#6B7280" />
-          <Text style={styles.cardLocation} numberOfLines={1}>
-            {item.address_text || 'Jimma City, Ethiopia'}
-          </Text>
-        </View>
-
-        <View style={styles.cardFooter}>
-          <View style={styles.instRow}>
-            <Text style={styles.instText} numberOfLines={1}>
-              🏢 {item.institution_name}
-            </Text>
-          </View>
-          <Text style={styles.dateText}>
-            {new Date(item.submitted_at).toLocaleDateString()}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
+  // ── Tab count helpers ──────────────────────────────────────────────────────
+  const countForTab = (tab: typeof FILTER_TABS[0]) => {
+    if (tab.statuses === 'all') return reports.length;
+    return reports.filter((r) => (tab.statuses as ReportStatus[]).includes(r.status)).length;
   };
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Top Header */}
+      {/* ── Header ── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Civic Reports</Text>
+        <View>
+          <Text style={styles.headerTitle}>My Reports</Text>
+          <Text style={styles.headerSub}>
+            {reports.length} {reports.length === 1 ? 'ticket' : 'tickets'} total
+          </Text>
+        </View>
         <TouchableOpacity
           style={styles.newReportBtn}
           onPress={() => navigation.navigate('CategorySelection')}
           activeOpacity={0.85}
         >
           <Ionicons name="add" size={18} color="#FFFFFF" />
-          <Text style={styles.newReportBtnText}>Report</Text>
+          <Text style={styles.newReportBtnText}>New Report</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
+      {/* ── Search ── */}
+      <View style={styles.searchWrapper}>
         <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={18} color="#9CA3AF" style={{ marginRight: 8 }} />
+          <Ionicons name="search-outline" size={16} color="#9CA3AF" />
           <TextInput
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search by ticket ID, road, department..."
+            placeholder="Search by ID, title, location…"
             placeholderTextColor="#9CA3AF"
+            returnKeyType="search"
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+              <Ionicons name="close-circle" size={16} color="#9CA3AF" />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      {/* Filter Tabs */}
-      <View style={styles.filterBar}>
+      {/* ── Filter tabs ── */}
+      <View style={styles.filterRow}>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
           data={FILTER_TABS}
-          keyExtractor={(item) => item.key}
-          renderItem={({ item }) => {
-            const isActive = selectedFilter === item.key;
+          keyExtractor={(t) => t.key}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+          renderItem={({ item: tab }) => {
+            const active = selectedFilter === tab.key;
+            const count = countForTab(tab);
             return (
               <TouchableOpacity
-                style={[styles.filterTab, isActive && styles.filterTabActive]}
-                onPress={() => setSelectedFilter(item.key)}
+                style={[styles.filterTab, active && styles.filterTabActive]}
+                onPress={() => setSelectedFilter(tab.key)}
               >
-                <Text style={[styles.filterTabText, isActive && styles.filterTabTextActive]}>
-                  {item.label}
+                <Text style={[styles.filterTabText, active && styles.filterTabTextActive]}>
+                  {tab.label}
                 </Text>
+                {count > 0 && (
+                  <View
+                    style={[
+                      styles.filterCount,
+                      { backgroundColor: active ? 'rgba(255,255,255,0.3)' : '#E5E7EB' },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.filterCountText,
+                        { color: active ? '#fff' : '#6B7280' },
+                      ]}
+                    >
+                      {count}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
             );
           }}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
         />
       </View>
 
-      {/* Reports List */}
+      {/* ── Report list ── */}
       <FlatList
         data={filteredReports}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+        keyExtractor={(r) => r.id}
+        renderItem={({ item }) => (
+          <ReportCard
+            item={item}
+            onPress={() => navigation.navigate('ReportDetail', { reportId: item.id })}
+          />
+        )}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconCircle}>
-              <Ionicons name="clipboard-outline" size={40} color={Colors.primary} />
+          loading ? null : (
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconCircle}>
+                <MaterialCommunityIcons
+                  name="clipboard-text-search-outline"
+                  size={36}
+                  color={Colors.primary}
+                />
+              </View>
+              <Text style={styles.emptyTitle}>
+                {searchQuery ? 'No matches found' : 'No reports here'}
+              </Text>
+              <Text style={styles.emptySubtitle}>
+                {searchQuery
+                  ? 'Try a different search term or clear the filter.'
+                  : selectedFilter === 'all'
+                  ? "You haven't filed any reports yet. Help improve Jimma City!"
+                  : `You have no "${tabDef.label}" reports.`}
+              </Text>
+              {!searchQuery && selectedFilter === 'all' && (
+                <TouchableOpacity
+                  style={styles.emptyCta}
+                  onPress={() => navigation.navigate('CategorySelection')}
+                >
+                  <Ionicons name="add-circle" size={16} color="#fff" />
+                  <Text style={styles.emptyCtaText}>Submit a Report</Text>
+                </TouchableOpacity>
+              )}
             </View>
-            <Text style={styles.emptyTitle}>No Reports Found</Text>
-            <Text style={styles.emptySubtitle}>
-              {searchQuery
-                ? 'No matching community problems found for your search.'
-                : 'You have no tickets in this status category.'}
-            </Text>
-            <TouchableOpacity
-              style={styles.emptyCta}
-              onPress={() => navigation.navigate('CategorySelection')}
-            >
-              <Text style={styles.emptyCtaText}>+ Submit a New Report</Text>
-            </TouchableOpacity>
-          </View>
+          )
         }
       />
     </SafeAreaView>
   );
 };
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
+  safe: { flex: 1, backgroundColor: '#F9FAFB' },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'android' ? 12 : 8,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#111827',
-  },
+  headerTitle: { fontSize: 22, fontWeight: '900', color: '#111827' },
+  headerSub: { fontSize: 12, color: '#9CA3AF', marginTop: 1 },
   newReportBtn: {
-    backgroundColor: Colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    gap: 5,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 12,
-    gap: 4,
   },
-  newReportBtnText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  searchContainer: {
-    backgroundColor: '#FFFFFF',
+  newReportBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+
+  searchWrapper: {
+    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
   searchBar: {
-    backgroundColor: '#F3F4F6',
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F3F4F6',
     borderRadius: 12,
     paddingHorizontal: 12,
-    height: 44,
+    height: 42,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: '#111827',
-  },
-  filterBar: {
-    backgroundColor: '#FFFFFF',
+  searchInput: { flex: 1, fontSize: 14, color: '#111827' },
+
+  filterRow: {
+    backgroundColor: '#fff',
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
   filterTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingVertical: 6,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     borderRadius: 20,
     marginRight: 8,
     backgroundColor: '#F3F4F6',
   },
-  filterTabActive: {
-    backgroundColor: Colors.primary,
+  filterTabActive: { backgroundColor: Colors.primary },
+  filterTabText: { fontSize: 13, fontWeight: '600', color: '#4B5563' },
+  filterTabTextActive: { color: '#fff', fontWeight: '700' },
+  filterCount: {
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    minWidth: 18,
+    alignItems: 'center',
   },
-  filterTabText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#4B5563',
-  },
-  filterTabTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
+  filterCountText: { fontSize: 10, fontWeight: '800' },
+
+  listContent: { padding: 16, paddingBottom: 40 },
+
+  // ── Card ──────────────────────────────────────────────────────────────────
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 2,
   },
   cardHeader: {
@@ -318,16 +486,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  trackingGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  categoryEmojiSmall: {
-    fontSize: 16,
-  },
+  trackingGroup: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  categoryEmoji: { fontSize: 15 },
   trackingText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
     color: Colors.primary,
     backgroundColor: '#E6F4EA',
@@ -335,54 +497,60 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 6,
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  emergencyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 5,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
   },
-  statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
+  emergencyBadgeText: { fontSize: 9, fontWeight: '800', color: '#DC2626' },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  statusBadgeText: { fontSize: 11, fontWeight: '800' },
+
   cardTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 6,
     lineHeight: 20,
+    marginBottom: 6,
   },
+  subIssuePill: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    marginBottom: 6,
+  },
+  subIssuePillText: { fontSize: 11, fontWeight: '600' },
+
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 10,
+    marginBottom: 2,
   },
-  cardLocation: {
-    fontSize: 12,
-    color: '#6B7280',
-    flex: 1,
-  },
+  cardLocation: { fontSize: 12, color: '#6B7280', flex: 1 },
+  landmarkText: { fontSize: 11, color: '#9CA3AF', flexShrink: 1 },
+
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
-    paddingTop: 10,
   },
-  instRow: {
-    flex: 1,
-  },
-  instText: {
-    fontSize: 11,
-    color: '#4B5563',
-    fontWeight: '600',
-  },
-  dateText: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    marginLeft: 8,
-  },
+  instText: { fontSize: 11, color: '#4B5563', fontWeight: '600', flex: 1 },
+  footerRight: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  urgencyDot: { width: 7, height: 7, borderRadius: 4 },
+  dateText: { fontSize: 11, color: '#9CA3AF' },
+
+  // ── Empty state ──────────────────────────────────────────────────────────
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -398,11 +566,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 16,
   },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#111827',
-  },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#111827' },
   emptySubtitle: {
     fontSize: 13,
     color: '#6B7280',
@@ -412,14 +576,13 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   emptyCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
     backgroundColor: Colors.primary,
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: 12,
   },
-  emptyCtaText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 14,
-  },
+  emptyCtaText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });

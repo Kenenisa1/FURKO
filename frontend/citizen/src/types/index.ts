@@ -22,7 +22,8 @@ export type ReportStatus =
   | 'under_review'
   | 'in_progress'
   | 'resolved'
-  | 'rejected';
+  | 'rejected'
+  | 'reopened';
 
 export interface LocationData {
   latitude: number;
