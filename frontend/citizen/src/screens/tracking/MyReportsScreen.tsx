@@ -11,7 +11,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { STATUS_META, PROBLEM_CATEGORIES } from '../../constants/categories';
 import { ReportsApi } from '../../services/api';
@@ -359,8 +359,8 @@ export const MyReportsScreen: React.FC<Props> = ({ navigation }) => {
           loading ? null : (
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconCircle}>
-                <MaterialCommunityIcons
-                  name="clipboard-text-search-outline"
+                <Ionicons
+                  name="document-text-outline"
                   size={36}
                   color={Colors.primary}
                 />

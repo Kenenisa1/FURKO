@@ -122,19 +122,19 @@ export const PhotoEvidenceScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.tipRow}>
               <Text style={styles.tipBullet}>1.</Text>
               <Text style={styles.tipText}>
-                <strong>Close-up:</strong> Clearly display the fault depth or damage.
+                <Text style={{ fontWeight: '700' }}>Close-up:</Text> Clearly display the fault depth or damage.
               </Text>
             </View>
             <View style={styles.tipRow}>
               <Text style={styles.tipBullet}>2.</Text>
               <Text style={styles.tipText}>
-                <strong>Context:</strong> Include nearby road edges or utility poles.
+                <Text style={{ fontWeight: '700' }}>Context:</Text> Include nearby road edges or utility poles.
               </Text>
             </View>
             <View style={styles.tipRow}>
               <Text style={styles.tipBullet}>3.</Text>
               <Text style={styles.tipText}>
-                <strong>Safety:</strong> Do not step into hazardous live wires or deep trenches.
+                <Text style={{ fontWeight: '700' }}>Safety:</Text> Do not step into hazardous live wires or deep trenches.
               </Text>
             </View>
           </View>

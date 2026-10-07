@@ -395,7 +395,7 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
 
             <View style={styles.dispatchNotice}>
               <Text style={styles.dispatchNoticeText}>
-                ⚡ <strong>Direct Service Routing:</strong> Upon tapping Submit, this report
+                ⚡ <Text style={{ fontWeight: '700' }}>Direct Service Routing:</Text> Upon tapping Submit, this report
                 will be sent directly to {selectedCategory?.responsibleInstitution}'s active queue.
               </Text>
             </View>
