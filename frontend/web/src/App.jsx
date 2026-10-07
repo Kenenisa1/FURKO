@@ -8,6 +8,7 @@ import DashboardLayout from './components/layout/DashboardLayout.jsx';
 import LoginPage           from './pages/Login/LoginPage.jsx';
 import DashboardPage       from './pages/Dashboard/DashboardPage.jsx';
 import ReportsPage         from './pages/Reports/ReportsPage.jsx';
+import InboxPage           from './pages/Reports/InboxPage.jsx';
 import ReportDetailsPage   from './pages/Reports/ReportDetailsPage.jsx';
 import InstitutionProfilePage from './pages/Profile/InstitutionProfilePage.jsx';
 import StaffPage           from './pages/Staff/StaffPage.jsx';
@@ -46,7 +47,7 @@ function AppRoutes() {
 
         {/* Reports */}
         <Route path="reports" element={<ReportsPage />} />
-        <Route path="reports/inbox" element={<DashboardPage />} />
+        <Route path="reports/inbox" element={<InboxPage />} />
         <Route path="reports/:id" element={<ReportDetailsPage />} />
 
         {/* Organization */}
