@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Keyboard,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -29,7 +31,15 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register } = useAuth();
 
+  // Refs for sequential field focus
+  const phoneRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+
   const handleRegister = async () => {
+    // Dismiss keyboard immediately to prevent auto-focus toggling
+    Keyboard.dismiss();
+
     if (!fullName.trim()) {
       Alert.alert('Missing Field', 'Please enter your full name.');
       return;
@@ -52,10 +62,10 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       await register(fullName.trim(), email.trim(), password, phone.trim());
       setIsSubmitting(false);
 
-      // Advance directly to Phone Verification as shown in user flow!
-      navigation.navigate('PhoneVerification', {
-        phoneNumber: phone.trim(),
-        fullName: fullName.trim(),
+      // Go directly to MainTabs — no SMS verification in MVP
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs' }],
       });
     } catch {
       setIsSubmitting(false);
@@ -85,14 +95,15 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Headline & Subtitle matching mockup */}
+          {/* Headline & Subtitle */}
           <View style={styles.headingGroup}>
             <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join Furko to start making a difference</Text>
+            <Text style={styles.subtitle}>Join FURKO to start making a difference</Text>
           </View>
 
-          {/* Form Fields matching mockup */}
+          {/* Form Fields */}
           <View style={styles.form}>
             {/* 1. Full Name */}
             <NotchedTextInput
@@ -102,20 +113,26 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setFullName}
               placeholder="Enter full name"
               autoCapitalize="words"
+              returnKeyType="next"
+              onSubmitEditing={() => phoneRef.current?.focus()}
             />
 
             {/* 2. Phone Number */}
             <NotchedTextInput
+              ref={phoneRef}
               iconName="phone"
               label="phone number"
               value={phone}
               onChangeText={setPhone}
               placeholder="Enter phone number"
               keyboardType="phone-pad"
+              returnKeyType="next"
+              onSubmitEditing={() => emailRef.current?.focus()}
             />
 
             {/* 3. Email */}
             <NotchedTextInput
+              ref={emailRef}
               iconName="mail"
               label="email"
               value={email}
@@ -123,16 +140,21 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               placeholder="Enter email address"
               keyboardType="email-address"
               autoCapitalize="none"
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
             />
 
             {/* 4. Password */}
             <NotchedTextInput
+              ref={passwordRef}
               iconName="lock"
               label="password"
               value={password}
               onChangeText={setPassword}
               placeholder="Enter password"
               isPassword={true}
+              returnKeyType="done"
+              onSubmitEditing={handleRegister}
             />
 
             {/* Create Account Primary Button */}

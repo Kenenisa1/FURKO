@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   KeyboardTypeOptions,
+  ReturnKeyTypeOptions,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -20,74 +21,89 @@ interface Props {
   secureTextEntry?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   isPassword?: boolean;
+  returnKeyType?: ReturnKeyTypeOptions;
+  onSubmitEditing?: () => void;
 }
 
-export const NotchedTextInput: React.FC<Props> = ({
-  iconName,
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  keyboardType = 'default',
-  secureTextEntry = false,
-  autoCapitalize = 'none',
-  isPassword = false,
-}) => {
-  const [isFocused, setIsFocused] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+export const NotchedTextInput = forwardRef<TextInput, Props>(
+  (
+    {
+      iconName,
+      label,
+      value,
+      onChangeText,
+      placeholder,
+      keyboardType = 'default',
+      secureTextEntry = false,
+      autoCapitalize = 'none',
+      isPassword = false,
+      returnKeyType,
+      onSubmitEditing,
+    },
+    ref
+  ) => {
+    const [isFocused, setIsFocused] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
-  return (
-    <View style={styles.container}>
-      {/* Floating Tag over Top-Left Border */}
-      <View style={styles.floatingBadge}>
-        <Feather
-          name={iconName}
-          size={14}
-          color={isFocused ? Colors.primary : '#9CA3AF'}
-          style={styles.badgeIcon}
-        />
-        <Text style={[styles.badgeText, isFocused && styles.badgeTextFocused]}>
-          {label}
-        </Text>
+    return (
+      <View style={styles.container}>
+        {/* Floating Tag over Top-Left Border */}
+        <View style={styles.floatingBadge}>
+          <Feather
+            name={iconName}
+            size={14}
+            color={isFocused ? Colors.primary : '#9CA3AF'}
+            style={styles.badgeIcon}
+          />
+          <Text style={[styles.badgeText, isFocused && styles.badgeTextFocused]}>
+            {label}
+          </Text>
+        </View>
+
+        {/* Input Box */}
+        <View
+          style={[
+            styles.inputContainer,
+            isFocused && styles.inputFocused,
+          ]}
+        >
+          <TextInput
+            ref={ref}
+            style={styles.textInput}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor="#9CA3AF"
+            keyboardType={keyboardType}
+            secureTextEntry={isPassword ? !showPassword : secureTextEntry}
+            autoCapitalize={autoCapitalize}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            returnKeyType={returnKeyType}
+            onSubmitEditing={onSubmitEditing}
+            blurOnSubmit={!onSubmitEditing}
+          />
+
+          {isPassword && (
+            <TouchableOpacity
+              style={styles.eyeButton}
+              onPress={() => setShowPassword((prev) => !prev)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#9CA3AF"
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
+    );
+  }
+);
 
-      {/* Input Box */}
-      <View
-        style={[
-          styles.inputContainer,
-          isFocused && styles.inputFocused,
-        ]}
-      >
-        <TextInput
-          style={styles.textInput}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
-          keyboardType={keyboardType}
-          secureTextEntry={isPassword ? !showPassword : secureTextEntry}
-          autoCapitalize={autoCapitalize}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-        />
-
-        {isPassword && (
-          <TouchableOpacity
-            style={styles.eyeButton}
-            onPress={() => setShowPassword((prev) => !prev)}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              size={20}
-              color="#9CA3AF"
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
-};
+NotchedTextInput.displayName = 'NotchedTextInput';
 
 const styles = StyleSheet.create({
   container: {

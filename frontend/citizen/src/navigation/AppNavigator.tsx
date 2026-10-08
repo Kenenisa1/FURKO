@@ -11,7 +11,6 @@ import { useAuth } from '../context/AuthContext';
 import { WelcomeScreen } from '../screens/auth/WelcomeScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
-import { PhoneVerificationScreen } from '../screens/auth/PhoneVerificationScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { CategorySelectionScreen } from '../screens/report/CategorySelectionScreen';
@@ -141,7 +140,6 @@ export const AppNavigator = () => {
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="PhoneVerification" component={PhoneVerificationScreen} />
 
         {/* Citizen Main 3-Tab Navigation (Home, Reports, Profile) */}
         <Stack.Screen name="MainTabs" component={MainTabs} />
