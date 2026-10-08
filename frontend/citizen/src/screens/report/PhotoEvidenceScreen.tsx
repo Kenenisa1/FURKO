@@ -9,7 +9,7 @@ import {
   StatusBar,
   Alert,
 } from 'react-native';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES } from '../../constants/categories';
 import { EvidenceUploader } from '../../components/report/EvidenceUploader';
@@ -22,7 +22,6 @@ interface Props {
 
 export const PhotoEvidenceScreen: React.FC<Props> = ({ navigation, route }) => {
   const categoryId = route?.params?.categoryId || 'cat-roads-001';
-  const subIssue = route?.params?.subIssue;
   const initialPhotoUri = route?.params?.photoUri || null;
 
   const category: ProblemCategory =
@@ -45,7 +44,6 @@ export const PhotoEvidenceScreen: React.FC<Props> = ({ navigation, route }) => {
               setIsSkipped(true);
               navigation.navigate('LocationCapture', {
                 categoryId: category.id,
-                subIssue,
                 photoUri: null,
                 isPhotoSkipped: true,
               });
@@ -58,7 +56,6 @@ export const PhotoEvidenceScreen: React.FC<Props> = ({ navigation, route }) => {
 
     navigation.navigate('LocationCapture', {
       categoryId: category.id,
-      subIssue,
       photoUri,
       isPhotoSkipped: isSkipped,
     });
@@ -85,11 +82,12 @@ export const PhotoEvidenceScreen: React.FC<Props> = ({ navigation, route }) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Category Recap Pill */}
-        <View style={styles.categoryPill}>
-          <View style={[styles.categoryDot, { backgroundColor: category.color }]} />
-          <Text style={styles.categoryPillText}>{category.name}</Text>
-          {subIssue && <Text style={styles.subIssueText}>• {subIssue}</Text>}
+        {/* Centered Category Recap Pill */}
+        <View style={styles.categoryPillCenter}>
+          <View style={styles.categoryPill}>
+            <View style={[styles.categoryDot, { backgroundColor: category.color }]} />
+            <Text style={styles.categoryPillText}>{category.name}</Text>
+          </View>
         </View>
 
         {/* Title & Guidance */}
@@ -222,15 +220,17 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 110,
   },
+  categoryPillCenter: {
+    alignItems: 'center',
+    marginBottom: 14,
+  },
   categoryPill: {
-    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F3F4F6',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    marginBottom: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
     gap: 6,
   },
   categoryDot: {
@@ -239,22 +239,19 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   categoryPillText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#111827',
   },
-  subIssueText: {
-    fontSize: 12,
-    color: '#6B7280',
-    fontWeight: '600',
-  },
   headingGroup: {
     marginBottom: 16,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '900',
     color: '#111827',
+    textAlign: 'center',
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -262,6 +259,7 @@ const styles = StyleSheet.create({
     color: '#4B5563',
     marginTop: 6,
     lineHeight: 20,
+    textAlign: 'center',
   },
   tipsToggle: {
     flexDirection: 'row',

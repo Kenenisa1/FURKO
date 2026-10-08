@@ -120,7 +120,6 @@ const ROUTING_CONFIG: Record<string, RoutingConfig> = {
 export const RoutingPreviewScreen: React.FC<Props> = ({ navigation, route }) => {
   // Params from wizard chain
   const categoryId: string = route?.params?.categoryId || 'cat-roads-001';
-  const subIssue: string | undefined = route?.params?.subIssue;
   const photoUri: string | null = route?.params?.photoUri ?? null;
   const isPhotoSkipped: boolean = route?.params?.isPhotoSkipped ?? false;
   const coords: { latitude: number; longitude: number } | undefined = route?.params?.coords;
@@ -166,7 +165,6 @@ export const RoutingPreviewScreen: React.FC<Props> = ({ navigation, route }) => 
   const handleProceed = () => {
     navigation.navigate('ReviewSubmit', {
       categoryId,
-      subIssue,
       photoUri,
       isPhotoSkipped,
       coords,
@@ -327,13 +325,6 @@ export const RoutingPreviewScreen: React.FC<Props> = ({ navigation, route }) => 
               <View style={styles.summaryContent}>
                 <Text style={styles.summaryRowLabel}>Category</Text>
                 <Text style={styles.summaryRowValue}>{category.name}</Text>
-                {subIssue && (
-                  <View style={[styles.subIssuePill, { backgroundColor: category.color + '18' }]}>
-                    <Text style={[styles.subIssuePillText, { color: category.color }]}>
-                      {subIssue}
-                    </Text>
-                  </View>
-                )}
               </View>
               <View style={[styles.summaryCheck, { backgroundColor: category.color + '20' }]}>
                 <Ionicons name="checkmark" size={14} color={category.color} />

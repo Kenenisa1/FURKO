@@ -26,10 +26,9 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
   const [selectedCategory, setSelectedCategory] = useState<ProblemCategory | null>(
     PROBLEM_CATEGORIES.find((c) => c.id === initialCatId) || null
   );
-  const [selectedSubIssue, setSelectedSubIssue] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Search filter across category names, local names, subIssues, and keywords
+  // Search filter across category names, local names, description, and keywords
   const filteredCategories = PROBLEM_CATEGORIES.filter((cat) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
@@ -38,24 +37,13 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
     const inAmharic = cat.nameAmharic?.toLowerCase().includes(q);
     const inDesc = cat.description.toLowerCase().includes(q);
     const inInst = cat.responsibleInstitution.toLowerCase().includes(q);
-    const inSubIssues = cat.subIssues?.some((s) => s.toLowerCase().includes(q));
     const inKeywords = cat.keywords?.some((k) => k.toLowerCase().includes(q));
 
-    return inName || inLocal || inAmharic || inDesc || inInst || inSubIssues || inKeywords;
+    return inName || inLocal || inAmharic || inDesc || inInst || inKeywords;
   });
 
   const handleSelectCategory = (category: ProblemCategory) => {
-    if (selectedCategory?.id === category.id) {
-      // Keep or toggle
-      setSelectedCategory(category);
-    } else {
-      setSelectedCategory(category);
-      setSelectedSubIssue(undefined);
-    }
-  };
-
-  const handleSelectSubIssue = (subIssue: string) => {
-    setSelectedSubIssue(subIssue);
+    setSelectedCategory(category);
   };
 
   const handleContinue = () => {
@@ -64,10 +52,9 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
       return;
     }
 
-    // Advance to Photo & Evidence Collection (Issue #79)
+    // Direct transition to Photo & Evidence Collection
     navigation.navigate('PhotoEvidence', {
       categoryId: selectedCategory.id,
-      subIssue: selectedSubIssue,
     });
   };
 
@@ -92,7 +79,7 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Title & Introduction matching issue #77 */}
+        {/* Title & Introduction */}
         <View style={styles.headlineGroup}>
           <Text style={styles.title}>What is the problem?</Text>
           <Text style={styles.subtitle}>
@@ -100,14 +87,14 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
           </Text>
         </View>
 
-        {/* Search / Symptom Filter Input */}
+        {/* Search Input */}
         <View style={styles.searchBar}>
           <Ionicons name="search-outline" size={20} color="#9CA3AF" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search symptoms (e.g. leak, dark street, pothole)..."
+            placeholder="Search category or problem (e.g. water, road, trash, light)..."
             placeholderTextColor="#9CA3AF"
           />
           {searchQuery.length > 0 && (
@@ -124,9 +111,7 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
               key={cat.id}
               category={cat}
               isSelected={selectedCategory?.id === cat.id}
-              selectedSubIssue={selectedSubIssue}
               onSelectCategory={handleSelectCategory}
-              onSelectSubIssue={handleSelectSubIssue}
             />
           ))}
 
@@ -135,7 +120,7 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
               <Ionicons name="search" size={36} color="#D1D5DB" />
               <Text style={styles.emptySearchTitle}>No matching categories</Text>
               <Text style={styles.emptySearchSubtitle}>
-                Try searching for general keywords like "road", "water", "trash", or "power".
+                Try searching for keywords like "road", "water", "trash", or "power".
               </Text>
             </View>
           )}
@@ -147,18 +132,15 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
         {selectedCategory ? (
           <View style={styles.selectedPreviewBox}>
             <View style={styles.selectedRow}>
-              <Text style={styles.selectedLabel}>Selected:</Text>
+              <Text style={styles.selectedLabel}>Selected Category:</Text>
               <Text style={styles.selectedName}>{selectedCategory.name}</Text>
-              {selectedSubIssue && (
-                <Text style={styles.selectedSubIssue}>• {selectedSubIssue}</Text>
-              )}
             </View>
             <Text style={styles.selectedInst} numberOfLines={1}>
               🏢 {selectedCategory.responsibleInstitution}
             </Text>
           </View>
         ) : (
-          <Text style={styles.hintText}>Select a problem category above to proceed</Text>
+          <Text style={styles.hintText}>Tap a category above to select</Text>
         )}
 
         <TouchableOpacity
@@ -288,12 +270,13 @@ const styles = StyleSheet.create({
   },
   selectedPreviewBox: {
     marginBottom: 10,
+    alignItems: 'center',
   },
   selectedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 6,
   },
   selectedLabel: {
     fontSize: 12,
@@ -301,22 +284,18 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   selectedName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
     color: Colors.primary,
   },
-  selectedSubIssue: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#111827',
-  },
   selectedInst: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#6B7280',
     marginTop: 2,
+    textAlign: 'center',
   },
   hintText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 10,
