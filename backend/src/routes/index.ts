@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import healthRoutes from './health.routes';
+import reportRoutes from './reportRoutes';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.get('/', (_req, res) => {
 
 // Health check endpoint under /api/v1/health
 router.use('/health', healthRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;
