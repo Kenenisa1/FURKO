@@ -14,6 +14,8 @@ import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { CategorySelectionScreen } from '../screens/report/CategorySelectionScreen';
+import { PhotoLocationScreen } from '../screens/report/PhotoLocationScreen';
+import { ReportDetailsScreen } from '../screens/report/ReportDetailsScreen';
 import { PhotoEvidenceScreen } from '../screens/report/PhotoEvidenceScreen';
 import { LocationCaptureScreen } from '../screens/report/LocationCaptureScreen';
 import { RoutingPreviewScreen } from '../screens/report/RoutingPreviewScreen';
@@ -145,6 +147,7 @@ export const AppNavigator = () => {
         <Stack.Screen name="MainTabs" component={MainTabs} />
 
         {/* Modal / Push Screens */}
+        {/* Core Reporting Architecture Flow */}
         <Stack.Screen
           name="CategorySelection"
           component={CategorySelectionScreen}
@@ -153,8 +156,15 @@ export const AppNavigator = () => {
           }}
         />
         <Stack.Screen
+          name="PhotoLocation"
+          component={PhotoLocationScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
           name="PhotoEvidence"
-          component={PhotoEvidenceScreen}
+          component={PhotoLocationScreen}
           options={{
             animation: 'slide_from_right',
           }}
@@ -162,6 +172,13 @@ export const AppNavigator = () => {
         <Stack.Screen
           name="LocationCapture"
           component={LocationCaptureScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="ReportDetails"
+          component={ReportDetailsScreen}
           options={{
             animation: 'slide_from_right',
           }}

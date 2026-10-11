@@ -24,13 +24,14 @@ export const EvidenceUploader: React.FC<Props> = ({
   isSkipped,
   onToggleSkip,
 }) => {
+  // Live Camera Only — gallery upload is strictly disabled per architecture
   const handleCamera = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
-          'Camera Permission',
-          'Camera access is needed to capture evidence on site. Please enable it in Settings.'
+          'Camera Permission Required',
+          'Live camera access is needed to capture authentic evidence at the site. Please enable camera permission in your phone settings.'
         );
         return;
       }
@@ -45,24 +46,7 @@ export const EvidenceUploader: React.FC<Props> = ({
         onToggleSkip(false);
       }
     } catch {
-      Alert.alert('Error', 'Unable to launch camera. Please try again.');
-    }
-  };
-
-  const handleGallery = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: true,
-        quality: 0.7,
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        onPhotoSelected(result.assets[0].uri);
-        onToggleSkip(false);
-      }
-    } catch {
-      Alert.alert('Error', 'Unable to open photo library. Please try again.');
+      Alert.alert('Camera Error', 'Unable to open camera. Please try again.');
     }
   };
 
@@ -86,14 +70,14 @@ export const EvidenceUploader: React.FC<Props> = ({
             {/* Ready Badge Overlay */}
             <View style={styles.badgeOverlay}>
               <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
-              <Text style={styles.badgeText}>Evidence Photo Attached</Text>
+              <Text style={styles.badgeText}>Live Site Photo Captured</Text>
             </View>
           </View>
 
           {/* Action Buttons for Preview */}
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.actionBtn} onPress={handleCamera} activeOpacity={0.8}>
-              <Ionicons name="camera-reverse-outline" size={18} color="#374151" />
+              <Ionicons name="camera-reverse-outline" size={18} color={Colors.primary} />
               <Text style={styles.actionBtnText}>Retake Photo</Text>
             </TouchableOpacity>
 
@@ -108,26 +92,25 @@ export const EvidenceUploader: React.FC<Props> = ({
           </View>
         </View>
       ) : (
-        /* CAPTURE / LIBRARY SELECTION MODE */
+        /* CAMERA ONLY CAPTURE MODE */
         <View style={styles.optionsContainer}>
-          {/* Two-button row: Camera + Gallery */}
-          <View style={styles.captureRow}>
-            <TouchableOpacity style={styles.captureCard} onPress={handleCamera} activeOpacity={0.85}>
-              <View style={styles.cameraCircle}>
-                <Ionicons name="camera" size={32} color="#FFFFFF" />
-              </View>
-              <Text style={styles.cameraTitle}>Take Photo</Text>
-              <Text style={styles.cameraSubtitle}>Capture live evidence on site</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.captureCard, styles.galleryCard]} onPress={handleGallery} activeOpacity={0.85}>
-              <View style={[styles.cameraCircle, styles.galleryCircle]}>
-                <Ionicons name="images" size={32} color="#FFFFFF" />
-              </View>
-              <Text style={styles.cameraTitle}>From Gallery</Text>
-              <Text style={styles.cameraSubtitle}>Choose an existing photo</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.cameraCaptureCard}
+            onPress={handleCamera}
+            activeOpacity={0.85}
+          >
+            <View style={styles.cameraCircle}>
+              <Ionicons name="camera" size={36} color="#FFFFFF" />
+            </View>
+            <Text style={styles.cameraTitle}>Take Photo with Camera</Text>
+            <Text style={styles.cameraSubtitle}>
+              Capture authentic photographic evidence directly at the site
+            </Text>
+            <View style={styles.cameraPill}>
+              <Ionicons name="shield-checkmark-outline" size={14} color="#008744" />
+              <Text style={styles.cameraPillText}>Camera only — gallery uploads disabled</Text>
+            </View>
+          </TouchableOpacity>
 
           {/* Non-punitive Skip Option */}
           <TouchableOpacity
@@ -179,7 +162,7 @@ const styles = StyleSheet.create({
   },
   previewImage: {
     width: '100%',
-    height: 260,
+    height: 240,
   },
   badgeOverlay: {
     position: 'absolute',
@@ -207,7 +190,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 10,
-    marginTop: 14,
+    marginTop: 12,
   },
   actionBtn: {
     flex: 1,
@@ -238,59 +221,32 @@ const styles = StyleSheet.create({
   },
   optionsContainer: {
     width: '100%',
-    gap: 14,
-  },
-  captureRow: {
-    flexDirection: 'row',
     gap: 12,
-  },
-  captureCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    paddingVertical: 22,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    borderStyle: 'dashed',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  galleryCard: {
-    borderColor: Colors.blueAccent || '#1E6FE0',
-  },
-  galleryCircle: {
-    backgroundColor: Colors.blueAccent || '#1E6FE0',
   },
   cameraCaptureCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    paddingVertical: 28,
-    paddingHorizontal: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
+    borderColor: Colors.primary,
     borderStyle: 'dashed',
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 2,
   },
   cameraCircle: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -298,7 +254,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   cameraTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
     color: '#111827',
   },
@@ -307,6 +263,23 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 4,
     textAlign: 'center',
+    paddingHorizontal: 10,
+    lineHeight: 18,
+  },
+  cameraPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#E6F4EA',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  cameraPillText: {
+    fontSize: 11,
+    color: '#008744',
+    fontWeight: '700',
   },
   skipCard: {
     backgroundColor: '#F9FAFB',

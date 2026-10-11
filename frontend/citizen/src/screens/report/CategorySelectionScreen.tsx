@@ -52,8 +52,8 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
       return;
     }
 
-    // Direct transition to Photo & Evidence Collection
-    navigation.navigate('PhotoEvidence', {
+    // Direct transition to Photo & Location Check (Step 2)
+    navigation.navigate('PhotoLocation', {
       categoryId: selectedCategory.id,
     });
   };

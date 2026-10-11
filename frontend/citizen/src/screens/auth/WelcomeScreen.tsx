@@ -35,7 +35,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
 
         <View style={styles.logoCenter}>
-          <FurkoLogo size="medium" showTagline={true} centered={true} />
+          <FurkoLogo size="medium" showTagline={false} centered={true} />
         </View>
 
         <View style={{ width: 40 }} />

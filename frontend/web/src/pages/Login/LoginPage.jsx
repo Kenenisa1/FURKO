@@ -18,7 +18,7 @@ import {
   TrendingUp,
   Users
 } from 'lucide-react';
-import furkoLogo from '../../assets/furko-logo.jpg';
+import furkoLogo from '../../assets/furko-logo.png';
 import jimmaCityImage from '../../assets/jimma-city.jpg';
 
 export default function LoginPage() {

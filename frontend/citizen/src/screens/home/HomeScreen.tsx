@@ -55,7 +55,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Top Header: Logo on Left, Sign In / Profile on Right */}
       <View style={styles.topHeader}>
-        <FurkoLogo size="small" showTagline={true} centered={false} />
+        <FurkoLogo size="small" showTagline={false} centered={false} />
 
         {user ? (
           <TouchableOpacity
@@ -151,7 +151,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <TouchableOpacity
                 key={cat.id}
                 style={[styles.categoryCard, { borderLeftColor: cat.color }]}
-                onPress={() => navigation.navigate('CategorySelection', { categoryId: cat.id })}
+                onPress={() => navigation.navigate('PhotoLocation', { categoryId: cat.id })}
                 activeOpacity={0.8}
               >
                 <View style={[styles.categoryIconCircle, { backgroundColor: cat.color + '18' }]}>
