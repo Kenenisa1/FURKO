@@ -25,4 +25,11 @@ export const env = {
     secret: process.env.JWT_SECRET || 'furko_jwt_dev_secret_key',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
+
+  uploads: {
+    directory: process.env.UPLOAD_DIR || path.resolve(__dirname, '../../uploads'),
+    maxFileSizeBytes: parseInt(process.env.MAX_FILE_SIZE_BYTES || '10485760', 10), // 10MB
+    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
+    baseUrl: process.env.UPLOAD_BASE_URL || '',
+  },
 };
