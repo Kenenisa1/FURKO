@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { EvidenceController } from '../controllers/evidence.controller';
 import { uploadEvidence } from '../middleware/upload.middleware';
+import { verifyToken } from '../middleware/authMiddleware';
+import { ReportController } from '../controllers/report.controller';
 
 const router = Router();
 
@@ -34,5 +36,5 @@ router.post('/:id/evidence', handleSingleUpload, normalizeFileField, EvidenceCon
  * @desc    Get all evidence attachments for a report
  */
 router.get('/:id/evidence', EvidenceController.getReportEvidence);
-
+router.post('/', verifyToken, ReportController.create);
 export default router;
