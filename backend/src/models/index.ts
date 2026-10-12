@@ -71,3 +71,19 @@ export interface Report {
   created_at: Date;
   updated_at: Date;
 }
+
+export type AttachmentType = 'evidence' | 'resolution_proof';
+
+export interface Attachment {
+  id: string;
+  report_id?: string | null;
+  uploaded_by_user_id?: string | null;
+  file_name: string;
+  original_name: string;
+  file_url: string;
+  file_type: AttachmentType;
+  mime_type: string;
+  file_size: number;
+  created_at: Date;
+}
+

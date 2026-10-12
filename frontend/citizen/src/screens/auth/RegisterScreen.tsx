@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
+import { FurkoLogo } from '../../components/common/FurkoLogo';
 import { NotchedTextInput } from '../../components/common/NotchedTextInput';
 import { useAuth } from '../../context/AuthContext';
 
@@ -97,6 +98,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Brand Logo */}
+          <View style={styles.logoRow}>
+            <FurkoLogo size="medium" showTagline={false} centered={false} />
+          </View>
+
           {/* Headline & Subtitle */}
           <View style={styles.headingGroup}>
             <Text style={styles.title}>Create Account</Text>
@@ -204,6 +210,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 40,
+  },
+  logoRow: {
+    marginBottom: 16,
   },
   headingGroup: {
     marginBottom: 28,

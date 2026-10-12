@@ -35,8 +35,7 @@ interface Coords {
 const JIMMA_CENTER: Coords = { latitude: 7.6734, longitude: 36.8344 };
 
 export const LocationCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
-  const categoryId = route?.params?.categoryId || 'cat-roads-001';
-  const subIssue: string | undefined = route?.params?.subIssue;
+  const categoryId: string = route?.params?.categoryId || 'cat-roads-001';
   const photoUri: string | null = route?.params?.photoUri ?? null;
   const isPhotoSkipped: boolean = route?.params?.isPhotoSkipped ?? false;
 
@@ -151,7 +150,6 @@ export const LocationCaptureScreen: React.FC<Props> = ({ navigation, route }) =>
   const handleConfirm = () => {
     navigation.navigate('RoutingPreview', {
       categoryId: category.id,
-      subIssue,
       photoUri,
       isPhotoSkipped,
       coords: coords ?? JIMMA_CENTER,
