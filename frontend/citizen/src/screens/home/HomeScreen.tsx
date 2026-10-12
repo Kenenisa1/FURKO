@@ -49,17 +49,13 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  // Quick stats
-  const inProgressCount = reports.filter((r) => r.status === 'in_progress').length;
-  const resolvedCount = reports.filter((r) => r.status === 'resolved').length;
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Top Header matching Image 1: Logo on Left, Sign In / Profile on Right */}
+      {/* Top Header: Logo on Left, Sign In / Profile on Right */}
       <View style={styles.topHeader}>
-        <FurkoLogo size="small" showTagline={true} centered={false} />
+        <FurkoLogo size="small" showTagline={false} centered={false} />
 
         {user ? (
           <TouchableOpacity
@@ -94,19 +90,19 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Hero Section with Landscape Background matching Image 1 */}
+        {/* Hero Section with Landscape Background */}
         <ImageBackground
           source={require('../../../assets/homebackround.png')}
           style={styles.heroBackground}
           resizeMode="cover"
         >
-          {/* Subtle gradient overlay */}
+          {/* Subtle overlay */}
           <View style={styles.heroOverlay}>
             <View style={styles.headlineBox}>
               <Text style={styles.heroTitleGreen}>Your Voice</Text>
               <Text style={styles.heroTitleBlack}>Can Improve{'\n'}Your Community.</Text>
 
-              {/* Blue vertical bar accent with description */}
+              {/* Accent callout */}
               <View style={styles.heroCalloutRow}>
                 <View style={styles.verticalBlueBar} />
                 <Text style={styles.heroCalloutText}>
@@ -114,9 +110,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 </Text>
               </View>
 
-              {/* Hero Action Buttons matching Image 1 */}
+              {/* Hero Action Buttons */}
               <View style={styles.heroBtnGroup}>
-                {/* 1. Report a problem (Green Pill -> Launches What is the problem? / Category Selection) */}
+                {/* 1. Report a problem */}
                 <TouchableOpacity
                   style={styles.reportBtn}
                   onPress={() => navigation.navigate('CategorySelection')}
@@ -129,7 +125,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   <Ionicons name="chevron-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
                 </TouchableOpacity>
 
-                {/* 2. Track a report (White Pill with Blue Border -> Switches to Reports Tab) */}
+                {/* 2. Track a report */}
                 <TouchableOpacity
                   style={styles.trackBtn}
                   onPress={() => navigation.navigate('ReportsTab')}
@@ -143,7 +139,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </ImageBackground>
 
-        {/* 4 Core Problem Categories Launchpad */}
+        {/* 4 Core Problem Categories Launchpad (Centered Icons & Text) */}
         <View style={styles.categoriesSection}>
           <View style={styles.sectionTitleRow}>
             <Text style={styles.sectionHeaderTitle}>Select Problem Category</Text>
@@ -155,7 +151,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <TouchableOpacity
                 key={cat.id}
                 style={[styles.categoryCard, { borderLeftColor: cat.color }]}
-                onPress={() => navigation.navigate('CategorySelection', { categoryId: cat.id })}
+                onPress={() => navigation.navigate('PhotoLocation', { categoryId: cat.id })}
                 activeOpacity={0.8}
               >
                 <View style={[styles.categoryIconCircle, { backgroundColor: cat.color + '18' }]}>
@@ -169,8 +165,8 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       : '💡'}
                   </Text>
                 </View>
-                <Text style={styles.categoryName}>{cat.name}</Text>
-                <Text style={styles.categoryLocal}>{cat.nameLocal}</Text>
+                <Text style={styles.categoryName} numberOfLines={1}>{cat.name}</Text>
+                <Text style={styles.categoryLocal} numberOfLines={1}>{cat.nameLocal}</Text>
                 <Text style={styles.categoryInst} numberOfLines={2}>
                   🏢 {cat.responsibleInstitution}
                 </Text>
@@ -179,13 +175,13 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Section: How Furko works matching Image 1 */}
+        {/* Section: How Furko works */}
         <View style={styles.howItWorksSection}>
           <Text style={styles.sectionHeaderTitle}>How Furko works</Text>
           <View style={styles.blueDivider} />
           <Text style={styles.sectionHeaderSubtitle}>Turning community problems into action.</Text>
 
-          {/* 3 Step Connected Diagram matching Image 1 */}
+          {/* 3 Step Connected Diagram */}
           <View style={styles.stepsDiagram}>
             {/* Step 1: Report */}
             <View style={styles.stepCol}>
@@ -257,12 +253,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         )}
 
-        {/* Curved Green Impact Banner matching bottom of Image 1 */}
+        {/* Curved Green Impact Banner */}
         <View style={styles.impactWaveContainer}>
           <Text style={styles.impactHeader}>building better communities</Text>
           <View style={styles.whiteDividerMini} />
 
-          {/* 4 Stats matching Image 1 */}
+          {/* 4 Stats */}
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
               <Ionicons name="people" size={26} color="#FFFFFF" />
@@ -448,11 +444,13 @@ const styles = StyleSheet.create({
   },
   sectionTitleRow: {
     marginBottom: 16,
+    alignItems: 'center',
   },
   sectionHeaderSubtitleLight: {
     fontSize: 13,
     color: '#6B7280',
     marginTop: 2,
+    textAlign: 'center',
   },
   categoryGrid: {
     flexDirection: 'row',
@@ -466,6 +464,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
     borderLeftWidth: 4,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
@@ -475,33 +474,36 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   categoryIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   categoryEmoji: {
-    fontSize: 22,
+    fontSize: 24,
   },
   categoryName: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#111827',
+    textAlign: 'center',
   },
   categoryLocal: {
     fontSize: 11,
-    color: '#9CA3AF',
-    marginTop: 1,
-    fontStyle: 'italic',
+    color: '#008744',
+    marginTop: 2,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   categoryInst: {
     fontSize: 11,
-    color: Colors.primary,
+    color: '#6B7280',
     marginTop: 6,
     lineHeight: 14,
-    fontWeight: '600',
+    fontWeight: '500',
+    textAlign: 'center',
   },
   howItWorksSection: {
     backgroundColor: '#FFFFFF',
@@ -514,6 +516,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '900',
     color: '#111827',
+    textAlign: 'center',
   },
   blueDivider: {
     width: 44,
@@ -527,6 +530,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#4B5563',
     marginBottom: 26,
+    textAlign: 'center',
   },
   stepsDiagram: {
     flexDirection: 'row',
@@ -550,6 +554,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#008744',
     marginBottom: 4,
+    textAlign: 'center',
   },
   stepDesc: {
     fontSize: 11,
@@ -635,11 +640,13 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     marginTop: 8,
+    alignItems: 'center',
   },
   impactHeader: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '800',
+    textAlign: 'center',
   },
   whiteDividerMini: {
     width: 48,
@@ -653,10 +660,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 16,
+    width: '100%',
   },
   statItem: {
     width: (width - 64) / 2,
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 4,
   },
   statNumber: {
@@ -664,5 +672,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     marginTop: 2,
+    textAlign: 'center',
   },
 });

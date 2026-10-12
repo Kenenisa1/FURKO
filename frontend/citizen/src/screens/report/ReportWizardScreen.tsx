@@ -25,7 +25,6 @@ interface Props {
 
 export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
   const initialCategory = route?.params?.categoryId;
-  const initialSubIssue = route?.params?.subIssue;
   const initialStepParam = route?.params?.initialStep;
 
   // Wizard state: 1 to 5
@@ -35,7 +34,6 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
   const [selectedCategory, setSelectedCategory] = useState<ProblemCategory | null>(
     PROBLEM_CATEGORIES.find((c) => c.id === initialCategory) || null
   );
-  const [selectedSubIssue, setSelectedSubIssue] = useState<string | undefined>(initialSubIssue);
 
   // Step 2: Photo
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -48,7 +46,7 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isLocating, setIsLocating] = useState(false);
 
   // Step 4: Description
-  const [title, setTitle] = useState(initialSubIssue || '');
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
   // Step 5: Submission
@@ -218,19 +216,7 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
                 key={cat.id}
                 category={cat}
                 isSelected={selectedCategory?.id === cat.id}
-                selectedSubIssue={selectedSubIssue}
-                onSelectCategory={(c) => {
-                  setSelectedCategory(c);
-                  if (selectedCategory?.id !== c.id) {
-                    setSelectedSubIssue(undefined);
-                  }
-                }}
-                onSelectSubIssue={(sub) => {
-                  setSelectedSubIssue(sub);
-                  if (!title || title.trim() === '') {
-                    setTitle(sub);
-                  }
-                }}
+                onSelectCategory={(c) => setSelectedCategory(c)}
               />
             ))}
           </View>

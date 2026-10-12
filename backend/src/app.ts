@@ -34,10 +34,13 @@ export const createApp = (): Application => {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-  // 5. Root Health Check (Direct)
+  // 5. Static File Serving for Evidence & Attachments
+  app.use('/uploads', express.static(env.uploads.directory));
+
+  // 6. Root Health Check (Direct)
   app.use('/health', healthRoutes);
 
-  // 6. Base API v1 Routes
+  // 7. Base API v1 Routes
   app.use(env.apiPrefix, apiRouter);
 
   // 7. Authentication Routes -> Mounted at /api/v1/auth/register and /api/v1/auth/login

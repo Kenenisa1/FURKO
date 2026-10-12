@@ -68,14 +68,13 @@ const URGENCY_OPTIONS: {
 
 export const ReportFormScreen: React.FC<Props> = ({ navigation, route }) => {
   const categoryId = route?.params?.categoryId || 'cat-roads-001';
-  const initialSubIssue = route?.params?.subIssue;
 
   // Selected Category
   const category: ProblemCategory =
     PROBLEM_CATEGORIES.find((c) => c.id === categoryId) || PROBLEM_CATEGORIES[0];
 
   // Form Fields
-  const [title, setTitle] = useState(initialSubIssue || '');
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [urgency, setUrgency] = useState<UrgencyLevel>('medium');
 
@@ -201,7 +200,6 @@ export const ReportFormScreen: React.FC<Props> = ({ navigation, route }) => {
         landmark: landmark.trim() || undefined,
         photo_url: photoUri || undefined,
         urgency,
-        sub_issue: initialSubIssue,
       };
 
       const newReport = await ReportsApi.submitReport(payload);
@@ -279,37 +277,7 @@ export const ReportFormScreen: React.FC<Props> = ({ navigation, route }) => {
               value={title}
               onChangeText={setTitle}
               placeholder="e.g. Deep pothole causing vehicle damage"
-              placeholderTextColor="#9CA3AF"
-              maxLength={80}
             />
-
-            {/* Quick title suggestions based on subIssues */}
-            {category.subIssues && (
-              <View style={styles.suggestionsContainer}>
-                <Text style={styles.suggestionLabel}>Quick suggestions:</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.suggestionsRow}>
-                  {category.subIssues.slice(0, 4).map((sub) => (
-                    <TouchableOpacity
-                      key={sub}
-                      style={[
-                        styles.suggestionPill,
-                        title === sub && { backgroundColor: category.color, borderColor: category.color },
-                      ]}
-                      onPress={() => setTitle(sub)}
-                    >
-                      <Text
-                        style={[
-                          styles.suggestionText,
-                          title === sub && { color: '#FFFFFF', fontWeight: '700' },
-                        ]}
-                      >
-                        {sub}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
           </View>
 
           {/* SECTION 2: Problem Description */}

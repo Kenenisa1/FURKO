@@ -54,7 +54,6 @@ const INSTITUTION_MAP: Record<string, { short: string; sla: string }> = {
 export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
   // ── Wizard params ──────────────────────────────────────────────────────────
   const categoryId: string     = route?.params?.categoryId  || 'cat-roads-001';
-  const subIssue: string | undefined = route?.params?.subIssue;
   const photoUri: string | null      = route?.params?.photoUri ?? null;
   const isPhotoSkipped: boolean      = route?.params?.isPhotoSkipped ?? false;
   const coords: { latitude: number; longitude: number } | undefined = route?.params?.coords;
@@ -66,7 +65,7 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
   const institution = INSTITUTION_MAP[categoryId] || { short: 'FURKO Admin', sla: '5–10 days' };
 
   // ── Form State ─────────────────────────────────────────────────────────────
-  const [title, setTitle] = useState<string>(subIssue || '');
+  const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState('');
   const [urgency, setUrgency] = useState<UrgencyLevel>('medium');
 
@@ -78,9 +77,6 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
   // Success animation
   const successScale = useRef(new Animated.Value(0)).current;
   const successOpacity = useRef(new Animated.Value(0)).current;
-
-  // ── Suggestions (populated from sub-issues of the category) ───────────────
-  const suggestions = category.subIssues?.slice(0, 4) || [];
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   const isFormValid = title.trim().length >= 5 && description.trim().length >= 10;
@@ -128,7 +124,6 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
         landmark: landmark?.trim() || undefined,
         photo_url: photoUri || undefined,
         urgency,
-        sub_issue: subIssue,
       });
       setIsSubmitting(false);
       setSubmittedReport(report);
@@ -312,11 +307,6 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
                 <View style={styles.summaryItemBody}>
                   <Text style={styles.summaryItemLabel}>Category</Text>
                   <Text style={styles.summaryItemValue}>{category.name}</Text>
-                  {subIssue && (
-                    <View style={[styles.pill, { backgroundColor: category.color + '18' }]}>
-                      <Text style={[styles.pillText, { color: category.color }]}>{subIssue}</Text>
-                    </View>
-                  )}
                 </View>
                 <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
               </View>
@@ -411,34 +401,6 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
             >
               {title.length}/80{title.trim().length < 5 && title.length > 0 ? ' — min 5 chars' : ''}
             </Text>
-
-            {/* Quick suggestions */}
-            {suggestions.length > 0 && (
-              <View>
-                <Text style={styles.suggestionsLabel}>Quick suggestions:</Text>
-                <View style={styles.suggestionsRow}>
-                  {suggestions.map((s) => (
-                    <TouchableOpacity
-                      key={s}
-                      style={[
-                        styles.suggestionPill,
-                        title === s && { backgroundColor: category.color + '20', borderColor: category.color },
-                      ]}
-                      onPress={() => setTitle(s)}
-                    >
-                      <Text
-                        style={[
-                          styles.suggestionPillText,
-                          title === s && { color: category.color },
-                        ]}
-                      >
-                        {s}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            )}
           </View>
 
           {/* ── Description ── */}
