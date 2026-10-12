@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import { env } from './config/env';
 import apiRouter from './routes';
 import healthRoutes from './routes/health.routes';
+import authRoutes from './routes/authRoutes'; // 👈 Import auth routes
+import userRoutes from './routes/userRoutes'; // 👈 Import user profile routes
 import { notFoundHandler } from './middleware/notFoundHandler';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -41,7 +43,13 @@ export const createApp = (): Application => {
   // 7. Base API v1 Routes
   app.use(env.apiPrefix, apiRouter);
 
-  // 7. Welcome Route
+  // 7. Authentication Routes -> Mounted at /api/v1/auth/register and /api/v1/auth/login
+  app.use(`${env.apiPrefix}/auth`, authRoutes);
+
+  // 8. User Profile Routes -> Mounted at /api/v1/users/me
+  app.use(`${env.apiPrefix}/users`, userRoutes);
+
+  // 9. Welcome Route
   app.get('/', (_req, res) => {
     res.json({
       name: 'FURKO Backend API',
@@ -52,10 +60,10 @@ export const createApp = (): Application => {
     });
   });
 
-  // 8. 404 Handler
+  // 10. 404 Handler
   app.use(notFoundHandler);
 
-  // 9. Centralized Error Handler
+  // 11. Centralized Error Handler
   app.use(errorHandler);
 
   return app;

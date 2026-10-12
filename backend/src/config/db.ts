@@ -19,3 +19,4 @@ pool.on('error', (err) => {
 export const query = (text: string, params?: unknown[]) => pool.query(text, params);
 
 export default pool;
+
