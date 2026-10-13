@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, Power, PowerOff, CheckCircle } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Power, PowerOff, CheckCircle, FolderTree, Eye, AlertTriangle } from 'lucide-react';
 import DataTable from '../../../components/admin/tables/DataTable.jsx';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner.jsx';
 import EmptyState from '../../../components/ui/EmptyState.jsx';
 import ConfirmationModal from '../../../components/ui/ConfirmationModal.jsx';
+import SummaryCards from '../../../components/admin/ui/SummaryCards.jsx';
+import FilterPanel from '../../../components/admin/ui/FilterPanel.jsx';
 import CategoryFormModal from './CategoryFormModal.jsx';
 import {
   getCategories,
@@ -17,11 +19,18 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Calculate summary stats
+  const totalCategories = categories.length;
+  const activeCategories = categories.filter((c) => c.status === 'active').length;
+  const inactiveCategories = categories.filter((c) => c.status === 'inactive').length;
+  const categoriesWithoutRules = categories.filter((c) => c.routingRules === 0).length;
 
   useEffect(() => {
     loadCategories();
@@ -104,14 +113,32 @@ export default function CategoriesPage() {
       render: (cat) => (
         <div>
           <p className="font-medium text-gray-900">{cat.name}</p>
-          <p className="text-xs text-gray-500">{cat.description}</p>
+          <p className="text-xs text-gray-500 line-clamp-1">{cat.description}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'usage',
+      label: 'Usage',
+      render: (cat) => (
+        <div className="text-sm">
+          <div className="text-gray-900">
+            {cat.totalReports || 0} <span className="text-gray-500 text-xs">reports</span>
+          </div>
+          {cat.activeReports > 0 && (
+            <div className="text-xs text-orange-600">{cat.activeReports} active</div>
+          )}
         </div>
       ),
     },
     {
       key: 'routingRules',
       label: 'Routing Rules',
-      render: (cat) => <span className="font-semibold text-gray-900">{cat.routingRules}</span>,
+      render: (cat) => (
+        <span className={`font-semibold ${cat.routingRules === 0 ? 'text-red-600' : 'text-gray-900'}`}>
+          {cat.routingRules}
+        </span>
+      ),
     },
     {
       key: 'status',
@@ -137,6 +164,7 @@ export default function CategoriesPage() {
               setShowFormModal(true);
             }}
             className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+            title="Edit category"
           >
             <Edit2 className="w-4 h-4" />
           </button>
@@ -144,6 +172,7 @@ export default function CategoriesPage() {
             onClick={() => handleToggleStatus(cat)}
             disabled={actionLoading}
             className="p-1.5 text-orange-600 hover:bg-orange-50 rounded transition-colors disabled:opacity-50"
+            title={cat.status === 'active' ? 'Deactivate' : 'Activate'}
           >
             {cat.status === 'active' ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
           </button>
@@ -153,6 +182,7 @@ export default function CategoriesPage() {
               setShowDeleteModal(true);
             }}
             className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+            title="Delete category"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -176,7 +206,7 @@ export default function CategoriesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Problem Categories</h2>
-          <p className="text-gray-600 mt-1">{filteredCategories.length} categories total</p>
+          <p className="text-gray-600 mt-1">Manage problem categories for report classification</p>
         </div>
         <button
           onClick={() => {
@@ -190,31 +220,87 @@ export default function CategoriesPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a6b3c]/30 focus:border-[#1a6b3c]"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a6b3c]/30"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
-      </div>
+      {/* Summary Cards */}
+      <SummaryCards
+        cards={[
+          {
+            label: 'Total Categories',
+            value: totalCategories,
+            subtitle: `${activeCategories} active, ${inactiveCategories} inactive`,
+            icon: <FolderTree className="w-6 h-6" />,
+            iconBg: 'bg-blue-100',
+            iconColor: 'text-blue-600',
+          },
+          {
+            label: 'Active Categories',
+            value: activeCategories,
+            subtitle: 'Available for reports',
+            icon: <CheckCircle className="w-6 h-6" />,
+            iconBg: 'bg-green-100',
+            iconColor: 'text-green-600',
+          },
+          {
+            label: 'Without Routing',
+            value: categoriesWithoutRules,
+            subtitle: 'Need routing rules',
+            icon: <AlertTriangle className="w-6 h-6" />,
+            iconBg: categoriesWithoutRules > 0 ? 'bg-red-100' : 'bg-gray-100',
+            iconColor: categoriesWithoutRules > 0 ? 'text-red-600' : 'text-gray-600',
+          },
+          {
+            label: 'Total Reports',
+            value: categories.reduce((sum, c) => sum + (c.totalReports || 0), 0),
+            subtitle: 'Across all categories',
+            icon: <Eye className="w-6 h-6" />,
+            iconBg: 'bg-purple-100',
+            iconColor: 'text-purple-600',
+          },
+        ]}
+      />
 
+      {/* Alert if categories without routing rules */}
+      {categoriesWithoutRules > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-yellow-900">
+              {categoriesWithoutRules} categor{categoriesWithoutRules === 1 ? 'y' : 'ies'} without routing rules
+            </p>
+            <p className="text-xs text-yellow-700 mt-1">
+              Reports in these categories will be sent to the fallback queue. Add routing rules to enable automatic routing.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <FilterPanel
+        search={search}
+        onSearchChange={setSearch}
+        showAdvanced={showFilters}
+        onToggleAdvanced={setShowFilters}
+        filters={[
+          {
+            type: 'select',
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { value: 'all', label: 'All Status' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ],
+          },
+        ]}
+      />
+
+      {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
+          <p className="text-sm text-gray-600">
+            Showing <span className="font-semibold text-gray-900">{filteredCategories.length}</span> of{' '}
+            <span className="font-semibold text-gray-900">{totalCategories}</span> categories
+          </p>
+        </div>
         {filteredCategories.length === 0 ? (
           <EmptyState
             icon={<Search className="w-12 h-12" />}

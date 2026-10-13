@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, CheckCircle, Layers } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, CheckCircle, Layers, MapPin, Building2 } from 'lucide-react';
 import DataTable from '../../../components/admin/tables/DataTable.jsx';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner.jsx';
 import EmptyState from '../../../components/ui/EmptyState.jsx';
 import ConfirmationModal from '../../../components/ui/ConfirmationModal.jsx';
+import SummaryCards from '../../../components/admin/ui/SummaryCards.jsx';
+import FilterPanel from '../../../components/admin/ui/FilterPanel.jsx';
 import ServiceAreaFormModal from './ServiceAreaFormModal.jsx';
 
 // Mock service areas data with usage tracking
@@ -23,11 +25,17 @@ export default function ServiceAreasPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Calculate stats
+  const totalAreas = serviceAreas.length;
+  const activeAreas = serviceAreas.filter((a) => a.status === 'active').length;
+  const inactiveAreas = serviceAreas.filter((a) => a.status === 'inactive').length;
 
   useEffect(() => {
     filterAreas();
@@ -204,7 +212,7 @@ export default function ServiceAreasPage() {
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Service Areas</h2>
             <p className="text-gray-600 mt-1">
-              Manage service areas that can be assigned to institutions
+              Define geographic and functional service areas for institutions
             </p>
           </div>
           <button
@@ -226,33 +234,72 @@ export default function ServiceAreasPage() {
         </div>
       </div>
 
+      {/* Summary Cards */}
+      <SummaryCards
+        cards={[
+          {
+            label: 'Total Service Areas',
+            value: totalAreas,
+            subtitle: `${activeAreas} active, ${inactiveAreas} inactive`,
+            icon: <MapPin className="w-6 h-6" />,
+            iconBg: 'bg-blue-100',
+            iconColor: 'text-blue-600',
+          },
+          {
+            label: 'Active Service Areas',
+            value: activeAreas,
+            subtitle: 'Available for assignment',
+            icon: <CheckCircle className="w-6 h-6" />,
+            iconBg: 'bg-green-100',
+            iconColor: 'text-green-600',
+          },
+          {
+            label: 'Assigned to Institutions',
+            value: serviceAreas.reduce((sum, a) => sum + (a.institutionsCount || 0), 0),
+            subtitle: 'Institution assignments',
+            icon: <Building2 className="w-6 h-6" />,
+            iconBg: 'bg-purple-100',
+            iconColor: 'text-purple-600',
+          },
+          {
+            label: 'With Categories',
+            value: serviceAreas.filter((a) => a.categoriesCount > 0).length,
+            subtitle: 'Mapped categories',
+            icon: <Layers className="w-6 h-6" />,
+            iconBg: 'bg-orange-100',
+            iconColor: 'text-orange-600',
+          },
+        ]}
+      />
+
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search service areas..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a6b3c]/30 focus:border-[#1a6b3c]"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a6b3c]/30"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
-      </div>
+      <FilterPanel
+        search={search}
+        onSearchChange={setSearch}
+        showAdvanced={showFilters}
+        onToggleAdvanced={setShowFilters}
+        filters={[
+          {
+            type: 'select',
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { value: 'all', label: 'All Status' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ],
+          },
+        ]}
+      />
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
+          <p className="text-sm text-gray-600">
+            Showing <span className="font-semibold text-gray-900">{filteredAreas.length}</span> of{' '}
+            <span className="font-semibold text-gray-900">{totalAreas}</span> service areas
+          </p>
+        </div>
         {filteredAreas.length === 0 ? (
           <EmptyState
             icon={<Search className="w-12 h-12" />}
