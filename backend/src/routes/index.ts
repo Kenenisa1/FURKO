@@ -2,6 +2,7 @@ import { Router } from 'express';
 import healthRoutes from './health.routes';
 import evidenceRoutes from './evidence.routes';
 import reportRoutes from './report.routes';
+import routingRoutes from './routing.routes';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.get('/', (_req, res) => {
       health: '/api/v1/health',
       evidenceUpload: '/api/v1/evidence/upload',
       reportEvidence: '/api/v1/reports/:id/evidence',
+      routingPreview: '/api/v1/routing/preview',
     },
   });
 });
@@ -29,5 +31,9 @@ router.use('/evidence', evidenceRoutes);
 // Report routes (including evidence endpoints)
 router.use('/reports', reportRoutes);
 
+// Rule-based routing engine routes
+router.use('/routing', routingRoutes);
+
 export default router;
+
 
