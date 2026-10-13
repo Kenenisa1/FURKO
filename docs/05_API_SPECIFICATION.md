@@ -230,3 +230,206 @@
 - `GET /api/v1/routing-rules` — List active spatial routing rules (`admin` only).
 - `POST /api/v1/routing-rules` — Add category + PostGIS boundary rule (`admin` only).
 - `GET /api/v1/admin/analytics/overview` — Platform resolution KPIs & response metrics (`admin` only).
+
+---
+
+## 4. Evidence & Photo Upload Endpoints
+
+### 4.1 Upload Evidence Photo
+- **Endpoint:** `POST /api/v1/evidence/upload`
+- **Auth:** Public / Authenticated
+- **Content-Type:** `multipart/form-data`
+- **Fields:**
+  - `file` or `evidence` or `photo` (File, required, max 10MB; JPG, PNG, WEBP, HEIC)
+  - `report_id` (UUID, optional)
+  - `file_type` (`evidence` | `resolution_proof`, default `evidence`)
+- **Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "att-uuid-001",
+    "report_id": "rep-uuid-001",
+    "file_name": "evidence-1791918689383-8499d1db.jpg",
+    "original_name": "camera-photo.jpg",
+    "file_url": "http://localhost:5000/uploads/evidence-1791918689383-8499d1db.jpg",
+    "file_type": "evidence",
+    "mime_type": "image/jpeg",
+    "file_size": 102400,
+    "created_at": "2026-10-13T12:00:00Z"
+  }
+}
+```
+
+### 4.2 Upload Evidence for Existing Report
+- **Endpoint:** `POST /api/v1/reports/:id/evidence`
+- **Auth:** Required
+- **Content-Type:** `multipart/form-data`
+- **Response (201 Created):** Same format as 4.1 linked to report `:id`.
+
+### 4.3 Get Report Evidence Attachments
+- **Endpoint:** `GET /api/v1/reports/:id/evidence`
+- **Auth:** Required
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "att-uuid-001",
+      "report_id": "rep-uuid-001",
+      "file_url": "http://localhost:5000/uploads/pothole.jpg",
+      "file_type": "evidence"
+    }
+  ]
+}
+```
+
+---
+
+## 5. Rule-Based Routing Engine Endpoints
+
+### 5.1 Preview Routing Decision
+- **Endpoint:** `POST /api/v1/routing/preview`
+- **Auth:** Public / Authenticated
+- **Request Body:**
+```json
+{
+  "category_id": "cat-roads-001",
+  "latitude": 7.6734,
+  "longitude": 36.8344,
+  "address_text": "Jimma Aba Jifar Road, Kebele 04"
+}
+```
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "target_institution": {
+      "id": "a90184b2-297c-482f-b054-c9f131a403d1",
+      "name": "Jimma City Road & Infrastructure Development Bureau",
+      "code": "JCRIDB"
+    },
+    "matched_rule_id": "mem-rule-roads-streets-central",
+    "is_fallback": false,
+    "routing_reason": "Direct spatial match: Located in Jimma Central District for category \"Roads & Streets\". Dispatched to Jimma City Road & Infrastructure Development Bureau.",
+    "jurisdiction_name": "Jimma Central District",
+    "confidence": "direct_boundary_match"
+  }
+}
+```
+
+### 5.2 List Pilot Institutions
+- **Endpoint:** `GET /api/v1/routing/institutions`
+- **Auth:** Public
+- **Response (200 OK):** Array of pilot institutions.
+
+### 5.3 List Pilot Problem Categories
+- **Endpoint:** `GET /api/v1/routing/categories`
+- **Auth:** Public
+- **Response (200 OK):** Array of pilot categories with mapping metadata.
+
+---
+
+## 6. Institution Workflow Endpoints
+
+### 6.1 Institution Inbox
+- **Endpoint:** `GET /api/v1/institutions/reports`
+- **Auth:** Required (`staff` role with active institution assignment)
+- **Response (200 OK):** List of reports assigned to staff member's institution.
+
+### 6.2 Review Report
+- **Endpoint:** `GET /api/v1/institutions/reports/:id`
+- **Auth:** Required (`staff` role)
+- **Response (200 OK):** Full report detail including location, category, and citizen metadata.
+
+### 6.3 Transition Report Status
+- **Endpoint:** `POST /api/v1/institutions/reports/:id/action`
+- **Auth:** Required (`staff` role)
+- **Request Body:**
+```json
+{
+  "action": "accept",
+  "comment": "Crew assigned to inspect location"
+}
+```
+*(Supported actions: `accept`, `reject`, `redirect`, `start`, `resolve`)*
+
+### 6.4 Assign Report to Staff
+- **Endpoint:** `POST /api/v1/institutions/reports/:id/assign`
+- **Auth:** Required (`staff` role)
+- **Request Body:**
+```json
+{
+  "staff_user_id": "usr-staff-002",
+  "comment": "Assigned to asphalt repair field team"
+}
+```
+
+### 6.5 Workflow Audit History
+- **Endpoint:** `GET /api/v1/institutions/reports/:id/history`
+- **Auth:** Required (`staff` role)
+- **Response (200 OK):** Sequential log of all transitions, assignees, and timestamps.
+
+---
+
+## 7. Report Tracking & Resolution Endpoints
+
+### 7.1 Track Report by Tracking Number (Public)
+- **Endpoint:** `GET /api/v1/reports/track/:trackingNumber`
+- **Auth:** Public
+- **Response (200 OK):** Complete report info, progress timeline, evidence attachments, and resolution proofs.
+
+### 7.2 Get Status Timeline & Resolution Details
+- **Endpoint:** `GET /api/v1/reports/:id/timeline` or `GET /api/v1/reports/:id`
+- **Auth:** Public / Authenticated
+- **Response (200 OK):** Full timeline history array, evidence, resolution proof attachments, and feedback.
+
+### 7.3 Confirm Resolution (Citizen)
+- **Endpoint:** `POST /api/v1/reports/:id/confirm`
+- **Auth:** Required (`citizen` owner)
+- **Request Body:**
+```json
+{
+  "rating": 5,
+  "comment": "Pothole filled cleanly, road is safe again. Excellent work!"
+}
+```
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Resolution successfully confirmed by citizen.",
+  "report": {
+    "id": "rep-demo-001",
+    "status": "resolved",
+    "citizen_confirmed": true,
+    "citizen_confirmed_at": "2026-10-13T12:00:00Z"
+  }
+}
+```
+
+### 7.4 Reopen Report (Citizen)
+- **Endpoint:** `POST /api/v1/reports/:id/reopen` or `PATCH /api/v1/reports/:id/reopen`
+- **Auth:** Required (`citizen` owner)
+- **Request Body:**
+```json
+{
+  "reason": "The pothole opened up again after heavy rainfall."
+}
+```
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Report reopened successfully and returned to under review queue.",
+  "report": {
+    "id": "rep-demo-001",
+    "status": "reopened",
+    "reopen_reason": "The pothole opened up again after heavy rainfall.",
+    "updated_at": "2026-10-13T12:05:00Z"
+  }
+}
+```
+
