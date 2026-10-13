@@ -1,0 +1,37 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Expand Dashboard, Users, and Institutions pages with comprehensive sections, detailed statistics, time-range filters, performance metrics, and enhanced tables. These three pages form the core of admin oversight and need rich data visualization",
+  "status": "pending",
+  "steps": [
+    "Expand AdminDashboardPage in src/pages/Admin/Dashboard/AdminDashboardPage.jsx: Add welcome section with current date and quick platform summary, expand platform statistics to 8 cards (total reports, new reports, in progress, resolved, active institutions, registered citizens, active staff, fallback queue), add time-range filter (7/30/90 days) for report analytics charts, add institutional performance table with columns (institution name, total reports, new, in progress, resolved, avg resolution time, performance indicator), expand recent activity to show 8-10 entries with actor avatars",
+    "Expand mockAdminData.js: Add institutional performance metrics (avgResolutionTime per institution, performance scores), add 10 more recent activity entries, add time-series data for report analytics (submissions per day for last 90 days), add staff activity summary",
+    "Expand UsersPage in src/pages/Admin/Users/UsersPage.jsx: Add summary cards for total users, citizens, staff, admins, active users, inactive users. Expand user table columns to include: avatar/initials, name, email, phone (add to mockUsers), role badge, institution, account status badge, registration date, last active date (add to mockUsers), actions menu. Add bulk actions toolbar (when users selected): activate/deactivate multiple, export selected. Add user details modal showing: profile info, account status, assigned permissions (add permissions array to mockUsers), institution affiliation, recent activity, login history",
+    "Expand mockUsers in src/data/mockAdminData.js: Add 15 more users (mix of citizens, staff, admins), add phone, lastActiveAt, permissions array, loginHistory array fields",
+    "Expand InstitutionsPage in src/pages/Admin/Institutions/InstitutionsPage.jsx: Add summary cards for total, active, inactive institutions, institutions with pending reports. Expand institution table columns: name, type, contact person (add to mockInstitutions), contact email/phone, service areas badges (first 2 + count), staff count, assigned reports, resolved reports, avg resolution time (add to mockInstitutions), status badge, creation date, actions. Add institution details modal with tabs: Overview (basic info), Contact (full contact details), Staff (list of staff members from that institution), Service Areas (all assigned areas), Routing (routing rules targeting this institution), Reports (recent reports), Activity (recent changes)",
+    "Expand mockInstitutions in src/data/mockAdminData.js: Add 3 more institutions (education department, health services, traffic management), add contactPerson, avgResolutionTime, recentReports array, activityLog array fields",
+    "Create InstitutionDetailsModal component in src/pages/Admin/Institutions/InstitutionDetailsModal.jsx: Tabbed modal showing comprehensive institution information"
+  ],
+  "acceptance_criteria": [
+    "Dashboard displays 8 summary cards with correct data from mockAdminData",
+    "Dashboard time-range filter updates chart data when changed",
+    "Dashboard institutional performance table shows all institutions with performance metrics",
+    "UsersPage summary cards show correct counts based on filtered data",
+    "UsersPage table includes all specified columns with proper formatting",
+    "User details modal opens when clicking a user row and displays all user information",
+    "InstitutionsPage summary cards show correct institution statistics",
+    "InstitutionsPage table displays all columns including avg resolution time",
+    "Institution details modal opens with working tabs showing relevant data from mockAdminData"
+  ],
+  "verification": [
+    "Run npm run dev and navigate to /admin - verify 8 stat cards, time filter, performance table, expanded activity",
+    "Change time-range filter on dashboard - chart data should update",
+    "Navigate to /admin/users - verify summary cards, expanded table with all columns",
+    "Click a user row - details modal should open with tabs and user data",
+    "Navigate to /admin/institutions - verify summary cards and expanded table",
+    "Click an institution row - details modal should open with all tabs working",
+    "Check browser console for errors - should be clean"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
