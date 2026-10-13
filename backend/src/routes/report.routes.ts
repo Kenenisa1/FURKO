@@ -4,6 +4,7 @@ import { uploadEvidence } from '../middleware/upload.middleware';
 import { verifyToken } from '../middleware/authMiddleware';
 import { ReportController } from '../controllers/report.controller';
 import { reportController } from '../controllers/reportController';
+import { ReportResolutionController } from '../controllers/reportResolution.controller';
 
 const router = Router();
 
@@ -26,6 +27,9 @@ const normalizeFileField = (req: any, _res: any, next: any) => {
   next();
 };
 
+// Public or authenticated tracking by tracking number
+router.get('/track/:trackingNumber', ReportResolutionController.getTimeline);
+
 // Upload evidence for a report
 router.post(
   '/:id/evidence',
@@ -42,10 +46,21 @@ router.get(
   EvidenceController.getReportEvidence
 );
 
+// Report status timeline & resolution details
+router.get('/:id/timeline', ReportResolutionController.getTimeline);
+router.get('/:id', ReportResolutionController.getTimeline);
+
+// Citizen confirm resolution
+router.post('/:id/confirm', verifyToken, ReportResolutionController.confirm);
+
+// Citizen reopen report
+router.post('/:id/reopen', verifyToken, ReportResolutionController.reopen);
+router.patch('/:id/reopen', verifyToken, ReportResolutionController.reopen);
+
 // Create a report
 router.post('/', verifyToken, ReportController.create);
 
 // Get reports belonging to the logged-in citizen
 router.get('/', verifyToken, reportController.getMyReports);
 
-export default router;
+export default router;
