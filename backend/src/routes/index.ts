@@ -2,6 +2,7 @@ import { Router } from 'express';
 import healthRoutes from './health.routes';
 import evidenceRoutes from './evidence.routes';
 import reportRoutes from './report.routes';
+import institutionWorkflowRoutes from './institutionWorkflow.routes';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.use('/evidence', evidenceRoutes);
 
 // Report routes (including evidence endpoints)
 router.use('/reports', reportRoutes);
+router.use('/institutions', institutionWorkflowRoutes);
 
 export default router;
 
