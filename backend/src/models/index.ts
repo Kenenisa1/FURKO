@@ -87,3 +87,33 @@ export interface Attachment {
   created_at: Date;
 }
 
+export interface GeoPoint {
+  latitude: number;
+  longitude: number;
+}
+
+export interface RoutingRule {
+  id: string;
+  category_id: string;
+  target_institution_id: string;
+  jurisdiction_name: string;
+  location_bounds?: string | null; // PostGIS polygon / GeoJSON / WKT
+  priority_weight: number;
+  is_active: boolean;
+  created_at?: Date;
+}
+
+export interface RoutingDecision {
+  target_institution: {
+    id: string;
+    name: string;
+    code?: string;
+  };
+  matched_rule_id: string | null;
+  is_fallback: boolean;
+  routing_reason: string;
+  jurisdiction_name?: string | null;
+  confidence: 'direct_boundary_match' | 'category_default_match' | 'fallback_review_queue';
+}
+
+

@@ -9,7 +9,9 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "lint": "echo \"No linter configured yet\"",
-    "test": "tsx tests/evidence.test.ts"
+    "test:evidence": "tsx tests/evidence.test.ts",
+    "test:routing": "tsx tests/routing.test.ts",
+    "test": "tsx tests/evidence.test.ts; tsx tests/routing.test.ts"
   },
   "keywords": [
     "furko",
