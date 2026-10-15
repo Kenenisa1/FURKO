@@ -23,6 +23,7 @@ interface Props {
   isPassword?: boolean;
   returnKeyType?: ReturnKeyTypeOptions;
   onSubmitEditing?: () => void;
+  blurOnSubmit?: boolean;
 }
 
 export const NotchedTextInput = forwardRef<TextInput, Props>(
@@ -39,6 +40,7 @@ export const NotchedTextInput = forwardRef<TextInput, Props>(
       isPassword = false,
       returnKeyType,
       onSubmitEditing,
+      blurOnSubmit = true,
     },
     ref
   ) => {
@@ -81,7 +83,7 @@ export const NotchedTextInput = forwardRef<TextInput, Props>(
             onBlur={() => setIsFocused(false)}
             returnKeyType={returnKeyType}
             onSubmitEditing={onSubmitEditing}
-            blurOnSubmit={!onSubmitEditing}
+            blurOnSubmit={blurOnSubmit}
           />
 
           {isPassword && (

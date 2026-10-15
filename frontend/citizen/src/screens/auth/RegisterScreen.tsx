@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   Alert,
   Keyboard,
-  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -31,11 +30,6 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register } = useAuth();
-
-  // Refs for sequential field focus
-  const phoneRef = useRef<TextInput>(null);
-  const emailRef = useRef<TextInput>(null);
-  const passwordRef = useRef<TextInput>(null);
 
   const handleRegister = async () => {
     // Dismiss keyboard immediately to prevent auto-focus toggling
@@ -119,26 +113,20 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setFullName}
               placeholder="Enter full name"
               autoCapitalize="words"
-              returnKeyType="next"
-              onSubmitEditing={() => phoneRef.current?.focus()}
             />
 
             {/* 2. Phone Number */}
             <NotchedTextInput
-              ref={phoneRef}
               iconName="phone"
               label="phone number"
               value={phone}
               onChangeText={setPhone}
               placeholder="Enter phone number"
               keyboardType="phone-pad"
-              returnKeyType="next"
-              onSubmitEditing={() => emailRef.current?.focus()}
             />
 
             {/* 3. Email */}
             <NotchedTextInput
-              ref={emailRef}
               iconName="mail"
               label="email"
               value={email}
@@ -146,21 +134,16 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               placeholder="Enter email address"
               keyboardType="email-address"
               autoCapitalize="none"
-              returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
             />
 
             {/* 4. Password */}
             <NotchedTextInput
-              ref={passwordRef}
               iconName="lock"
               label="password"
               value={password}
               onChangeText={setPassword}
               placeholder="Enter password"
               isPassword={true}
-              returnKeyType="done"
-              onSubmitEditing={handleRegister}
             />
 
             {/* Create Account Primary Button */}
