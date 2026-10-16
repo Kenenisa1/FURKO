@@ -86,6 +86,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
+        enabled={Platform.OS === 'ios'}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -113,6 +114,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setFullName}
               placeholder="Enter full name"
               autoCapitalize="words"
+              autoCorrect={false}
+              autoComplete="name"
+              textContentType="name"
             />
 
             {/* 2. Phone Number */}
@@ -123,6 +127,8 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setPhone}
               placeholder="Enter phone number"
               keyboardType="phone-pad"
+              autoComplete="tel"
+              textContentType="telephoneNumber"
             />
 
             {/* 3. Email */}
@@ -134,6 +140,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               placeholder="Enter email address"
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
             />
 
             {/* 4. Password */}
@@ -144,6 +153,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setPassword}
               placeholder="Enter password"
               isPassword={true}
+              autoCorrect={false}
+              autoComplete="new-password"
+              textContentType="newPassword"
             />
 
             {/* Create Account Primary Button */}

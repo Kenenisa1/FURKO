@@ -64,6 +64,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
+        enabled={Platform.OS === 'ios'}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -92,6 +93,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setIdentifier}
               placeholder="Enter email or phone number"
               autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="username"
+              textContentType="username"
             />
 
             {/* Password */}
@@ -102,6 +106,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setPassword}
               placeholder="Enter password"
               isPassword={true}
+              autoCorrect={false}
+              autoComplete="current-password"
+              textContentType="password"
             />
 
             {/* Forgot Password */}
