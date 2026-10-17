@@ -59,18 +59,50 @@ export interface LocationRecord {
 export interface Report {
   id: string;
   tracking_number: string;
+  citizen_id?: string | null;
   user_id?: string | null;
   category_id: string;
   location_id: string;
+  current_institution_id?: string | null;
   institution_id?: string | null;
   title: string;
   description: string;
   photo_url?: string;
-  urgency: UrgencyLevel;
+  urgency?: UrgencyLevel;
+  priority?: string;
   status: ReportStatus;
-  created_at: Date;
+  verification_status?: 'pending' | 'verified' | 'rejected';
+  resolution_information?: string | null;
+  is_fallback?: boolean;
+  citizen_confirmed?: boolean;
+  citizen_confirmed_at?: Date | null;
+  reopen_reason?: string | null;
+  submitted_at: Date;
+  resolved_at?: Date | null;
   updated_at: Date;
 }
+
+export interface StatusHistoryEntry {
+  id: string;
+  report_id: string;
+  changed_by_user_id?: string | null;
+  actor_name?: string | null;
+  actor_role?: UserRole | 'system';
+  previous_status?: ReportStatus | null;
+  new_status: ReportStatus;
+  comment?: string | null;
+  changed_at: Date;
+}
+
+export interface FeedbackRecord {
+  id: string;
+  report_id: string;
+  citizen_id: string;
+  rating: number;
+  comment?: string | null;
+  created_at: Date;
+}
+
 
 export type AttachmentType = 'evidence' | 'resolution_proof';
 
