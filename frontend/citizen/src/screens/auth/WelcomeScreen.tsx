@@ -35,7 +35,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
 
         <View style={styles.logoCenter}>
-          <FurkoLogo size="medium" showTagline={true} centered={true} />
+          <FurkoLogo size="medium" showTagline={false} centered={true} />
         </View>
 
         <View style={{ width: 40 }} />
@@ -46,9 +46,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.heroImageContainer}>
           {/* Scenic citizen reporting hero representation */}
           <Image
-            source={{
-              uri: 'https://images.unsplash.com/photo-1541888946425-d0fbb1861593?q=80&w=1000&auto=format&fit=crop',
-            }}
+            source={require('../../../assets/welcome.png')}
             style={styles.heroImage}
             resizeMode="cover"
           />

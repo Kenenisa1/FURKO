@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import { Platform, ActivityIndicator, View } from 'react-native';
 import { Colors } from '../constants/colors';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,9 +11,16 @@ import { useAuth } from '../context/AuthContext';
 import { WelcomeScreen } from '../screens/auth/WelcomeScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
-import { PhoneVerificationScreen } from '../screens/auth/PhoneVerificationScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { HomeScreen } from '../screens/home/HomeScreen';
+import { CategorySelectionScreen } from '../screens/report/CategorySelectionScreen';
+import { PhotoLocationScreen } from '../screens/report/PhotoLocationScreen';
+import { ReportDetailsScreen } from '../screens/report/ReportDetailsScreen';
+import { PhotoEvidenceScreen } from '../screens/report/PhotoEvidenceScreen';
+import { LocationCaptureScreen } from '../screens/report/LocationCaptureScreen';
+import { RoutingPreviewScreen } from '../screens/report/RoutingPreviewScreen';
+import { ReviewSubmitScreen } from '../screens/report/ReviewSubmitScreen';
+import { ReportFormScreen } from '../screens/report/ReportFormScreen';
 import { ReportWizardScreen } from '../screens/report/ReportWizardScreen';
 import { MyReportsScreen } from '../screens/tracking/MyReportsScreen';
 import { ReportDetailScreen } from '../screens/tracking/ReportDetailScreen';
@@ -112,7 +119,15 @@ const MainTabs = () => {
 };
 
 export const AppNavigator = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
@@ -127,12 +142,68 @@ export const AppNavigator = () => {
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="PhoneVerification" component={PhoneVerificationScreen} />
 
         {/* Citizen Main 3-Tab Navigation (Home, Reports, Profile) */}
         <Stack.Screen name="MainTabs" component={MainTabs} />
 
         {/* Modal / Push Screens */}
+        {/* Core Reporting Architecture Flow */}
+        <Stack.Screen
+          name="CategorySelection"
+          component={CategorySelectionScreen}
+          options={{
+            animation: 'slide_from_bottom',
+          }}
+        />
+        <Stack.Screen
+          name="PhotoLocation"
+          component={PhotoLocationScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="PhotoEvidence"
+          component={PhotoLocationScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="LocationCapture"
+          component={LocationCaptureScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="ReportDetails"
+          component={ReportDetailsScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="RoutingPreview"
+          component={RoutingPreviewScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="ReviewSubmit"
+          component={ReviewSubmitScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="ReportForm"
+          component={ReportFormScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
         <Stack.Screen
           name="ReportWizard"
           component={ReportWizardScreen}

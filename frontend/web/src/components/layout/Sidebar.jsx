@@ -19,7 +19,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import furkoLogo from '../../assets/furko-logo.jpg';
+import furkoLogo from '../../assets/furko-logo.png';
 
 // ── Nav item ───────────────────────────────────
 function NavItem({ to, icon, label, badge, end = false }) {
@@ -73,14 +73,17 @@ export default function Sidebar({ collapsed, onToggle }) {
       } min-h-screen flex-shrink-0`}
     >
       {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
+      <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
         {!collapsed && (
           <div className="flex items-center gap-3">
-            <img 
-              src={furkoLogo} 
-              alt="FURKO" 
-              className="h-10 w-auto object-contain"
-            />
+            <div className="bg-white rounded-lg p-1 shadow-sm flex items-center justify-center">
+              <img 
+                src={furkoLogo} 
+                alt="FURKO" 
+                className="h-9 w-auto object-contain"
+              />
+            </div>
+            <span className="font-bold text-white text-base tracking-wide">FURKO</span>
           </div>
         )}
         <button

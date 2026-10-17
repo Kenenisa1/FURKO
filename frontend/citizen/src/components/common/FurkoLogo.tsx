@@ -1,40 +1,36 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '../../constants/colors';
+import { View, Image, Text, StyleSheet } from 'react-native';
 
 interface Props {
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'xlarge';
   showTagline?: boolean;
   centered?: boolean;
 }
 
 export const FurkoLogo: React.FC<Props> = ({
   size = 'medium',
-  showTagline = true,
+  showTagline = false,
   centered = true,
 }) => {
-  const iconSize = size === 'small' ? 24 : size === 'large' ? 44 : 32;
-  const titleSize = size === 'small' ? 18 : size === 'large' ? 28 : 22;
-  const taglineSize = size === 'small' ? 8 : size === 'large' ? 11 : 9.5;
+  // Official FURKO logo aspect ratio 1.5:1 (1024x682)
+  const dimensions =
+    size === 'small'
+      ? { width: 78, height: 52 }
+      : size === 'large'
+      ? { width: 174, height: 116 }
+      : size === 'xlarge'
+      ? { width: 240, height: 160 }
+      : { width: 120, height: 80 };
 
   return (
     <View style={[styles.container, centered && styles.centered]}>
-      <View style={styles.iconWrapper}>
-        {/* Stylized Pin / Leaf emblem */}
-        <View style={[styles.pinBackground, { width: iconSize + 14, height: iconSize + 14, borderRadius: (iconSize + 14) / 2 }]}>
-          <MaterialCommunityIcons
-            name="map-marker-path"
-            size={iconSize}
-            color={Colors.primary}
-          />
-        </View>
-      </View>
-      <Text style={[styles.title, { fontSize: titleSize }]}>FURKO</Text>
+      <Image
+        source={require('../../../assets/furko-logo.png')}
+        style={[styles.logoImage, dimensions]}
+        resizeMode="contain"
+      />
       {showTagline && (
-        <Text style={[styles.tagline, { fontSize: taglineSize }]}>
-          Report. Track. Resolve.
-        </Text>
+        <Text style={styles.tagline}>Report. Track. Resolve.</Text>
       )}
     </View>
   );
@@ -46,25 +42,17 @@ const styles = StyleSheet.create({
   },
   centered: {
     alignItems: 'center',
-  },
-  iconWrapper: {
-    marginBottom: 4,
-  },
-  pinBackground: {
-    backgroundColor: '#E6F4EA',
-    alignItems: 'center',
     justifyContent: 'center',
   },
-  title: {
-    fontWeight: '900',
-    color: '#0F2F1E',
-    letterSpacing: 2,
-    fontFamily: 'System',
+  logoImage: {
+    backgroundColor: 'transparent',
   },
   tagline: {
     color: '#008744',
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '800',
     letterSpacing: 0.8,
-    marginTop: 1,
+    marginTop: 2,
+    textAlign: 'center',
   },
 });

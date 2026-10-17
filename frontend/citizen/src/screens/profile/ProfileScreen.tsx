@@ -269,7 +269,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         {/* Quick Navigation to Reports */}
         <TouchableOpacity
           style={styles.menuLinkCard}
-          onPress={() => navigation.navigate('MyReports')}
+          onPress={() => navigation.navigate('ReportsTab')}
         >
           <View style={styles.menuLinkLeft}>
             <View style={styles.menuLinkIcon}>

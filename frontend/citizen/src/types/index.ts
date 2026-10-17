@@ -6,11 +6,14 @@ export interface ProblemCategory {
   id: string;
   key: ProblemCategoryId;
   name: string;
-  nameLocal?: string; // Oromo / Amharic translation
+  nameLocal?: string; // Afaan Oromoo translation
+  nameAmharic?: string; // Amharic translation
   description: string;
   icon: string;
   color: string;
   examples: string[];
+  subIssues?: string[];
+  keywords?: string[];
   responsibleInstitution: string;
 }
 
@@ -19,7 +22,8 @@ export type ReportStatus =
   | 'under_review'
   | 'in_progress'
   | 'resolved'
-  | 'rejected';
+  | 'rejected'
+  | 'reopened';
 
 export interface LocationData {
   latitude: number;
@@ -66,6 +70,8 @@ export interface Report {
   resolved_at?: string;
   user_rating?: number;
   user_feedback?: string;
+  urgency?: 'low' | 'medium' | 'high' | 'emergency';
+  sub_issue?: string;
   audit_history?: AuditHistoryEntry[];
 }
 
@@ -100,6 +106,8 @@ export interface SubmitReportPayload {
   address_text?: string;
   landmark?: string;
   photo_url?: string;
+  urgency?: 'low' | 'medium' | 'high' | 'emergency';
+  sub_issue?: string;
 }
 
 export interface SubmitFeedbackPayload {

@@ -156,6 +156,113 @@ const mockReports: Report[] = [
       },
     ],
   },
+  {
+    id: 'rep-004',
+    tracking_number: 'FRK-2026-0817',
+    title: 'Dangling high-voltage electric wire near school gate',
+    description: 'A broken electric pole wire is hanging low across the footpath outside Agaro Primary School, sparking at night and endangering students.',
+    category_id: 'cat-lighting-004',
+    category_name: 'Street Lighting & Power',
+    category_key: 'lighting',
+    status: 'resolved',
+    urgency: 'emergency',
+    sub_issue: 'Dangling High-Voltage Electric Wire',
+    latitude: 7.6721,
+    longitude: 36.8358,
+    address_text: 'Agaro Primary School Road, Kebele 03',
+    landmark: 'Directly in front of school main gate',
+    institution_name: 'Ethiopian Electric Utility (EEU) – Jimma Branch',
+    submitted_at: '2026-09-22T06:10:00Z',
+    resolved_at: '2026-09-22T18:45:00Z',
+    resolution_notes: 'Emergency crew dispatched. Broken wire de-energized and pole replaced. School gate safe by evening.',
+    proof_photo_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
+    audit_history: [
+      {
+        id: 'aud-41',
+        status: 'submitted',
+        changed_at: '2026-09-22T06:10:00Z',
+        actor_role: 'citizen',
+        comment: 'Emergency report filed — wire sparking near students.',
+      },
+      {
+        id: 'aud-42',
+        status: 'under_review',
+        changed_at: '2026-09-22T06:12:00Z',
+        actor_role: 'system',
+        comment: 'Emergency escalation triggered. Dispatched to EEU Jimma emergency line.',
+      },
+      {
+        id: 'aud-43',
+        status: 'in_progress',
+        changed_at: '2026-09-22T07:30:00Z',
+        actor_role: 'staff',
+        comment: 'EEU crew on site. Wire de-energized. Pole replacement in progress.',
+      },
+      {
+        id: 'aud-44',
+        status: 'resolved',
+        changed_at: '2026-09-22T18:45:00Z',
+        actor_role: 'staff',
+        comment: 'Pole replaced and wire secured. Area safe. Photo proof attached.',
+        proof_photo_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
+      },
+    ],
+  },
+  {
+    id: 'rep-005',
+    tracking_number: 'FRK-2026-0818',
+    title: 'Road pothole on Bonga Road causing accidents — NOT resolved',
+    description: 'The pothole marked as repaired last week has re-opened even worse. Vehicles are still swerving and a motorbike fell in yesterday.',
+    category_id: 'cat-roads-001',
+    category_name: 'Roads & Streets',
+    category_key: 'roads',
+    status: 'reopened',
+    urgency: 'high',
+    sub_issue: 'Road Cavity / Sinkhole',
+    latitude: 7.6755,
+    longitude: 36.8402,
+    address_text: 'Bonga Road Junction, Kebele 05',
+    landmark: 'Near Bonga bus stop',
+    institution_name: 'Jimma City Road & Infrastructure Development Bureau',
+    submitted_at: '2026-09-18T09:00:00Z',
+    resolved_at: '2026-09-25T12:00:00Z',
+    audit_history: [
+      {
+        id: 'aud-51',
+        status: 'submitted',
+        changed_at: '2026-09-18T09:00:00Z',
+        actor_role: 'citizen',
+      },
+      {
+        id: 'aud-52',
+        status: 'under_review',
+        changed_at: '2026-09-18T09:01:00Z',
+        actor_role: 'system',
+        comment: 'Routed to Road Bureau.',
+      },
+      {
+        id: 'aud-53',
+        status: 'in_progress',
+        changed_at: '2026-09-20T08:00:00Z',
+        actor_role: 'staff',
+        comment: 'Road crew dispatched to fill pothole.',
+      },
+      {
+        id: 'aud-54',
+        status: 'resolved',
+        changed_at: '2026-09-25T12:00:00Z',
+        actor_role: 'staff',
+        comment: 'Patched with cold mix asphalt.',
+      },
+      {
+        id: 'aud-55',
+        status: 'reopened',
+        changed_at: '2026-10-02T10:30:00Z',
+        actor_role: 'citizen',
+        comment: 'Patch has broken apart. Pothole is back and worse than before. A motorbike fell in yesterday evening.',
+      },
+    ],
+  },
 ];
 
 // Helper to generate human-readable tracking number
@@ -198,19 +305,28 @@ export const ReportsApi = {
         'cat-lighting-004': 'Ethiopian Electric Utility (EEU) – Jimma Branch',
       };
 
+      const categoryNames: Record<string, string> = {
+        'cat-roads-001': 'Roads & Streets',
+        'cat-water-002': 'Water & Sewerage',
+        'cat-waste-003': 'Waste Management',
+        'cat-lighting-004': 'Street Lighting & Power',
+      };
+
       const newReport: Report = {
         id: `rep-${Date.now()}`,
         tracking_number: generateTrackingNumber(),
         title: payload.title,
         description: payload.description,
         category_id: payload.category_id,
-        category_name: 'Civic Issue',
+        category_name: categoryNames[payload.category_id] || 'Civic Issue',
         status: 'submitted',
         latitude: payload.latitude,
         longitude: payload.longitude,
         address_text: payload.address_text || 'Jimma City, Ethiopia',
         landmark: payload.landmark,
         photo_url: payload.photo_url,
+        urgency: payload.urgency || 'medium',
+        sub_issue: payload.sub_issue,
         institution_name: categoryMap[payload.category_id] || 'Admin Fallback Queue',
         is_fallback: false,
         submitted_at: new Date().toISOString(),
@@ -220,7 +336,7 @@ export const ReportsApi = {
             status: 'submitted',
             changed_at: new Date().toISOString(),
             actor_role: 'citizen',
-            comment: 'Report submitted successfully.',
+            comment: `Report submitted for ${categoryNames[payload.category_id] || 'Civic Issue'}.`,
           },
         ],
       };
@@ -243,6 +359,28 @@ export const ReportsApi = {
         report.user_feedback = payload.comment;
       }
       return true;
+    }
+  },
+
+  reopenReport: async (reportId: string, comment: string): Promise<Report> => {
+    try {
+      const response = await apiClient.patch(`/reports/${reportId}/reopen`, { comment });
+      return response.data.data;
+    } catch {
+      const report = mockReports.find((r) => r.id === reportId);
+      if (!report) throw new Error('Report not found');
+      report.status = 'reopened';
+      report.audit_history = [
+        ...(report.audit_history || []),
+        {
+          id: `aud-reopen-${Date.now()}`,
+          status: 'reopened' as const,
+          changed_at: new Date().toISOString(),
+          actor_role: 'citizen',
+          comment: comment.trim() || 'Citizen requested re-investigation.',
+        },
+      ];
+      return { ...report };
     }
   },
 };

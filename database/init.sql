@@ -77,7 +77,15 @@ CREATE INDEX IF NOT EXISTS idx_routing_rules_bounds ON routing_rules USING GIST 
 
 -- 6. REPORTS
 DO $$ BEGIN
-    CREATE TYPE report_status AS ENUM ('submitted', 'under_review', 'in_progress', 'resolved', 'rejected');
+    CREATE TYPE report_status AS ENUM (
+    'submitted',
+    'under_review',
+    'accepted',
+    'redirected',
+    'in_progress',
+    'resolved',
+    'rejected'
+);
     CREATE TYPE verification_status AS ENUM ('pending', 'verified', 'rejected');
 EXCEPTION
     WHEN duplicate_object THEN null;
