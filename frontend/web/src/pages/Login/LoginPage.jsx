@@ -18,8 +18,8 @@ import {
   TrendingUp,
   Users
 } from 'lucide-react';
-import furkoLogo from '../../assets/furko-logo.png';
-import jimmaCityImage from '../../assets/jimma-city.jpg';
+import furkoLogo from '../../assets/furko-logo.jpg';
+import jimmaCityImage from '../../assets/jimma-city.gif';
 
 export default function LoginPage() {
   const navigate = useNavigate();

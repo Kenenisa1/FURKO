@@ -1,0 +1,48 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Expand System Settings and Admin Profile pages with comprehensive configuration sections, security preferences, notification settings, backup/restore UI (frontend only), profile management, password change, and activity history. Add missing profile and settings routes to AdminApp.jsx",
+  "status": "pending",
+  "steps": [
+    "Add missing profile route to src/AdminApp.jsx: Import AdminProfilePage and add route path='profile' element={<AdminProfilePage />} inside the admin layout routes",
+    "Expand SystemSettingsPage in src/pages/Admin/Settings/SystemSettingsPage.jsx (already has good structure): Add Platform Configuration section (platform name, description, contact email, support URL - all editable). Add Email Configuration section (SMTP settings, email templates selection, test email button - UI only). Add Backup & Maintenance section (last backup date, backup frequency dropdown, backup now button, restore from backup button, maintenance mode toggle - all UI only with localStorage). Add Reports Configuration section (default assignment timeout, auto-escalation rules, priority calculation rules - dropdowns and inputs). Add Integrations section (placeholder for future API integrations, webhook configuration). Make all sections save to localStorage with proper validation",
+    "Expand AdminProfilePage in src/pages/Admin/Profile/AdminProfilePage.jsx (already has good structure): Add Security section with: change password form (current password, new password, confirm password - validation only, no actual change), two-factor authentication toggle (UI only), active sessions list (mock 2-3 sessions with device, location, last active, revoke button), login history table (last 10 logins with timestamp, IP, device, status). Add Preferences section: language selection (English, Amharic), timezone selection, date format, email notification preferences (report updates, user actions, system alerts). Add Activity section: recent actions by this admin (last 20 from audit log filtered by actor)",
+    "Add mockAdminSessions in src/data/mockAdminData.js: Array of 2-3 active sessions with device, browser, location, ip, lastActive",
+    "Add mockAdminLoginHistory in src/data/mockAdminData.js: Array of 15 login attempts with timestamp, ip, device, browser, location, status (success/failed)",
+    "Create PasswordChangeModal component in src/pages/Admin/Profile/PasswordChangeModal.jsx: Modal with password change form, strength indicator, validation messages",
+    "Create SessionsTable component in src/pages/Admin/Profile/SessionsTable.jsx: Table showing active sessions with revoke capability",
+    "Update mockAdminData.js: Add adminPreferences object with language, timezone, dateFormat, emailNotificationPreferences"
+  ],
+  "acceptance_criteria": [
+    "AdminApp.jsx includes profile route and navigates correctly when clicking Profile in top bar dropdown",
+    "SystemSettingsPage displays all new configuration sections (Platform, Email, Backup, Reports, Integrations)",
+    "All settings sections save to localStorage and persist across page reloads",
+    "Settings validation prevents saving invalid configurations (e.g., empty required fields)",
+    "AdminProfilePage displays Security section with password change form",
+    "Password change modal validates password strength and shows appropriate messages",
+    "Active sessions table displays mock sessions with working revoke button (removes from UI)",
+    "Login history table shows last 15 logins with all details",
+    "Preferences section allows changing language, timezone, date format, and saves to localStorage",
+    "Activity section shows recent actions from audit log filtered by current admin",
+    "All forms and modals have proper validation and error messages"
+  ],
+  "verification": [
+    "Run npm run dev and navigate to /admin",
+    "Click Profile in top bar dropdown - should navigate to /admin/profile",
+    "Verify all profile sections render: Security, Preferences, Activity",
+    "Click Change Password - modal should open with validation",
+    "Enter passwords - strength indicator should update",
+    "Verify active sessions table shows mock sessions",
+    "Click revoke on a session - should remove from UI",
+    "Verify login history table shows 15 entries",
+    "Change preferences (language, timezone) and save - should persist after refresh",
+    "Navigate to /admin/settings",
+    "Verify all configuration sections render correctly",
+    "Edit platform configuration and save - should persist to localStorage",
+    "Toggle maintenance mode - should save state",
+    "Test email configuration button - should show feedback message",
+    "Verify no console errors on either page"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
