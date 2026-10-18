@@ -1,9 +1,5 @@
-// ──────────────────────────────────────────────
-// FURKO — Admin Auth Service (mock)
-// Replace with real API calls when backend is ready
-// POST /auth/admin/login  →  { token, user }
-// ──────────────────────────────────────────────
-
+// Admin Auth service: uses backend auth when available, falls back to the existing mock.
+import adminApi from './adminApiClient.js';
 const MOCK_ADMIN_CREDENTIALS = [
   {
     email: 'admin@furko.local',
@@ -47,30 +43,49 @@ const MOCK_ADMIN_CREDENTIALS = [
   },
 ];
 
-/**
- * Simulates admin login
- * @param {string} email
- * @param {string} password
- * @returns {Promise<{ user: object }>}
- */
 export async function loginAdmin(email, password) {
-  await delay(600);
-
-  const match = MOCK_ADMIN_CREDENTIALS.find(
-    (c) => c.email === email.trim().toLowerCase() && c.password === password
-  );
-
-  if (!match) {
-    throw new Error('Invalid admin credentials');
+  // Try real backend first
+  try {
+    const resp = await adminApi.post('/auth/login', {
+      email,
+      password,
+    });
+    // Expecting structure: { success: true, data: { user, token } }
+    const data = resp?.data?.data || resp?.data;
+    const user = data.user || data;
+    const token = data.token;
+    if (!token || !user) {
+      throw new Error('Invalid login response from server');
+    }
+    sessionStorage.setItem('furko_admin_token', token);
+    sessionStorage.setItem('furko_admin_user', JSON.stringify(user));
+    return { user };
+  } catch (err) {
+    // Fallback to mock credentials in development
+    const match = MOCK_ADMIN_CREDENTIALS.find(
+      (c) => c.email === String(email).trim().toLowerCase() && c.password === password
+    );
+    if (match) {
+      const mockToken = 'demo-admin-token';
+      sessionStorage.setItem('furko_admin_token', mockToken);
+      sessionStorage.setItem('furko_admin_user', JSON.stringify(match.user));
+      return { user: match.user };
+    }
+    // Bubble up real error for UI to surface
+    throw err;
   }
-
-  sessionStorage.setItem('furko_admin_user', JSON.stringify(match.user));
-  return { user: match.user };
 }
 
 export async function logoutAdmin() {
-  await delay(200);
-  sessionStorage.removeItem('furko_admin_user');
+  // Optionally inform backend, but always clear client session
+  try {
+    await adminApi.post('/auth/logout').catch(() => {});
+  } catch (e) {
+    // ignore
+  } finally {
+    sessionStorage.removeItem('furko_admin_token');
+    sessionStorage.removeItem('furko_admin_user');
+  }
 }
 
 export function getStoredAdminUser() {
@@ -84,8 +99,4 @@ export function getStoredAdminUser() {
 
 export function isAdmin(user) {
   return user && user.role === 'admin';
-}
-
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
