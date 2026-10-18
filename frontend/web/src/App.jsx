@@ -14,6 +14,7 @@ import InstitutionProfilePage from './pages/Profile/InstitutionProfilePage.jsx';
 import StaffPage           from './pages/Staff/StaffPage.jsx';
 import SettingsPage        from './pages/Settings/SettingsPage.jsx';
 import SupportPage         from './pages/Support/SupportPage.jsx';
+import CategoriesPage from './pages/Categories/CategoriesPage.jsx';
 
 // Protected route wrapper
 function RequireAuth({ children }) {
@@ -49,6 +50,8 @@ function AppRoutes() {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="reports/inbox" element={<InboxPage />} />
         <Route path="reports/:id" element={<ReportDetailsPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
+
 
         {/* Organization */}
         <Route path="profile"  element={<InstitutionProfilePage />} />
