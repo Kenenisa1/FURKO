@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar.jsx';
 import AdminTopBar from './AdminTopBar.jsx';
-import ToastContainer from '../../ui/Toast.jsx';
+import ToastContainer from '../ui/ToastContainer.jsx';
 import { getStoredAdminUser } from '../../../services/admin/adminAuthService.js';
 import { mockFallbackQueue } from '../../../data/mockAdminData.js';
 

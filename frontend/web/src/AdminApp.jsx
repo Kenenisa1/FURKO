@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { getStoredAdminUser } from './services/admin/adminAuthService.js';
 
 // Admin Layout
@@ -58,16 +58,12 @@ function AdminRoutes() {
         <Route path="audit-log" element={<AuditLogPage />} />
       </Route>
 
-      {/* Redirect unknown admin routes */}
-      <Route path="*" element={<Navigate to="/admin" replace />} />
+      {/* Catch all */}
+      <Route path="/*" element={<Navigate to="/admin" replace />} />
     </Routes>
   );
 }
 
 export default function AdminApp() {
-  return (
-    <BrowserRouter>
-      <AdminRoutes />
-    </BrowserRouter>
-  );
+  return <AdminRoutes />;
 }
