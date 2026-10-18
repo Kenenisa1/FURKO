@@ -1,0 +1,98 @@
+// ──────────────────────────────────────────────
+// FURKO — Mock Staff Data
+// ──────────────────────────────────────────────
+
+export const mockStaff = [
+  {
+    id: 'STF-001',
+    name: 'Abdullah Ziyad',
+    role: 'Institution Staff',
+    department: 'Water Services',
+    email: 'a.ziyad@jimmawater.gov.et',
+    phone: '+251911000001',
+    status: 'Active',
+    avatar: null,
+    joinedAt: '2024-01-15',
+    reportsHandled: 12,
+  },
+  {
+    id: 'STF-002',
+    name: 'Eman Muhammed',
+    role: 'Senior Staff',
+    department: 'Water Services',
+    email: 'e.muhammed@jimmawater.gov.et',
+    phone: '+251911000002',
+    status: 'Active',
+    avatar: null,
+    joinedAt: '2023-06-01',
+    reportsHandled: 28,
+  },
+  {
+    id: 'STF-003',
+    name: 'Yohannes Girma',
+    role: 'Institution Staff',
+    department: 'Waste Management',
+    email: 'y.girma@jimmawater.gov.et',
+    phone: '+251911000003',
+    status: 'Active',
+    avatar: null,
+    joinedAt: '2024-03-10',
+    reportsHandled: 9,
+  },
+  {
+    id: 'STF-004',
+    name: 'Tigist Worku',
+    role: 'Institution Staff',
+    department: 'Electricity Service',
+    email: 't.worku@jimmawater.gov.et',
+    phone: '+251911000004',
+    status: 'Active',
+    avatar: null,
+    joinedAt: '2024-02-20',
+    reportsHandled: 15,
+  },
+  {
+    id: 'STF-005',
+    name: 'Kebede Alemu',
+    role: 'Field Inspector',
+    department: 'Road Maintenance',
+    email: 'k.alemu@jimmawater.gov.et',
+    phone: '+251911000005',
+    status: 'Active',
+    avatar: null,
+    joinedAt: '2023-11-05',
+    reportsHandled: 7,
+  },
+  {
+    id: 'STF-006',
+    name: 'Selamawit Teka',
+    role: 'Institution Staff',
+    department: 'Administration',
+    email: 's.teka@jimmawater.gov.et',
+    phone: '+251911000006',
+    status: 'Inactive',
+    avatar: null,
+    joinedAt: '2024-05-01',
+    reportsHandled: 3,
+  },
+];
+
+export const departments = [
+  'Water Services',
+  'Road Maintenance',
+  'Waste Management',
+  'Electricity Service',
+  'Administration',
+  'Public Health',
+  'Engineering',
+];
+
+export const currentUser = {
+  id: 'STF-002',
+  name: 'Eman Muhammed',
+  role: 'Senior Staff',
+  department: 'Water Services',
+  email: 'e.muhammed@jimmawater.gov.et',
+  institution: 'Jimma Water Service',
+  avatar: null,
+};
