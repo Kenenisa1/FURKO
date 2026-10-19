@@ -1,45 +1,35 @@
-// ──────────────────────────────────────────────
-// FURKO — Audit Log API Service (mock)
-// ──────────────────────────────────────────────
-
+import adminApi from './adminApiClient.js';
 import { mockAuditLog } from '../../data/mockAdminData.js';
 
 export async function getAuditLog(filters = {}) {
-  await delay(300);
-  
-  let filtered = [...mockAuditLog];
-  
-  if (filters.search) {
-    const search = filters.search.toLowerCase();
-    filtered = filtered.filter(
-      (a) =>
-        a.action.toLowerCase().includes(search) ||
-        a.actor.toLowerCase().includes(search) ||
-        a.description.toLowerCase().includes(search)
-    );
+  try {
+    const resp = await adminApi.get('/admin/audit-log', { params: filters });
+    return resp.data?.data || resp.data;
+  } catch (err) {
+    let filtered = [...mockAuditLog];
+    if (filters.search) {
+      const search = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (a) =>
+          a.action.toLowerCase().includes(search) ||
+          a.actor.toLowerCase().includes(search) ||
+          a.description.toLowerCase().includes(search)
+      );
+    }
+    if (filters.action) filtered = filtered.filter((a) => a.action === filters.action);
+    if (filters.entityType) filtered = filtered.filter((a) => a.entityType === filters.entityType);
+    filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return filtered;
   }
-  
-  if (filters.action) {
-    filtered = filtered.filter((a) => a.action === filters.action);
-  }
-  
-  if (filters.entityType) {
-    filtered = filtered.filter((a) => a.entityType === filters.entityType);
-  }
-  
-  // Sort by timestamp descending
-  filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
-  return filtered;
 }
 
 export async function getAuditEntryById(id) {
-  await delay(200);
-  const entry = mockAuditLog.find((a) => a.id === id);
-  if (!entry) throw new Error('Audit entry not found');
-  return entry;
-}
-
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  try {
+    const resp = await adminApi.get(`/admin/audit-log/${id}`);
+    return resp.data?.data || resp.data;
+  } catch (err) {
+    const entry = mockAuditLog.find((a) => a.id === id);
+    if (!entry) throw err;
+    return entry;
+  }
 }
