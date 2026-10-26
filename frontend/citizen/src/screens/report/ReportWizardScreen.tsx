@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES } from '../../constants/categories';
 import { ReportsApi } from '../../services/api';
@@ -159,7 +160,7 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
       setIsSubmitting(false);
 
       Alert.alert(
-        '🎉 Report Dispatched!',
+        'Report Dispatched!',
         `Your tracking number is ${newReport.tracking_number}.\n\nDirectly routed to:\n${newReport.institution_name}`,
         [
           {
@@ -242,13 +243,13 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
             ) : (
               <View style={styles.photoOptionsContainer}>
                 <TouchableOpacity style={styles.photoActionCard} onPress={takePhoto}>
-                  <Text style={styles.photoActionEmoji}>📷</Text>
+                  <Ionicons name="camera" size={32} color={Colors.primary} style={{ marginBottom: 6 }} />
                   <Text style={styles.photoActionTitle}>Use Camera</Text>
                   <Text style={styles.photoActionSubtitle}>Snap photo directly at site</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.photoActionCard} onPress={pickGallery}>
-                  <Text style={styles.photoActionEmoji}>🖼️</Text>
+                  <Ionicons name="images" size={32} color={Colors.primary} style={{ marginBottom: 6 }} />
                   <Text style={styles.photoActionTitle}>Choose from Gallery</Text>
                   <Text style={styles.photoActionSubtitle}>Upload from saved photos</Text>
                 </TouchableOpacity>
@@ -274,7 +275,7 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
 
             <View style={styles.locationCard}>
               <View style={styles.locationPinHeader}>
-                <Text style={{ fontSize: 28 }}>📍</Text>
+                <Ionicons name="location-sharp" size={30} color={Colors.primary} />
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.locationCoordsLabel}>Detected Coordinates</Text>
                   {isLocating ? (
@@ -291,7 +292,10 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
               </View>
 
               <TouchableOpacity style={styles.refreshLocBtn} onPress={detectLocation}>
-                <Text style={styles.refreshLocText}>🔄 Refresh GPS Location</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="refresh" size={15} color={Colors.primary} style={{ marginRight: 6 }} />
+                  <Text style={styles.refreshLocText}>Refresh GPS Location</Text>
+                </View>
               </TouchableOpacity>
             </View>
 
@@ -373,17 +377,25 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
 
               <View style={styles.reviewRow}>
                 <Text style={styles.reviewLabel}>Evidence</Text>
-                <Text style={styles.reviewValue}>
-                  {photoUri ? '📷 1 Photo Attached' : 'Skipped (No Photo)'}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {photoUri ? (
+                    <Ionicons name="camera" size={15} color="#16A34A" style={{ marginRight: 5 }} />
+                  ) : null}
+                  <Text style={styles.reviewValue}>
+                    {photoUri ? '1 Photo Attached' : 'Skipped (No Photo)'}
+                  </Text>
+                </View>
               </View>
             </View>
 
             <View style={styles.dispatchNotice}>
-              <Text style={styles.dispatchNoticeText}>
-                ⚡ <Text style={{ fontWeight: '700' }}>Direct Service Routing:</Text> Upon tapping Submit, this report
-                will be sent directly to {selectedCategory?.responsibleInstitution}'s active queue.
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                <Ionicons name="flash" size={16} color="#B45309" style={{ marginRight: 6, marginTop: 2 }} />
+                <Text style={[styles.dispatchNoticeText, { flex: 1 }]}>
+                  <Text style={{ fontWeight: '700' }}>Direct Service Routing:</Text> Upon tapping Submit, this report
+                  will be sent directly to {selectedCategory?.responsibleInstitution}'s active queue.
+                </Text>
+              </View>
             </View>
           </View>
         )}
@@ -434,7 +446,10 @@ export const ReportWizardScreen: React.FC<Props> = ({ navigation, route }) => {
             {isSubmitting ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
-              <Text style={styles.submitButtonText}>🚀 Submit & Dispatch Report</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="paper-plane" size={18} color={Colors.white} style={{ marginRight: 8 }} />
+                <Text style={styles.submitButtonText}>Submit & Dispatch Report</Text>
+              </View>
             )}
           </TouchableOpacity>
         )}

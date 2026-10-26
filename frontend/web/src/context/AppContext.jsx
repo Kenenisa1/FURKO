@@ -7,14 +7,13 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { getStoredUser } from '../services/authService.js';
 import { getReports } from '../services/reportService.js';
-import { mockNotifications } from '../data/mockNotifications.js';
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(() => getStoredUser());
   const [reports, setReports] = useState([]);
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState([]);
   const [reportsLoading, setReportsLoading] = useState(false);
 
   // Toast queue: [{ id, type, message }]

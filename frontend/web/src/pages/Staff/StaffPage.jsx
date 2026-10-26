@@ -4,11 +4,19 @@ import Modal from '../../components/ui/Modal.jsx';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import { getStaff, addStaff, updateStaff } from '../../services/staffService.js';
-import { departments } from '../../data/mockStaff.js';
 import { useApp } from '../../context/AppContext.jsx';
 import { Plus, Search, User, Loader2 } from 'lucide-react';
 
 const ROLES = ['Institution Staff', 'Senior Staff', 'Field Inspector', 'Department Head', 'Administrator'];
+
+const DEPARTMENTS = [
+  'Field Operations',
+  'Field Inspection',
+  'Customer Relations',
+  'Administration',
+  'Technical Department',
+  'Maintenance Team',
+];
 
 const BLANK_FORM = { name: '', role: 'Institution Staff', department: '', email: '', phone: '', status: 'Active' };
 
@@ -194,7 +202,7 @@ export default function StaffPage() {
               <select value={form.department} onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a6b3c]/30 focus:border-[#1a6b3c] bg-white">
                 <option value="">Select department</option>
-                {departments.map((d) => <option key={d} value={d}>{d}</option>)}
+                {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
           </div>

@@ -4,11 +4,11 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Dimensions,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { FurkoLogo } from '../../components/common/FurkoLogo';
@@ -26,19 +26,12 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Top Header with Back Arrow and Centered Furko Logo */}
       <View style={styles.topHeader}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.canGoBack() && navigation.goBack()}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="chevron-back" size={26} color={Colors.primary} />
-        </TouchableOpacity>
 
         <View style={styles.logoCenter}>
           <FurkoLogo size="medium" showTagline={false} centered={true} />
         </View>
 
-        <View style={{ width: 40 }} />
+        <View style={{ width: 10 }} />
       </View>
 
       {/* Hero Image Section with Curved Bottom Cut */}
@@ -50,12 +43,6 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.heroImage}
             resizeMode="cover"
           />
-
-          {/* Floating civic indicator on top of image */}
-          <View style={styles.heroOverlayBadge}>
-            <View style={styles.badgeDot} />
-            <Text style={styles.badgeText}>Jimma City Active Reporting</Text>
-          </View>
         </View>
 
         {/* Curved Wave Mask */}

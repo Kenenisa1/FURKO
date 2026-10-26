@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Image,
   TextInput,
@@ -14,6 +13,7 @@ import {
   Modal,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { STATUS_META, PROBLEM_CATEGORIES } from '../../constants/categories';
@@ -48,6 +48,9 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const [reopenModalVisible, setReopenModalVisible] = useState(false);
   const [reopenComment, setReopenComment] = useState('');
   const [submittingReopen, setSubmittingReopen] = useState(false);
+
+  // Lightbox Zoom Modal state
+  const [lightboxImage, setLightboxImage] = useState<{ uri: string; title: string } | null>(null);
 
   useEffect(() => {
     if (reportId) {
@@ -126,6 +129,20 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const meta = STATUS_META[report.status] || STATUS_META.submitted;
   const cat = PROBLEM_CATEGORIES.find((c) => c.id === report.category_id);
+
+  const evidencePhotos: string[] =
+    report.evidence_photos && report.evidence_photos.length > 0
+      ? report.evidence_photos
+      : report.photo_url
+      ? [report.photo_url]
+      : [];
+
+  const resolutionPhotos: string[] =
+    report.resolution_photos && report.resolution_photos.length > 0
+      ? report.resolution_photos
+      : report.proof_photo_url
+      ? [report.proof_photo_url]
+      : [];
 
   // Stepper calculations
   const getStageIndex = (st: ReportStatus) => {
@@ -280,11 +297,59 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           <Text style={styles.reportTitle}>{report.title}</Text>
           <Text style={styles.reportDesc}>{report.description}</Text>
 
-          {/* Evidence photo if citizen uploaded */}
-          {report.photo_url && (
+          {/* Citizen Evidence Photo(s) */}
+          {evidencePhotos.length > 0 && (
             <View style={styles.photoContainer}>
-              <Text style={styles.photoLabel}>📸 Citizen Evidence Photo</Text>
-              <Image source={{ uri: report.photo_url }} style={styles.evidenceImage} />
+              <View style={styles.photoHeaderRow}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ionicons name="camera-outline" size={15} color="#4B5563" style={{ marginRight: 6 }} />
+                  <Text style={styles.photoLabel}>
+                    Citizen Evidence Photo{evidencePhotos.length > 1 ? `s (${evidencePhotos.length})` : ''}
+                  </Text>
+                </View>
+                {evidencePhotos.length > 1 && (
+                  <View style={styles.photoCountBadge}>
+                    <Text style={styles.photoCountText}>{evidencePhotos.length} Attached</Text>
+                  </View>
+                )}
+              </View>
+
+              {evidencePhotos.length === 1 ? (
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => setLightboxImage({ uri: evidencePhotos[0], title: 'Citizen Evidence Photo' })}
+                  style={styles.singlePhotoCard}
+                >
+                  <Image
+                    source={{ uri: evidencePhotos[0] }}
+                    style={styles.evidenceImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.expandPill}>
+                    <Ionicons name="expand-outline" size={12} color="#FFFFFF" style={{ marginRight: 4 }} />
+                    <Text style={styles.expandPillText}>Tap to zoom</Text>
+                  </View>
+                </TouchableOpacity>
+              ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryScroll}>
+                  {evidencePhotos.map((photoUri, pIdx) => (
+                    <TouchableOpacity
+                      key={pIdx}
+                      activeOpacity={0.9}
+                      onPress={() => setLightboxImage({ uri: photoUri, title: `Citizen Evidence #${pIdx + 1}` })}
+                      style={styles.galleryThumbCard}
+                    >
+                      <Image source={{ uri: photoUri }} style={styles.galleryThumb} resizeMode="cover" />
+                      <View style={styles.galleryIndexBadge}>
+                        <Text style={styles.galleryIndexText}>{pIdx + 1}</Text>
+                      </View>
+                      <View style={styles.expandPillMini}>
+                        <Ionicons name="expand" size={10} color="#FFFFFF" />
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
             </View>
           )}
 
@@ -311,19 +376,60 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Responsible Institution Card */}
+        {/* Responsible Institution & Task Assignment Card */}
         <View style={styles.card}>
-          <Text style={styles.cardHeaderSmall}>Direct Service Routing</Text>
+          <Text style={styles.cardHeaderSmall}>Handling Institution & Assignment</Text>
           <View style={styles.instBox}>
             <Ionicons name="business" size={26} color={cat?.color || Colors.primary} />
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.instName}>{report.institution_name}</Text>
-              <Text style={styles.instSub}>Assigned Operational Unit & Field Team</Text>
+              <Text style={styles.instName}>{report.institution_name || 'Jimma City Administration'}</Text>
+              <Text style={styles.instSub}>Designated Municipal Bureau</Text>
+            </View>
+          </View>
+
+          {/* Assigned Staff Member / Field Operative */}
+          <View style={styles.assignmentDivider} />
+          <View style={styles.assignedStaffRow}>
+            <View
+              style={[
+                styles.assignedStaffAvatar,
+                { backgroundColor: report.assigned_staff_name ? '#DCFCE7' : '#F1F5F9' },
+              ]}
+            >
+              <Ionicons
+                name={report.assigned_staff_name ? 'person' : 'people-outline'}
+                size={20}
+                color={report.assigned_staff_name ? '#16A34A' : '#64748B'}
+              />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={styles.assignedStaffLabel}>Task Assigned To</Text>
+              <Text style={styles.assignedStaffName}>
+                {report.assigned_staff_name || 'Central Operations & Field Dispatch Unit'}
+              </Text>
+              {report.assigned_staff_name ? (
+                <View style={styles.staffMetaRow}>
+                  <View style={styles.activeStaffTag}>
+                    <Text style={styles.activeStaffTagText}>Field Operative</Text>
+                  </View>
+                  {report.assigned_staff_phone ? (
+                    <Text style={styles.assignedStaffPhone}>
+                      📞 {report.assigned_staff_phone}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : (
+                <Text style={styles.assignedStaffPending}>
+                  {report.status === 'submitted'
+                    ? 'Pending initial review and individual officer allocation'
+                    : 'Assigned to institution operational field crew'}
+                </Text>
+              )}
             </View>
           </View>
         </View>
 
-        {/* Resolution Notes & Proof Photo (If Resolved) */}
+        {/* Resolution Notes & Proof Photo (Only when ACTUALLY Resolved) */}
         {report.status === 'resolved' && (
           <View style={[styles.card, { borderColor: '#A7F3D0', backgroundColor: '#F0FDF4' }]}>
             <View style={styles.resolutionHeader}>
@@ -333,13 +439,64 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             {report.resolution_notes ? (
               <Text style={styles.resolutionNotes}>{report.resolution_notes}</Text>
             ) : (
-              <Text style={styles.resolutionNotes}>Issue marked resolved by municipal field team.</Text>
+              <Text style={styles.resolutionNotes}>
+                The institution has marked this issue as resolved. No additional notes were provided.
+              </Text>
             )}
 
-            {report.proof_photo_url && (
-              <View style={styles.photoContainer}>
-                <Text style={[styles.photoLabel, { color: '#16A34A' }]}>🛠️ Staff Field Proof Photo</Text>
-                <Image source={{ uri: report.proof_photo_url }} style={styles.evidenceImage} />
+            {/* Staff Field Proof Photo(s) */}
+            {resolutionPhotos.length > 0 && (
+              <View style={[styles.photoContainer, { marginTop: 12 }]}>
+                <View style={styles.photoHeaderRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons name="construct-outline" size={15} color="#16A34A" style={{ marginRight: 6 }} />
+                    <Text style={[styles.photoLabel, { color: '#16A34A', marginBottom: 0 }]}>
+                      Staff Field Proof Photo{resolutionPhotos.length > 1 ? `s (${resolutionPhotos.length})` : ''}
+                    </Text>
+                  </View>
+                  {resolutionPhotos.length > 1 && (
+                    <View style={[styles.photoCountBadge, { backgroundColor: '#DCFCE7' }]}>
+                      <Text style={[styles.photoCountText, { color: '#16A34A' }]}>{resolutionPhotos.length} Attached</Text>
+                    </View>
+                  )}
+                </View>
+
+                {resolutionPhotos.length === 1 ? (
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => setLightboxImage({ uri: resolutionPhotos[0], title: 'Staff Field Resolution Proof' })}
+                    style={styles.singlePhotoCard}
+                  >
+                    <Image
+                      source={{ uri: resolutionPhotos[0] }}
+                      style={styles.evidenceImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.expandPill}>
+                      <Ionicons name="expand-outline" size={12} color="#FFFFFF" style={{ marginRight: 4 }} />
+                      <Text style={styles.expandPillText}>Tap to zoom</Text>
+                    </View>
+                  </TouchableOpacity>
+                ) : (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryScroll}>
+                    {resolutionPhotos.map((photoUri, pIdx) => (
+                      <TouchableOpacity
+                        key={pIdx}
+                        activeOpacity={0.9}
+                        onPress={() => setLightboxImage({ uri: photoUri, title: `Staff Proof #${pIdx + 1}` })}
+                        style={styles.galleryThumbCard}
+                      >
+                        <Image source={{ uri: photoUri }} style={styles.galleryThumb} resizeMode="cover" />
+                        <View style={[styles.galleryIndexBadge, { backgroundColor: '#16A34A' }]}>
+                          <Text style={styles.galleryIndexText}>{pIdx + 1}</Text>
+                        </View>
+                        <View style={styles.expandPillMini}>
+                          <Ionicons name="expand" size={10} color="#FFFFFF" />
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
               </View>
             )}
 
@@ -366,40 +523,6 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             </Text>
           </View>
         )}
-
-        {/* Audit Timeline */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeaderSmall}>Resolution Audit Trail</Text>
-          {report.audit_history?.map((audit, index) => {
-            const auditMeta = STATUS_META[audit.status] || STATUS_META.submitted;
-            const isLast = index === (report.audit_history?.length || 0) - 1;
-            return (
-              <View key={audit.id} style={styles.timelineRow}>
-                <View style={styles.timelineColLeft}>
-                  <View style={[styles.timelineDot, { backgroundColor: auditMeta.color }]} />
-                  {!isLast && <View style={styles.timelineConnector} />}
-                </View>
-                <View style={styles.timelineColRight}>
-                  <View style={styles.timelineHeaderRow}>
-                    <Text style={[styles.timelineStatusTitle, { color: auditMeta.color }]}>
-                      {auditMeta.label}
-                    </Text>
-                    <Text style={styles.timelineRoleBadge}>{audit.actor_role.toUpperCase()}</Text>
-                  </View>
-                  <Text style={styles.timelineTime}>
-                    {new Date(audit.changed_at).toLocaleString()}
-                  </Text>
-                  {audit.comment ? (
-                    <Text style={styles.timelineComment}>{audit.comment}</Text>
-                  ) : null}
-                  {audit.proof_photo_url && (
-                    <Image source={{ uri: audit.proof_photo_url }} style={styles.auditThumbnail} />
-                  )}
-                </View>
-              </View>
-            );
-          })}
-        </View>
 
         {/* Resolution Feedback (Shown when status is resolved) */}
         {report.status === 'resolved' && (
@@ -504,6 +627,59 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      </Modal>
+
+      {/* ── Photo Lightbox Modal ── */}
+      <Modal
+        visible={Boolean(lightboxImage)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLightboxImage(null)}
+      >
+        <View style={styles.lightboxOverlay}>
+          <SafeAreaView style={styles.lightboxSafe}>
+            <View style={styles.lightboxHeader}>
+              <View style={{ flex: 1, marginRight: 12 }}>
+                <Text style={styles.lightboxTitle} numberOfLines={1}>
+                  {lightboxImage?.title || 'Report Evidence Photo'}
+                </Text>
+                <Text style={styles.lightboxSubTitle}>
+                  {report.tracking_number} • Jimma Infrastructure Registry
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.lightboxCloseBtn}
+                onPress={() => setLightboxImage(null)}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Ionicons name="close" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.lightboxBody}>
+              {lightboxImage?.uri ? (
+                <Image
+                  source={{ uri: lightboxImage.uri }}
+                  style={styles.lightboxImage}
+                  resizeMode="contain"
+                />
+              ) : null}
+            </View>
+
+            <View style={styles.lightboxFooter}>
+              <View style={styles.lightboxMetaRow}>
+                <Ionicons name="shield-checkmark" size={14} color="#10B981" />
+                <Text style={styles.lightboxFooterText}>Civic Authenticated Evidence</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.lightboxDismissBtn}
+                onPress={() => setLightboxImage(null)}
+              >
+                <Text style={styles.lightboxDismissText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
         </View>
       </Modal>
     </SafeAreaView>
@@ -682,19 +858,183 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   photoContainer: {
-    marginTop: 4,
+    marginTop: 6,
     marginBottom: 12,
   },
+  photoHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
   photoLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#6B7280',
-    marginBottom: 6,
+    color: '#374151',
+  },
+  photoCountBadge: {
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  photoCountText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#4F46E5',
+  },
+  singlePhotoCard: {
+    position: 'relative',
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   evidenceImage: {
     width: '100%',
-    height: 180,
+    height: 200,
+    borderRadius: 14,
+  },
+  expandPill: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  expandPillText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  galleryScroll: {
+    flexDirection: 'row',
+    marginHorizontal: -4,
+  },
+  galleryThumbCard: {
+    position: 'relative',
+    marginHorizontal: 4,
     borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  galleryThumb: {
+    width: 140,
+    height: 120,
+    borderRadius: 12,
+  },
+  galleryIndexBadge: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  galleryIndexText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  expandPillMini: {
+    position: 'absolute',
+    bottom: 6,
+    right: 6,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Lightbox Modal
+  lightboxOverlay: {
+    flex: 1,
+    backgroundColor: '#090D16',
+  },
+  lightboxSafe: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  lightboxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  lightboxTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#F8FAFC',
+  },
+  lightboxSubTitle: {
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  lightboxCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lightboxBody: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+  },
+  lightboxImage: {
+    width: '100%',
+    height: '100%',
+  },
+  lightboxFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#0B1120',
+  },
+  lightboxMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  lightboxFooterText: {
+    fontSize: 12,
+    color: '#E2E8F0',
+    fontWeight: '600',
+  },
+  lightboxDismissBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  lightboxDismissText: {
+    fontSize: 12,
+    color: '#F8FAFC',
+    fontWeight: '600',
   },
   metaDivider: {
     height: 1,
@@ -738,6 +1078,68 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#6B7280',
     marginTop: 2,
+  },
+  assignmentDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 12,
+  },
+  assignedStaffRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  assignedStaffAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  assignedStaffLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#64748B',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  assignedStaffName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginTop: 2,
+  },
+  staffMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  activeStaffTag: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  activeStaffTagText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#16A34A',
+  },
+  assignedStaffPhone: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2563EB',
+  },
+  assignedStaffPending: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+    lineHeight: 16,
   },
   // Resolution & Reopen
   resolutionHeader: {

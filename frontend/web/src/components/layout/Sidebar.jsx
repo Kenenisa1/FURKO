@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
-import { REPORT_STATUS } from '../../data/mockReports.js';
+import { REPORT_STATUS } from '../../services/reportService.js';
 import {
   LayoutDashboard,
   FileText,
@@ -199,13 +199,13 @@ export default function Sidebar({ collapsed, onToggle }) {
         <div className="border-t border-white/10 px-3 py-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
-              {currentUser.name.charAt(0)}
+              {(currentUser.full_name || currentUser.name || 'U').charAt(0).toUpperCase()}
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-white text-xs font-semibold truncate">{currentUser.name}</p>
-                <p className="text-white/50 text-[10px] truncate">{currentUser.role}</p>
-                <p className="text-white/40 text-[10px] truncate">{currentUser.institution}</p>
+                <p className="text-white text-xs font-semibold truncate">{currentUser.full_name || currentUser.name || 'Staff User'}</p>
+                <p className="text-white/50 text-[10px] truncate">{currentUser.role || 'Staff'}</p>
+                <p className="text-white/40 text-[10px] truncate">{currentUser.institution || currentUser.institution_name || 'Jimma Municipality'}</p>
               </div>
             )}
           </div>

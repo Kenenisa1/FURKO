@@ -8,9 +8,15 @@ import {
   SubmitReportPayload,
 } from '../types';
 
-// Android emulator uses 10.0.2.2, iOS simulator uses localhost, physical devices use LAN IP
+// Current development PC IP address on the Wi-Fi network
+export const CURRENT_DEV_IP = '192.168.137.54';
+
+// Use EXPO_PUBLIC_API_URL env var if set, otherwise fall back to the dev machine's Wi-Fi IP.
+// Physical Android devices can't use 10.0.2.2 (that's only for emulators).
+const LAN_IP = process.env.EXPO_PUBLIC_API_URL || `http://${CURRENT_DEV_IP}:5000/api/v1`;
+
 const DEFAULT_BASE_URL = Platform.select({
-  android: 'http://10.0.2.2:5000/api/v1',
+  android: LAN_IP,
   ios: 'http://localhost:5000/api/v1',
   default: 'http://localhost:5000/api/v1',
 });
@@ -23,9 +29,13 @@ const apiClient = axios.create({
   },
 });
 
-// Attach Bearer token to every request
+// Attach custom URL override and Bearer token to every request
 apiClient.interceptors.request.use(async (config) => {
   try {
+    const customUrl = await SecureStore.getItemAsync('furko_api_url');
+    if (customUrl) {
+      config.baseURL = customUrl;
+    }
     const token = await SecureStore.getItemAsync('furko_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -35,6 +45,22 @@ apiClient.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+export const setCustomApiUrl = async (url: string): Promise<string> => {
+  const clean = url.trim().replace(/\/+$/, '');
+  const finalUrl = clean.endsWith('/api/v1') ? clean : `${clean}/api/v1`;
+  await SecureStore.setItemAsync('furko_api_url', finalUrl);
+  apiClient.defaults.baseURL = finalUrl;
+  return finalUrl;
+};
+
+export const getActiveApiUrl = async (): Promise<string> => {
+  try {
+    const saved = await SecureStore.getItemAsync('furko_api_url');
+    if (saved) return saved;
+  } catch {}
+  return apiClient.defaults.baseURL || DEFAULT_BASE_URL;
+};
 
 // --- In-Memory Mock Store for Offline / Preview Mode ---
 // Ensures the citizen app runs beautifully even when backend is not started
@@ -271,117 +297,124 @@ export const generateTrackingNumber = (): string => {
   return `FRK-2026-${random}`;
 };
 
+// Normalizes image URLs so Cloudinary HTTPS URLs remain untouched, and local URLs replace localhost with the mobile-accessible LAN IP
+export const normalizeImageUrl = (url?: string | null): string | undefined => {
+  if (!url) return undefined;
+  if (url.startsWith('https://') || url.startsWith('http://res.cloudinary.com')) {
+    return url;
+  }
+  if (url.includes('localhost:5000') || url.includes('127.0.0.1:5000')) {
+    return url.replace(/localhost:5000|127\.0\.0\.1:5000/, `${CURRENT_DEV_IP}:5000`);
+  }
+  if (url.startsWith('/uploads/')) {
+    return `http://${CURRENT_DEV_IP}:5000${url}`;
+  }
+  return url;
+};
+
 // API Services
 export const ReportsApi = {
   getMyReports: async (): Promise<Report[]> => {
-    try {
-      const response = await apiClient.get('/reports/my');
-      return response.data.data;
-    } catch {
-      // Return mock data for seamless testing/preview
-      return mockReports;
-    }
+    const response = await apiClient.get('/reports');
+    const list: Report[] = response.data?.data || response.data?.reports || [];
+    return list.map((r) => ({
+      ...r,
+      photo_url: normalizeImageUrl(r.photo_url),
+      proof_photo_url: normalizeImageUrl(r.proof_photo_url),
+    }));
   },
 
   getReportById: async (id: string): Promise<Report | undefined> => {
-    try {
-      const response = await apiClient.get(`/reports/${id}`);
-      return response.data.data;
-    } catch {
-      return mockReports.find((r) => r.id === id);
+    const response = await apiClient.get(`/reports/${id}`);
+    const raw = response.data?.data || response.data?.report || response.data;
+    if (!raw) return undefined;
+    const baseReport = raw.report || raw;
+
+    const evidencePhotos: string[] = [];
+    if (baseReport.photo_url) {
+      const u = normalizeImageUrl(baseReport.photo_url);
+      if (u) evidencePhotos.push(u);
     }
+    if (Array.isArray(raw.evidence)) {
+      raw.evidence.forEach((e: any) => {
+        const u = normalizeImageUrl(e.file_url);
+        if (u && !evidencePhotos.includes(u)) evidencePhotos.push(u);
+      });
+    }
+
+    const resolutionPhotos: string[] = [];
+    if (baseReport.proof_photo_url) {
+      const u = normalizeImageUrl(baseReport.proof_photo_url);
+      if (u) resolutionPhotos.push(u);
+    }
+    if (Array.isArray(raw.resolution_proofs)) {
+      raw.resolution_proofs.forEach((r: any) => {
+        const u = normalizeImageUrl(r.file_url);
+        if (u && !resolutionPhotos.includes(u)) resolutionPhotos.push(u);
+      });
+    }
+
+    const mappedTimeline = (raw.timeline || []).map((t: any) => ({
+      id: t.id,
+      status: t.new_status || t.status,
+      changed_at: t.changed_at,
+      actor_role: t.actor_role || 'staff',
+      comment: t.comment,
+      proof_photo_url: normalizeImageUrl(raw.resolution_proofs?.[0]?.file_url || t.proof_photo_url),
+    }));
+
+    return {
+      ...baseReport,
+      photo_url: evidencePhotos[0] || normalizeImageUrl(baseReport.photo_url),
+      evidence_photos: evidencePhotos,
+      proof_photo_url: resolutionPhotos[0] || normalizeImageUrl(baseReport.proof_photo_url),
+      resolution_photos: resolutionPhotos,
+      audit_history: mappedTimeline.length > 0 ? mappedTimeline : (baseReport.audit_history || []),
+      user_rating: raw.feedback?.rating ?? baseReport.user_rating,
+      user_feedback: raw.feedback?.comment ?? baseReport.user_feedback,
+    };
   },
 
   submitReport: async (payload: SubmitReportPayload): Promise<Report> => {
-    try {
-      const response = await apiClient.post('/reports', payload);
-      return response.data.data;
-    } catch {
-      // Mock creation
-      const categoryMap: Record<string, string> = {
-        'cat-roads-001': 'Jimma City Road & Infrastructure Development Bureau',
-        'cat-water-002': 'Jimma City Water & Sewerage Authority',
-        'cat-waste-003': 'Jimma City Sanitation & Waste Management Office',
-        'cat-lighting-004': 'Ethiopian Electric Utility (EEU) – Jimma Branch',
-      };
+    const response = await apiClient.post('/reports', payload);
+    const reportData = response.data?.data || response.data?.report || response.data;
+    return reportData;
+  },
 
-      const categoryNames: Record<string, string> = {
-        'cat-roads-001': 'Roads & Streets',
-        'cat-water-002': 'Water & Sewerage',
-        'cat-waste-003': 'Waste Management',
-        'cat-lighting-004': 'Street Lighting & Power',
-      };
+  uploadEvidence: async (localUri: string): Promise<string> => {
+    const formData = new FormData();
+    const filename = localUri.split('/').pop() || `evidence_${Date.now()}.jpg`;
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1].toLowerCase()}` : 'image/jpeg';
 
-      const newReport: Report = {
-        id: `rep-${Date.now()}`,
-        tracking_number: generateTrackingNumber(),
-        title: payload.title,
-        description: payload.description,
-        category_id: payload.category_id,
-        category_name: categoryNames[payload.category_id] || 'Civic Issue',
-        status: 'submitted',
-        latitude: payload.latitude,
-        longitude: payload.longitude,
-        address_text: payload.address_text || 'Jimma City, Ethiopia',
-        landmark: payload.landmark,
-        photo_url: payload.photo_url,
-        urgency: payload.urgency || 'medium',
-        sub_issue: payload.sub_issue,
-        institution_name: categoryMap[payload.category_id] || 'Admin Fallback Queue',
-        is_fallback: false,
-        submitted_at: new Date().toISOString(),
-        audit_history: [
-          {
-            id: `aud-${Date.now()}`,
-            status: 'submitted',
-            changed_at: new Date().toISOString(),
-            actor_role: 'citizen',
-            comment: `Report submitted for ${categoryNames[payload.category_id] || 'Civic Issue'}.`,
-          },
-        ],
-      };
-      mockReports.unshift(newReport);
-      return newReport;
-    }
+    formData.append('file', {
+      uri: Platform.OS === 'android' ? localUri : localUri.replace('file://', ''),
+      name: filename,
+      type,
+    } as any);
+
+    const res = await apiClient.post('/evidence/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return res.data?.data?.file_url || res.data?.file_url || res.data?.data?.file_name;
   },
 
   submitFeedback: async (
     reportId: string,
     payload: SubmitFeedbackPayload
   ): Promise<boolean> => {
-    try {
-      await apiClient.post(`/reports/${reportId}/feedback`, payload);
-      return true;
-    } catch {
-      const report = mockReports.find((r) => r.id === reportId);
-      if (report) {
-        report.user_rating = payload.rating;
-        report.user_feedback = payload.comment;
-      }
-      return true;
-    }
+    const response = await apiClient.post(`/reports/${reportId}/confirm`, payload);
+    return response.data?.success !== false;
   },
 
   reopenReport: async (reportId: string, comment: string): Promise<Report> => {
-    try {
-      const response = await apiClient.patch(`/reports/${reportId}/reopen`, { comment });
-      return response.data.data;
-    } catch {
-      const report = mockReports.find((r) => r.id === reportId);
-      if (!report) throw new Error('Report not found');
-      report.status = 'reopened';
-      report.audit_history = [
-        ...(report.audit_history || []),
-        {
-          id: `aud-reopen-${Date.now()}`,
-          status: 'reopened' as const,
-          changed_at: new Date().toISOString(),
-          actor_role: 'citizen',
-          comment: comment.trim() || 'Citizen requested re-investigation.',
-        },
-      ];
-      return { ...report };
-    }
+    const response = await apiClient.post(`/reports/${reportId}/reopen`, { reason: comment, comment });
+    const raw = response.data?.data || response.data?.report || response.data;
+    const baseReport = raw.report || raw;
+    return baseReport;
   },
 };
 

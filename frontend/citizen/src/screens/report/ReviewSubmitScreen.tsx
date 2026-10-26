@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  SafeAreaView,
   StatusBar,
   Image,
   ActivityIndicator,
@@ -16,6 +15,7 @@ import {
   Animated,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES } from '../../constants/categories';
@@ -82,7 +82,12 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
   const isFormValid = title.trim().length >= 5 && description.trim().length >= 10;
 
   const urgentLabel = () => {
-    const opt = URGENCY_OPTIONS.find((o) => o.level === urgency)!;
+    const opt = URGENCY_OPTIONS.find((o) => o.level === urgency) || URGENCY_OPTIONS[1] || {
+      label: 'Medium',
+      color: '#D97706',
+      bg: '#FEF3C7',
+      icon: 'information-circle-outline' as const,
+    };
     return { label: opt.label, color: opt.color, bg: opt.bg, icon: opt.icon };
   };
 
@@ -114,6 +119,18 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
   const doSubmit = async () => {
     setIsSubmitting(true);
     try {
+      let uploadedPhotoUrl = photoUri || undefined;
+      if (photoUri && (photoUri.startsWith('file:') || photoUri.startsWith('content:'))) {
+        try {
+          const serverUrl = await ReportsApi.uploadEvidence(photoUri);
+          if (serverUrl) {
+            uploadedPhotoUrl = serverUrl;
+          }
+        } catch (uploadError) {
+          console.warn('[ReviewSubmit] Evidence photo upload failed, sending fallback:', uploadError);
+        }
+      }
+
       const report = await ReportsApi.submitReport({
         category_id: categoryId,
         title: title.trim(),
@@ -122,7 +139,7 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
         longitude: coords?.longitude ?? 36.8344,
         address_text: addressText || 'Jimma City, Oromia Region',
         landmark: landmark?.trim() || undefined,
-        photo_url: photoUri || undefined,
+        photo_url: uploadedPhotoUrl,
         urgency,
       });
       setIsSubmitting(false);
@@ -316,7 +333,7 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
               {/* Photo */}
               <View style={styles.summaryItem}>
                 {photoUri ? (
-                  <Image source={{ uri: photoUri }} style={styles.summaryThumb} />
+                  <Image source={{ uri: photoUri }} style={styles.summaryThumb} resizeMode="cover" />
                 ) : (
                   <View style={styles.summaryPhotoPlaceholder}>
                     <Ionicons
@@ -351,7 +368,12 @@ export const ReviewSubmitScreen: React.FC<Props> = ({ navigation, route }) => {
                   <Text style={styles.summaryItemValue} numberOfLines={2}>
                     {addressText || 'Jimma City, Oromia'}
                   </Text>
-                  {landmark ? <Text style={styles.summaryItemSub}>📍 {landmark}</Text> : null}
+                  {landmark ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                      <Ionicons name="location-sharp" size={12} color="#6B7280" style={{ marginRight: 3 }} />
+                      <Text style={styles.summaryItemSub}>{landmark}</Text>
+                    </View>
+                  ) : null}
                 </View>
                 <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
               </View>

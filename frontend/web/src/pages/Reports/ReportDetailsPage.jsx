@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import {
-  acceptReport, redirectReport, rejectReport, getReportById,
+  acceptReport, redirectReport, rejectReport, getReportById, getInstitutions,
 } from '../../services/reportService.js';
-import { REPORT_STATUS, mockInstitutions } from '../../data/mockReports.js';
-import { mockStaff } from '../../data/mockStaff.js';
+import { REPORT_STATUS } from '../../services/reportService.js';
 
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import PriorityBadge from '../../components/ui/PriorityBadge.jsx';
@@ -21,7 +20,8 @@ import {
   MapPin,
   Check,
   CircleCheck,
-  Loader2
+  Loader2,
+  ExternalLink,
 } from 'lucide-react';
 
 function formatDateTime(iso) {
@@ -46,10 +46,14 @@ function timeAgo(iso) {
 const TIMELINE_STAGES = ['Submitted', 'Under Review', 'Accepted', 'Assigned', 'In Progress', 'Resolved'];
 const REJECTION_REASONS = ['Duplicate report', 'Insufficient information', 'Invalid report', 'Outside jurisdiction', 'Other'];
 
-// ── Map placeholder ────────────────────────────────────────────────────────
+// ── Map placeholder with Google Maps Link ──────────────────────────────────
 function MapPlaceholder({ location }) {
+  const lat = location?.coordinates?.lat;
+  const lng = location?.coordinates?.lng;
+  const mapsUrl = (lat && lng) ? `https://www.google.com/maps?q=${lat},${lng}` : null;
+
   return (
-    <div className="w-full h-48 rounded-xl bg-[#e8f5ee] border border-[#1a6b3c]/20 relative overflow-hidden flex items-center justify-center">
+    <div className="w-full rounded-xl bg-[#e8f5ee] border border-[#1a6b3c]/20 relative overflow-hidden flex flex-col items-center justify-center p-6 min-h-[190px]">
       {/* Grid lines for map feel */}
       <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -61,18 +65,30 @@ function MapPlaceholder({ location }) {
       </svg>
       {/* Pin marker */}
       <div className="relative z-10 flex flex-col items-center">
-        <div className="w-8 h-8 rounded-full bg-[#1a6b3c] flex items-center justify-center shadow-lg mb-1">
-          <MapPin className="w-4 h-4 text-white fill-white" />
+        <div className="w-9 h-9 rounded-full bg-[#1a6b3c] flex items-center justify-center shadow-lg mb-2 ring-4 ring-white">
+          <MapPin className="w-5 h-5 text-white fill-white" />
         </div>
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center shadow-sm border border-[#1a6b3c]/20">
-          <p className="text-xs font-semibold text-[#1a6b3c]">{location?.kebele}</p>
-          <p className="text-[10px] text-gray-500">{location?.city}</p>
-          {location?.coordinates && (
-            <p className="text-[9px] text-gray-400 mt-0.5 font-mono">
-              {location.coordinates.lat}°N, {location.coordinates.lng}°E
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2 text-center shadow-sm border border-[#1a6b3c]/20 max-w-sm">
+          <p className="text-xs font-bold text-[#1a6b3c]">{location?.kebele || location?.address || 'Jimma City'}</p>
+          <p className="text-[11px] text-gray-500">{location?.address || location?.city}</p>
+          {lat && lng && (
+            <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
+              {Number(lat).toFixed(5)}°N, {Number(lng).toFixed(5)}°E
             </p>
           )}
         </div>
+
+        {mapsUrl && (
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#1a6b3c] hover:bg-[#14532d] text-white text-xs font-semibold shadow-sm transition-all"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Open in Google Maps
+          </a>
+        )}
       </div>
     </div>
   );
@@ -162,6 +178,7 @@ export default function ReportDetailsPage() {
   const { updateReportInState, showToast, addNotification, currentUser } = useApp();
 
   const [report, setReport] = useState(null);
+  const [institutions, setInstitutions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -179,8 +196,11 @@ export default function ReportDetailsPage() {
 
   useEffect(() => {
     setLoading(true);
-    getReportById(id)
-      .then((r) => setReport(r))
+    Promise.all([getReportById(id), getInstitutions()])
+      .then(([r, insts]) => {
+        setReport(r);
+        setInstitutions(insts);
+      })
       .catch(() => setReport(null))
       .finally(() => setLoading(false));
   }, [id]);
@@ -217,10 +237,14 @@ export default function ReportDetailsPage() {
       showToast('Please fill in all fields.', 'error');
       return;
     }
-    const dest = mockInstitutions.find((i) => String(i.id) === redirectForm.destination);
+    const dest = institutions.find((i) => i.id === redirectForm.destination);
     setActionLoading(true);
     try {
-      const updated = await redirectReport(id, { destinationName: dest?.name || redirectForm.destination, reason: redirectForm.reason });
+      const updated = await redirectReport(id, {
+        destinationName: dest?.name || redirectForm.destination,
+        destinationId: redirectForm.destination,
+        reason: redirectForm.reason,
+      });
       setReport(updated);
       updateReportInState(updated);
       showToast(`Report redirected to ${dest?.name || redirectForm.destination}.`, 'success');
@@ -325,7 +349,13 @@ export default function ReportDetailsPage() {
           {/* Photos */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Photos</h2>
-            <PhotoGallery photos={report.photos} />
+            <PhotoGallery
+              photos={
+                (report.photos && report.photos.length > 0)
+                  ? report.photos
+                  : (report.photo_url ? [report.photo_url] : (report.attachments?.map((a) => a.file_url || a.url).filter(Boolean) || []))
+              }
+            />
           </div>
 
           {/* Location */}
@@ -350,11 +380,22 @@ export default function ReportDetailsPage() {
                 <p className="text-sm text-gray-900">{report.location?.address}</p>
               </div>
               {report.location?.coordinates && (
-                <div className="col-span-2">
-                  <p className="text-xs text-gray-500 mb-0.5">GPS Coordinates</p>
-                  <p className="text-sm font-mono text-gray-900">
-                    {report.location.coordinates.lat}°N, {report.location.coordinates.lng}°E
-                  </p>
+                <div className="col-span-2 pt-3 mt-1 border-t border-gray-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-0.5">GPS Coordinates</p>
+                    <p className="text-sm font-mono text-gray-900">
+                      {report.location.coordinates.lat}°N, {report.location.coordinates.lng}°E
+                    </p>
+                  </div>
+                  <a
+                    href={`https://www.google.com/maps?q=${report.location.coordinates.lat},${report.location.coordinates.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a6b3c]/10 text-[#1a6b3c] hover:bg-[#1a6b3c]/20 text-xs font-semibold transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Open in Google Maps
+                  </a>
                 </div>
               )}
             </div>
@@ -526,7 +567,7 @@ export default function ReportDetailsPage() {
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a6b3c]/30 focus:border-[#1a6b3c]"
             >
               <option value="">Select institution or department</option>
-              {mockInstitutions.map((inst) => (
+              {institutions.map((inst) => (
                 <option key={inst.id} value={inst.id}>{inst.name}</option>
               ))}
             </select>

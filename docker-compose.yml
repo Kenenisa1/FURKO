@@ -1,24 +1,57 @@
-version: '3.8'
-
 services:
+  # =============================================================
+  # PostgreSQL 16 + PostGIS 3.4 Database Service
+  # =============================================================
   furko-db:
     image: postgis/postgis:16-3.4
     container_name: furko-postgres
     restart: always
     environment:
-      POSTGRES_DB: furko_db
-      POSTGRES_USER: furko_user
-      POSTGRES_PASSWORD: furko_password
+      POSTGRES_DB: ${DB_NAME:-furko_db}
+      POSTGRES_USER: ${DB_USER:-furko_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-furko_password}
     ports:
       - "5432:5432"
     volumes:
       - furko_pgdata:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U furko_user -d furko_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-furko_user} -d ${DB_NAME:-furko_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  # =============================================================
+  # FURKO Backend Express API Service
+  # =============================================================
+  furko-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: furko-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      API_PREFIX: /api/v1
+      CORS_ORIGIN: "*"
+      # Defaults to Compose service name 'furko-db' for all-in-one local setup.
+      # When connecting to a teammate's shared DB, set DB_HOST=<teammate-ip> in .env
+      DB_HOST: ${DB_HOST:-furko-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-furko_db}
+      DB_USER: ${DB_USER:-furko_user}
+      DB_PASSWORD: ${DB_PASSWORD:-furko_password}
+      JWT_SECRET: ${JWT_SECRET:-super_secret_furko_jwt_key_change_in_production}
+      JWT_EXPIRES_IN: 7d
+    depends_on:
+      furko-db:
+        condition: service_healthy
+    volumes:
+      - backend_uploads:/app/uploads
+
 volumes:
   furko_pgdata:
+  backend_uploads:

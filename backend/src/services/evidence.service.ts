@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { query } from '../config/db';
 import { env } from '../config/env';
 import { Attachment, AttachmentType } from '../models';
+import { CloudinaryService } from './cloudinary.service';
 
 export interface SaveEvidenceParams {
   file: Express.Multer.File;
@@ -42,7 +43,16 @@ export class EvidenceService {
     const { file, reportId = null, uploadedByUserId = null, fileType = 'evidence', reqBaseUrl } = params;
 
     const attachmentId = uuidv4();
-    const fileUrl = this.getFileUrl(file.filename, reqBaseUrl);
+    let fileUrl = this.getFileUrl(file.filename, reqBaseUrl);
+
+    // If Cloudinary is configured, upload to cloud storage
+    if (CloudinaryService.isEnabled()) {
+      const cloudUpload = await CloudinaryService.uploadImage(file.path, fileType);
+      if (cloudUpload?.url) {
+        fileUrl = cloudUpload.url;
+      }
+    }
+
     const createdAt = new Date();
 
     const attachment: Attachment = {

@@ -7,13 +7,14 @@ import {
   TouchableOpacity,
   TextInput,
   RefreshControl,
-  SafeAreaView,
   StatusBar,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { STATUS_META, PROBLEM_CATEGORIES } from '../../constants/categories';
+import { CategoryIcon } from '../../components/common/CategoryIcon';
 import { ReportsApi } from '../../services/api';
 import { Report, ReportStatus } from '../../types';
 
@@ -34,17 +35,6 @@ const FILTER_TABS: {
   { key: 'reopened',   label: 'Reopened',    statuses: ['reopened'] },
   { key: 'rejected',   label: 'Rejected',    statuses: ['rejected'] },
 ];
-
-// ─── Category icon helper ─────────────────────────────────────────────────────
-const categoryEmoji = (key?: string) => {
-  switch (key) {
-    case 'roads':    return '🚧';
-    case 'water':    return '💧';
-    case 'waste':    return '🗑️';
-    case 'lighting': return '💡';
-    default:         return '📋';
-  }
-};
 
 // ─── Urgency config ───────────────────────────────────────────────────────────
 const URGENCY_COLOR: Record<string, string> = {
@@ -126,8 +116,8 @@ const ReportCard = ({
       {/* ── Card header row ── */}
       <View style={styles.cardHeader}>
         <View style={styles.trackingGroup}>
-          <Text style={styles.categoryEmoji}>{categoryEmoji(cat?.key)}</Text>
-          <Text style={styles.trackingText}>{item.tracking_number}</Text>
+          <CategoryIcon categoryKey={cat?.key} size={18} color={cat?.color ?? Colors.primary} />
+          <Text style={[styles.trackingText, { marginLeft: 6 }]}>{item.tracking_number}</Text>
         </View>
         <View style={styles.badgeRow}>
           {item.urgency === 'emergency' && (
@@ -176,9 +166,12 @@ const ReportCard = ({
 
       {/* ── Card footer ── */}
       <View style={styles.cardFooter}>
-        <Text style={styles.instText} numberOfLines={1}>
-          🏢 {item.institution_name}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+          <Ionicons name="business-outline" size={13} color="#6B7280" style={{ marginRight: 4 }} />
+          <Text style={styles.instText} numberOfLines={1}>
+            {item.institution_name}
+          </Text>
+        </View>
         <View style={styles.footerRight}>
           {urgColor && item.urgency !== 'low' && (
             <View style={[styles.urgencyDot, { backgroundColor: urgColor }]} />

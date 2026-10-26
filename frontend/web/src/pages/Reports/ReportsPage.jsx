@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
-import { REPORT_STATUS } from '../../data/mockReports.js';
+import { REPORT_STATUS } from '../../services/reportService.js';
 import ReportTable from '../../components/reports/ReportTable.jsx';
 import FilterBar from '../../components/reports/FilterBar.jsx';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';

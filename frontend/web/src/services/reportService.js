@@ -1,171 +1,160 @@
 // ──────────────────────────────────────────────
-// FURKO — Report Service (mock)
-// All functions operate on in-memory state.
-// Replace function bodies with fetch() calls when backend is ready:
-//   GET    /api/reports
-//   GET    /api/reports/:id
-//   POST   /api/reports/:id/accept
-//   POST   /api/reports/:id/redirect
-//   POST   /api/reports/:id/reject
-//   POST   /api/reports/:id/assign
-//   POST   /api/reports/:id/resolve
+// FURKO — Report Service (real API)
+// Backed by GET/POST  /api/v1/institutions/reports
+// Field names are normalized from DB snake_case to
+// the camelCase shape the UI pages expect.
 // ──────────────────────────────────────────────
 
-import { mockReports, REPORT_STATUS } from '../data/mockReports.js';
+import { getStoredToken } from './authService.js';
 
-// In-memory store — initialised from mock data
-let _reports = mockReports.map((r) => ({ ...r }));
+const API_BASE = '/api/v1';
 
-function delay(ms = 400) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export const REPORT_STATUS = {
+  NEW:          'submitted',
+  UNDER_REVIEW: 'under_review',
+  ACCEPTED:     'accepted',
+  ASSIGNED:     'assigned',
+  IN_PROGRESS:  'in_progress',
+  REDIRECTED:   'redirected',
+  RESOLVED:     'resolved',
+  REJECTED:     'rejected',
+  REOPENED:     'reopened',
+};
+
+function authHeaders() {
+  const token = getStoredToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
-function now() {
-  return new Date().toISOString();
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: { ...authHeaders(), ...(options.headers || {}) },
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message || json.error || `Request failed: ${res.status}`);
+  return json;
+}
+
+/**
+ * Normalize a raw DB report row into the shape the UI components expect.
+ * Maps snake_case DB columns → camelCase UI fields.
+ */
+function normalizeReport(r) {
+  return {
+    ...r,
+    // Timestamps
+    submittedAt: r.submitted_at ?? r.submittedAt,
+    updatedAt:   r.updated_at  ?? r.updatedAt,
+    // Category (DB: category_name, UI: category)
+    category: r.category_name ?? r.category ?? '—',
+    // Location: flatten DB location columns into the nested shape UI expects
+    location: r.location ?? {
+      address:  r.address_text  ?? r.landmark ?? '—',
+      kebele:   r.landmark      ?? '—',
+      woreda:   '—',
+      city:     'Jimma City',
+      coordinates: (r.latitude && r.longitude)
+        ? { lat: parseFloat(r.latitude), lng: parseFloat(r.longitude) }
+        : null,
+    },
+    // Activity log: map from status_history shape if present
+    activity: r.activity ?? (r.history ?? []).map((h) => ({
+      time:   h.changed_at,
+      action: h.comment || `Status changed to ${h.new_status}`,
+    })),
+    // Timeline: build from audit_history or status_history
+    timeline: r.timeline ?? [],
+    // Photos
+    photos: r.photos ?? [],
+  };
 }
 
 // ── READ ─────────────────────────────────────
 
 export async function getReports() {
-  await delay();
-  return [..._reports];
+  const json = await apiFetch('/institutions/reports');
+  // Backend returns { success, count, reports: [...] }
+  return (json.reports ?? []).map(normalizeReport);
 }
 
 export async function getReportById(id) {
-  await delay(300);
-  const report = _reports.find((r) => r.id === id);
-  if (!report) throw new Error(`Report ${id} not found.`);
-  return { ...report };
+  const json = await apiFetch(`/institutions/reports/${id}`);
+  return normalizeReport(json.report ?? json);
+}
+
+// Fetch all active institutions (for redirect dropdown)
+export async function getInstitutions() {
+  try {
+    const json = await apiFetch('/institutions/list');
+    return json.institutions ?? json.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+// Fetch institution profile
+export async function getProfile() {
+  const json = await apiFetch('/institutions/profile');
+  return json.data;
+}
+
+// Update institution profile
+export async function updateProfile(updates) {
+  const json = await apiFetch('/institutions/profile', {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  });
+  return json.data;
 }
 
 // ── WORKFLOW ACTIONS ─────────────────────────
 
-export async function acceptReport(id) {
-  await delay();
-  _reports = _reports.map((r) => {
-    if (r.id !== id) return r;
-    const timestamp = now();
-    return {
-      ...r,
-      status: REPORT_STATUS.UNDER_REVIEW,
-      timeline: [
-        ...r.timeline,
-        { stage: 'Under Review', completedAt: timestamp, note: 'Report accepted and under review' },
-      ],
-      activity: [
-        ...r.activity,
-        { time: timestamp, action: 'Report accepted by institution — moved to Under Review' },
-      ],
-    };
+async function postAction(id, action, body = {}) {
+  return apiFetch(`/institutions/reports/${id}/action`, {
+    method: 'POST',
+    body: JSON.stringify({ action, ...body }),
   });
+}
+
+export async function acceptReport(id) {
+  await postAction(id, 'accept');
   return getReportById(id);
 }
 
-export async function redirectReport(id, { destinationName, reason }) {
-  await delay();
-  _reports = _reports.map((r) => {
-    if (r.id !== id) return r;
-    const timestamp = now();
-    return {
-      ...r,
-      status: REPORT_STATUS.REDIRECTED,
-      timeline: [
-        ...r.timeline,
-        { stage: 'Redirected', completedAt: timestamp, note: `Redirected to ${destinationName}` },
-      ],
-      activity: [
-        ...r.activity,
-        {
-          time: timestamp,
-          action: `Report redirected to ${destinationName}. Reason: ${reason}`,
-        },
-      ],
-    };
+export async function redirectReport(id, { destinationName, destinationId, reason }) {
+  await postAction(id, 'redirect', {
+    institution_id: destinationId,
+    comment: reason,
   });
-  return getReportById(id);
+  return { id, status: REPORT_STATUS.REDIRECTED, redirectedTo: destinationName };
 }
 
 export async function rejectReport(id, { reason, explanation }) {
-  await delay();
-  _reports = _reports.map((r) => {
-    if (r.id !== id) return r;
-    const timestamp = now();
-    return {
-      ...r,
-      status: REPORT_STATUS.REJECTED,
-      timeline: [
-        ...r.timeline,
-        { stage: 'Rejected', completedAt: timestamp, note: `Rejected: ${reason}` },
-      ],
-      activity: [
-        ...r.activity,
-        {
-          time: timestamp,
-          action: `Report rejected. Reason: ${reason}${explanation ? ` — ${explanation}` : ''}`,
-        },
-      ],
-    };
+  await postAction(id, 'reject', {
+    comment: [reason, explanation].filter(Boolean).join(' — '),
   });
   return getReportById(id);
 }
 
-export async function assignReport(id, { department, assignedTo, assignmentNote, dueDate }) {
-  await delay();
-  _reports = _reports.map((r) => {
-    if (r.id !== id) return r;
-    const timestamp = now();
-    return {
-      ...r,
-      status: REPORT_STATUS.IN_PROGRESS,
-      department,
-      assignedTo,
-      assignmentNote,
-      dueDate: dueDate || null,
-      timeline: [
-        ...r.timeline,
-        ...(r.status === REPORT_STATUS.UNDER_REVIEW || r.status === REPORT_STATUS.NEW
-          ? [{ stage: 'Accepted', completedAt: timestamp, note: 'Accepted before assignment' }]
-          : []),
-        { stage: 'Assigned', completedAt: timestamp, note: `Assigned to ${assignedTo} — ${department}` },
-        { stage: 'In Progress', completedAt: timestamp, note: 'Work started' },
-      ],
-      activity: [
-        ...r.activity,
-        {
-          time: timestamp,
-          action: `Assigned to ${assignedTo} (${department})${assignmentNote ? ` — Note: ${assignmentNote}` : ''}`,
-        },
-        { time: timestamp, action: 'Status changed to In Progress' },
-      ],
-    };
+export async function assignReport(id, { assignedTo, assignmentNote }) {
+  await apiFetch(`/institutions/reports/${id}/assign`, {
+    method: 'POST',
+    body: JSON.stringify({
+      staff_user_id: assignedTo,
+      comment: assignmentNote || null,
+    }),
   });
+  await postAction(id, 'start');
   return getReportById(id);
 }
 
-export async function resolveReport(id, { description, resolvedBy, photos }) {
-  await delay();
-  _reports = _reports.map((r) => {
-    if (r.id !== id) return r;
-    const timestamp = now();
-    return {
-      ...r,
-      status: REPORT_STATUS.RESOLVED,
-      resolution: {
-        description,
-        resolvedAt: timestamp,
-        resolvedBy,
-        photos: photos || [],
-      },
-      timeline: [
-        ...r.timeline,
-        { stage: 'Resolved', completedAt: timestamp, note: 'Work completed and verified' },
-      ],
-      activity: [
-        ...r.activity,
-        { time: timestamp, action: `Report resolved by ${resolvedBy}` },
-        { time: timestamp, action: 'Report marked as Resolved' },
-      ],
-    };
+export async function resolveReport(id, { description, resolvedBy }) {
+  await postAction(id, 'resolve', {
+    comment: `${resolvedBy ? resolvedBy + ': ' : ''}${description}`,
   });
   return getReportById(id);
 }

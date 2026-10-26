@@ -57,11 +57,16 @@ export class ReportResolutionService {
         `SELECT r.*,
                 c.name AS category_name,
                 i.name AS institution_name,
-                l.latitude, l.longitude, l.address_text, l.landmark
+                l.latitude, l.longitude, l.address_text, l.landmark,
+                u_staff.full_name AS assigned_staff_name,
+                u_staff.phone_number AS assigned_staff_phone,
+                u_staff.email AS assigned_staff_email,
+                u_staff.role AS assigned_staff_role
          FROM reports r
          LEFT JOIN categories c ON c.id = r.category_id
-         LEFT JOIN institutions i ON i.id = COALESCE(r.current_institution_id, r.institution_id)
+         LEFT JOIN institutions i ON i.id = r.current_institution_id
          LEFT JOIN locations l ON l.id = r.location_id
+         LEFT JOIN users u_staff ON u_staff.id = r.assigned_staff_id
          WHERE ${isUuid ? 'r.id = $1' : 'r.tracking_number = $1 OR r.id::text = $1'}
          LIMIT 1`,
         [identifier]
@@ -101,6 +106,12 @@ export class ReportResolutionService {
       const attachments: Attachment[] = attachRes.rows || [];
       const evidence = attachments.filter((a) => a.file_type === 'evidence');
       const resolutionProofs = attachments.filter((a) => a.file_type === 'resolution_proof');
+
+      if (!reportRow.photo_url && evidence.length > 0) {
+        reportRow.photo_url = evidence[0].file_url;
+      }
+      reportRow.evidence_photos = evidence.map((e) => e.file_url);
+      reportRow.resolution_photos = resolutionProofs.map((r) => r.file_url);
 
       return {
         report: reportRow,
@@ -333,8 +344,8 @@ export class ReportResolutionService {
         report_id: reportId,
         new_status: 'submitted',
         actor_role: 'citizen',
-        comment: 'Report submitted by citizen.',
-        changed_at: new Date(Date.now() - 86400000 * 2),
+        comment: 'Report submitted by citizen with GPS location and photo evidence.',
+        changed_at: new Date(Date.now() - 86400000),
       },
       {
         id: 'aud-2',
@@ -342,21 +353,13 @@ export class ReportResolutionService {
         previous_status: 'submitted',
         new_status: 'under_review',
         actor_role: 'system',
-        comment: 'Direct spatial routing dispatched to Road Bureau.',
-        changed_at: new Date(Date.now() - 86400000),
-      },
-      {
-        id: 'aud-3',
-        report_id: reportId,
-        previous_status: 'under_review',
-        new_status: 'resolved',
-        actor_role: 'staff',
-        comment: 'Maintenance crew completed asphalt patching.',
+        comment: 'Awaiting institution response: Routed to responsible bureau.',
         changed_at: new Date(Date.now() - 3600000),
       },
     ];
 
     const extension = mockReportExtensions.get(reportId) || {};
+    const isResolved = extension.status === 'resolved';
 
     const report: any = {
       id: reportId,
@@ -367,15 +370,17 @@ export class ReportResolutionService {
       institution_name: 'Jimma City Road & Infrastructure Development Bureau',
       title: 'Severe road pothole near Aba Jifar Palace',
       description: 'Pothole causing traffic disruption.',
-      status: extension.status || 'resolved',
-      resolution_information:
-        'Pothole filled and leveled with hot asphalt mix by Team 2.',
+      status: extension.status || 'under_review',
+      assigned_staff_name: extension.status === 'submitted' ? null : 'Abebe Bikila (Field Specialist)',
+      assigned_staff_phone: extension.status === 'submitted' ? null : '+251 911 223 344',
+      assigned_staff_role: 'staff',
+      resolution_information: isResolved ? 'Pothole filled and leveled with hot asphalt mix by Team 2.' : null,
       latitude: 7.6734,
       longitude: 36.8344,
       address_text: 'Jimma Aba Jifar Road, Kebele 04',
       landmark: 'Near Palace Gate',
-      submitted_at: new Date(Date.now() - 86400000 * 2),
-      resolved_at: new Date(Date.now() - 3600000),
+      submitted_at: new Date(Date.now() - 86400000),
+      resolved_at: isResolved ? new Date() : null,
       updated_at: new Date(),
       citizen_confirmed: extension.citizen_confirmed ?? false,
       citizen_confirmed_at: extension.citizen_confirmed_at ?? null,
@@ -395,10 +400,10 @@ export class ReportResolutionService {
           file_type: 'evidence',
           mime_type: 'image/jpeg',
           file_size: 102400,
-          created_at: new Date(Date.now() - 86400000 * 2),
+          created_at: new Date(Date.now() - 86400000),
         },
       ],
-      resolution_proofs: [
+      resolution_proofs: isResolved ? [
         {
           id: 'att-2',
           report_id: reportId,
@@ -408,9 +413,9 @@ export class ReportResolutionService {
           file_type: 'resolution_proof',
           mime_type: 'image/jpeg',
           file_size: 120400,
-          created_at: new Date(Date.now() - 3600000),
+          created_at: new Date(),
         },
-      ],
+      ] : [],
       feedback: mockFeedbackStore.get(reportId) || null,
     };
   }

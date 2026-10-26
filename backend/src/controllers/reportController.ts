@@ -26,16 +26,24 @@ export const reportController = {
           r.description,
           r.status,
           r.priority,
+          r.urgency,
           r.submitted_at,
+          r.resolved_at,
+          COALESCE(
+            r.photo_url,
+            (SELECT file_url FROM attachments WHERE report_id = r.id AND file_type = 'evidence' LIMIT 1)
+          ) AS photo_url,
           c.id AS category_id,
           c.name AS category_name,
           l.latitude,
           l.longitude,
           l.address_text,
-          l.landmark
+          l.landmark,
+          i.name AS institution_name
         FROM reports r
         LEFT JOIN categories c ON c.id = r.category_id
         LEFT JOIN locations l ON l.id = r.location_id
+        LEFT JOIN institutions i ON i.id = r.current_institution_id
         WHERE r.citizen_id = $1
         ORDER BY r.submitted_at DESC
         `,
@@ -45,7 +53,7 @@ export const reportController = {
       res.status(200).json({
         success: true,
         count: result.rows.length,
-        reports: result.rows,
+        data: result.rows,
       });
     } catch (error) {
       console.error('Get citizen reports error:', error);

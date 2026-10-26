@@ -62,7 +62,9 @@ export interface Report {
   address_text?: string;
   landmark?: string;
   photo_url?: string;
+  evidence_photos?: string[];
   proof_photo_url?: string;
+  resolution_photos?: string[];
   resolution_notes?: string;
   institution_name?: string;
   is_fallback?: boolean;
@@ -72,6 +74,11 @@ export interface Report {
   user_feedback?: string;
   urgency?: 'low' | 'medium' | 'high' | 'emergency';
   sub_issue?: string;
+  assigned_staff_id?: string;
+  assigned_staff_name?: string;
+  assigned_staff_phone?: string;
+  assigned_staff_email?: string;
+  assigned_staff_role?: string;
   audit_history?: AuditHistoryEntry[];
 }
 

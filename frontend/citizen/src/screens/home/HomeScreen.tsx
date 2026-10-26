@@ -5,16 +5,17 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ImageBackground,
   Dimensions,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES, STATUS_META } from '../../constants/categories';
 import { FurkoLogo } from '../../components/common/FurkoLogo';
+import { CategoryIcon } from '../../components/common/CategoryIcon';
 import { useAuth } from '../../context/AuthContext';
 import { ReportsApi } from '../../services/api';
 import { Report } from '../../types';
@@ -155,21 +156,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 activeOpacity={0.8}
               >
                 <View style={[styles.categoryIconCircle, { backgroundColor: cat.color + '18' }]}>
-                  <Text style={styles.categoryEmoji}>
-                    {cat.key === 'roads'
-                      ? '🚧'
-                      : cat.key === 'water'
-                      ? '💧'
-                      : cat.key === 'waste'
-                      ? '🗑️'
-                      : '💡'}
-                  </Text>
+                  <CategoryIcon categoryKey={cat.key} size={24} color={cat.color} />
                 </View>
                 <Text style={styles.categoryName} numberOfLines={1}>{cat.name}</Text>
                 <Text style={styles.categoryLocal} numberOfLines={1}>{cat.nameLocal}</Text>
-                <Text style={styles.categoryInst} numberOfLines={2}>
-                  🏢 {cat.responsibleInstitution}
-                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -229,7 +219,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             {reports.slice(0, 2).map((rep) => {
-              const meta = STATUS_META[rep.status];
+              const meta = STATUS_META[rep.status] || STATUS_META.submitted;
               return (
                 <TouchableOpacity
                   key={rep.id}
@@ -239,14 +229,17 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 >
                   <View style={styles.recentCardTop}>
                     <Text style={styles.recentTracking}>{rep.tracking_number}</Text>
-                    <View style={[styles.recentStatusBadge, { backgroundColor: meta.bg }]}>
-                      <Text style={[styles.recentStatusText, { color: meta.color }]}>
-                        {meta.label}
+                    <View style={[styles.recentStatusBadge, { backgroundColor: meta?.bg || '#F3F4F6' }]}>
+                      <Text style={[styles.recentStatusText, { color: meta?.color || '#374151' }]}>
+                        {meta?.label || rep.status}
                       </Text>
                     </View>
                   </View>
                   <Text style={styles.recentTitle} numberOfLines={1}>{rep.title}</Text>
-                  <Text style={styles.recentLoc} numberOfLines={1}>📍 {rep.address_text}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                    <Ionicons name="location-sharp" size={13} color="#6B7280" style={{ marginRight: 3 }} />
+                    <Text style={styles.recentLoc} numberOfLines={1}>{rep.address_text}</Text>
+                  </View>
                 </TouchableOpacity>
               );
             })}

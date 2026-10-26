@@ -1,42 +1,71 @@
 // ──────────────────────────────────────────────
-// FURKO — Staff Service (mock)
-// Replace with:  GET/POST/PUT/DELETE /api/staff
+// FURKO — Staff Service (Real Database API)
+// Connects to /api/v1/institutions/staff
 // ──────────────────────────────────────────────
 
-import { mockStaff } from '../data/mockStaff.js';
+import { getStoredToken } from './authService.js';
 
-let _staff = mockStaff.map((s) => ({ ...s }));
-let _nextId = _staff.length + 1;
+const API_BASE = '/api/v1/institutions';
 
-function delay(ms = 350) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export const departments = [
+  'Operations',
+  'Field Inspection',
+  'Road Infrastructure',
+  'Water & Sewerage',
+  'Waste Management',
+  'Power & Lighting',
+  'Customer Relations',
+  'Administration',
+];
+
+function authHeaders() {
+  const token = getStoredToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: { ...authHeaders(), ...(options.headers || {}) },
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.message || json.error || `Request failed with status ${res.status}`);
+  }
+  return json;
 }
 
 export async function getStaff() {
-  await delay();
-  return [..._staff];
+  const json = await apiFetch('/staff');
+  return json.data || [];
 }
 
 export async function getStaffById(id) {
-  await delay(200);
-  return _staff.find((s) => s.id === id) || null;
+  const staff = await getStaff();
+  return staff.find((s) => s.id === id) || null;
 }
 
 export async function addStaff(staffData) {
-  await delay();
-  const id = `STF-${String(_nextId++).padStart(3, '0')}`;
-  const newMember = { ...staffData, id, reportsHandled: 0, joinedAt: new Date().toISOString() };
-  _staff = [..._staff, newMember];
-  return newMember;
+  const json = await apiFetch('/staff', {
+    method: 'POST',
+    body: JSON.stringify(staffData),
+  });
+  return json.data;
 }
 
 export async function updateStaff(id, updates) {
-  await delay();
-  _staff = _staff.map((s) => (s.id === id ? { ...s, ...updates } : s));
-  return _staff.find((s) => s.id === id);
+  const json = await apiFetch(`/staff/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  });
+  return json.data;
 }
 
 export async function deleteStaff(id) {
-  await delay();
-  _staff = _staff.filter((s) => s.id !== id);
+  await apiFetch(`/staff/${id}`, {
+    method: 'DELETE',
+  });
 }

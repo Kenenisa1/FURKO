@@ -4,6 +4,7 @@ export interface User {
   id?: string;
   institution_id?: string | null;
   full_name: string;
+  fathers_name?: string | null;
   email: string;
   phone_number?: string;
   password_hash: string;
@@ -17,13 +18,13 @@ export interface User {
 
 export const UserModel = {
   async findByEmail(email: string): Promise<User | null> {
-    const queryText = 'SELECT * FROM users WHERE email = \$1';
+    const queryText = 'SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))';
     const result = await pool.query(queryText, [email]);
     return result.rows[0] || null;
   },
 
   async findById(id: string): Promise<User | null> {
-    const queryText = 'SELECT id, institution_id, full_name, email, phone_number, role, is_active, is_verified, created_at FROM users WHERE id = \$1';
+    const queryText = 'SELECT id, institution_id, full_name, email, phone_number, role, is_active, is_verified, created_at FROM users WHERE id = $1';
     const result = await pool.query(queryText, [id]);
     return result.rows[0] || null;
   },
@@ -32,16 +33,24 @@ export const UserModel = {
     full_name: string;
     email: string;
     phone_number?: string;
+    fathers_name?: string | null;
     password_hash: string;
     role?: 'citizen' | 'staff' | 'admin';
   }): Promise<User> {
-    const { full_name, email, phone_number, password_hash, role = 'citizen' } = userData;
+    const { full_name, email, phone_number, fathers_name, password_hash, role = 'citizen' } = userData;
     const queryText = `
-      INSERT INTO users (full_name, email, phone_number, password_hash, role, is_active, is_verified, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      RETURNING id, full_name, email, phone_number, role, is_active, is_verified, created_at;
+      INSERT INTO users (full_name, fathers_name, email, phone_number, password_hash, role, is_active, is_verified, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      RETURNING id, full_name, fathers_name, email, phone_number, role, is_active, is_verified, created_at;
     `;
-    const result = await pool.query(queryText, [full_name, email, phone_number || null, password_hash, role]);
+    const result = await pool.query(queryText, [
+      full_name.trim(),
+      fathers_name ? fathers_name.trim() : null,
+      email.trim().toLowerCase(),
+      phone_number ? phone_number.trim() : null,
+      password_hash,
+      role
+    ]);
     return result.rows[0];
   },
 
@@ -50,7 +59,7 @@ export const UserModel = {
     const queryText = `
       UPDATE users 
       SET verification_code = $1, verification_expires_at = $2, updated_at = CURRENT_TIMESTAMP
-      WHERE email = $3
+      WHERE LOWER(TRIM(email)) = LOWER(TRIM($3))
     `;
     await pool.query(queryText, [otpHash, expiresAt, email]);
   },
@@ -60,7 +69,7 @@ export const UserModel = {
     const queryText = `
       UPDATE users 
       SET is_verified = TRUE, verification_code = NULL, verification_expires_at = NULL, updated_at = CURRENT_TIMESTAMP
-      WHERE email = $1
+      WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))
       RETURNING id;
     `;
     const result = await pool.query(queryText, [email]);

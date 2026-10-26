@@ -4,11 +4,11 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { CustomKeypad } from '../../components/common/CustomKeypad';
@@ -74,7 +74,7 @@ export const PhoneVerificationScreen: React.FC<Props> = ({ navigation, route }) 
       setIsVerifying(false);
 
       Alert.alert(
-        'Phone Verified! 🎉',
+        'Phone Verified!',
         'Your citizen mobile number has been authenticated. Welcome to FURKO!',
         [
           {

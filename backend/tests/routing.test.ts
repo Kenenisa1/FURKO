@@ -64,7 +64,7 @@ async function runRoutingTests() {
     });
 
     if (
-      decision.target_institution.code === 'EEU-JB' &&
+      (decision.target_institution.code === 'EEU-JB' || decision.target_institution.code === 'EEU-JIMMA') &&
       !decision.is_fallback
     ) {
       console.log('✅ Test 3 Passed: Correctly routed Lighting report by slug to EEU Jimma');

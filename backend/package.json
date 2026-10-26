@@ -13,7 +13,7 @@
     "test:routing": "tsx tests/routing.test.ts",
     "test:resolution": "tsx tests/resolution.test.ts",
     "test:integration": "tsx tests/integration.test.ts",
-    "test": "tsx tests/evidence.test.ts; tsx tests/routing.test.ts; tsx tests/resolution.test.ts; tsx tests/integration.test.ts"
+    "test": "npx tsx tests/evidence.test.ts && npx tsx tests/routing.test.ts && npx tsx tests/resolution.test.ts && npx tsx tests/integration.test.ts"
   },
   "keywords": [
     "furko",
@@ -29,6 +29,7 @@
   "license": "MIT",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cloudinary": "^2.11.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
