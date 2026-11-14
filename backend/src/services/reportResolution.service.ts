@@ -57,6 +57,7 @@ export class ReportResolutionService {
         `SELECT r.*,
                 c.name AS category_name,
                 i.name AS institution_name,
+                b.name AS branch_name,
                 l.latitude, l.longitude, l.address_text, l.landmark,
                 u_staff.full_name AS assigned_staff_name,
                 u_staff.phone_number AS assigned_staff_phone,
@@ -65,6 +66,7 @@ export class ReportResolutionService {
          FROM reports r
          LEFT JOIN categories c ON c.id = r.category_id
          LEFT JOIN institutions i ON i.id = r.current_institution_id
+         LEFT JOIN branches b ON b.id = r.current_branch_id
          LEFT JOIN locations l ON l.id = r.location_id
          LEFT JOIN users u_staff ON u_staff.id = r.assigned_staff_id
          WHERE ${isUuid ? 'r.id = $1' : 'r.tracking_number = $1 OR r.id::text = $1'}
@@ -73,11 +75,31 @@ export class ReportResolutionService {
       );
 
       if (reportRes.rowCount === 0) {
+        if (identifier.startsWith('rep-demo') || identifier.startsWith('FRK-2026-')) {
+          return this.getMockTimeline(identifier);
+        }
         return null;
       }
 
       const reportRow = reportRes.rows[0];
       const reportId = reportRow.id;
+
+      if (!reportRow.institution_name && reportRow.category_id) {
+        try {
+          const instLookup = await pool.query(
+            `SELECT i.name FROM institutions i
+             JOIN routing_rules rr ON rr.target_institution_id = i.id
+             WHERE rr.category_id = $1
+             LIMIT 1`,
+            [reportRow.category_id]
+          );
+          if (instLookup.rows.length > 0) {
+            reportRow.institution_name = instLookup.rows[0].name;
+          }
+        } catch {
+          // ignore fallback lookup errors
+        }
+      }
 
       // 2. Fetch status history timeline
       const timelineRes = await pool.query(
@@ -148,6 +170,9 @@ export class ReportResolutionService {
 
         if (repRes.rowCount === 0) {
           await client.query('ROLLBACK');
+          if (reportId.startsWith('rep-demo') || reportId.startsWith('FRK-2026-')) {
+            return this.confirmResolutionMock(reportId, input);
+          }
           throw new Error('Report not found');
         }
 
@@ -259,6 +284,9 @@ export class ReportResolutionService {
 
         if (repRes.rowCount === 0) {
           await client.query('ROLLBACK');
+          if (reportId.startsWith('rep-demo') || reportId.startsWith('FRK-2026-')) {
+            return this.reopenReportMock(reportId, input);
+          }
           throw new Error('Report not found');
         }
 
@@ -359,7 +387,9 @@ export class ReportResolutionService {
     ];
 
     const extension = mockReportExtensions.get(reportId) || {};
-    const isResolved = extension.status === 'resolved';
+    const defaultStatus = reportId.startsWith('rep-demo') ? 'resolved' : 'under_review';
+    const status = extension.status || defaultStatus;
+    const isResolved = status === 'resolved';
 
     const report: any = {
       id: reportId,
@@ -370,7 +400,7 @@ export class ReportResolutionService {
       institution_name: 'Jimma City Road & Infrastructure Development Bureau',
       title: 'Severe road pothole near Aba Jifar Palace',
       description: 'Pothole causing traffic disruption.',
-      status: extension.status || 'under_review',
+      status: status,
       assigned_staff_name: extension.status === 'submitted' ? null : 'Abebe Bikila (Field Specialist)',
       assigned_staff_phone: extension.status === 'submitted' ? null : '+251 911 223 344',
       assigned_staff_role: 'staff',

@@ -46,6 +46,10 @@ router.get(
   EvidenceController.getReportEvidence
 );
 
+// City-wide public statistics across all institutions & reports
+router.get('/public-stats', reportController.getPublicStats);
+router.get('/metrics/public', reportController.getPublicStats);
+
 // Report status timeline & resolution details
 router.get('/:id/timeline', ReportResolutionController.getTimeline);
 router.get('/:id', ReportResolutionController.getTimeline);

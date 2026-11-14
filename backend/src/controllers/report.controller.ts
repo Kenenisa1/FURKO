@@ -113,6 +113,24 @@ export const ReportController = {
         if (fallbackRule.rowCount && fallbackRule.rowCount > 0) {
           targetInstitutionId = fallbackRule.rows[0].target_institution_id;
           targetInstitutionName = fallbackRule.rows[0].institution_name;
+        } else {
+          // Direct fallback to institution matching the category
+          const defaultInst = await client.query(
+            `SELECT id, name FROM institutions
+             WHERE is_active = TRUE
+               AND (
+                 (lower($1) LIKE '%road%' AND code = 'JIMA-ROAD') OR
+                 (lower($1) LIKE '%water%' AND code = 'JIMA-WATER') OR
+                 (lower($1) LIKE '%waste%' AND code = 'JIMA-WASTE') OR
+                 (lower($1) LIKE '%light%' AND code = 'EEU-JIMMA')
+               )
+             LIMIT 1`,
+            [categoryName]
+          );
+          if (defaultInst.rowCount && defaultInst.rowCount > 0) {
+            targetInstitutionId = defaultInst.rows[0].id;
+            targetInstitutionName = defaultInst.rows[0].name;
+          }
         }
       }
 
