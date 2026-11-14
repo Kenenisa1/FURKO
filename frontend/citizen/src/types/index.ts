@@ -67,6 +67,8 @@ export interface Report {
   resolution_photos?: string[];
   resolution_notes?: string;
   institution_name?: string;
+  current_branch_id?: string;
+  branch_name?: string;
   is_fallback?: boolean;
   submitted_at: string;
   resolved_at?: string;
