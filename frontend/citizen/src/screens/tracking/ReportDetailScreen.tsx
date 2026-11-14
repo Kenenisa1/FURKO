@@ -128,7 +128,17 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   const meta = STATUS_META[report.status] || STATUS_META.submitted;
-  const cat = PROBLEM_CATEGORIES.find((c) => c.id === report.category_id);
+  const cat = PROBLEM_CATEGORIES.find(
+    (c) =>
+      c.id === report.category_id ||
+      c.key === report.category_id ||
+      c.key === report.category_key ||
+      c.name.toLowerCase() === report.category_name?.toLowerCase()
+  );
+  const assignedInstitution =
+    report.institution_name ||
+    cat?.responsibleInstitution ||
+    'Jimma City Administration';
 
   const evidencePhotos: string[] =
     report.evidence_photos && report.evidence_photos.length > 0
@@ -382,35 +392,43 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.instBox}>
             <Ionicons name="business" size={26} color={cat?.color || Colors.primary} />
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.instName}>{report.institution_name || 'Jimma City Administration'}</Text>
-              <Text style={styles.instSub}>Designated Municipal Bureau</Text>
+              <Text style={styles.instName}>{assignedInstitution}</Text>
+              <Text style={styles.instSub}>
+                {report.branch_name ? `Branch: ${report.branch_name}` : 'Designated Municipal Bureau'}
+              </Text>
             </View>
           </View>
 
-          {/* Assigned Staff Member / Field Operative */}
+          {/* Assigned Staff Member / Field Operative or Institution Dispatch */}
           <View style={styles.assignmentDivider} />
           <View style={styles.assignedStaffRow}>
             <View
               style={[
                 styles.assignedStaffAvatar,
-                { backgroundColor: report.assigned_staff_name ? '#DCFCE7' : '#F1F5F9' },
+                {
+                  backgroundColor: report.assigned_staff_name
+                    ? '#DCFCE7'
+                    : (cat?.color ? cat.color + '18' : '#EFF6FF'),
+                },
               ]}
             >
               <Ionicons
-                name={report.assigned_staff_name ? 'person' : 'people-outline'}
+                name={report.assigned_staff_name ? 'person' : 'business-outline'}
                 size={20}
-                color={report.assigned_staff_name ? '#16A34A' : '#64748B'}
+                color={report.assigned_staff_name ? '#16A34A' : (cat?.color || Colors.primary)}
               />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.assignedStaffLabel}>Task Assigned To</Text>
               <Text style={styles.assignedStaffName}>
-                {report.assigned_staff_name || 'Central Operations & Field Dispatch Unit'}
+                {report.assigned_staff_name || `${assignedInstitution}${report.branch_name ? ` (${report.branch_name})` : ''}`}
               </Text>
               {report.assigned_staff_name ? (
                 <View style={styles.staffMetaRow}>
                   <View style={styles.activeStaffTag}>
-                    <Text style={styles.activeStaffTagText}>Field Operative</Text>
+                    <Text style={styles.activeStaffTagText}>
+                      {report.assigned_staff_role ? report.assigned_staff_role.replace(/_/g, ' ').toUpperCase() : 'Field Operative'}
+                    </Text>
                   </View>
                   {report.assigned_staff_phone ? (
                     <Text style={styles.assignedStaffPhone}>
@@ -419,12 +437,36 @@ export const ReportDetailScreen: React.FC<Props> = ({ navigation, route }) => {
                   ) : null}
                 </View>
               ) : (
-                <Text style={styles.assignedStaffPending}>
-                  {report.status === 'submitted'
-                    ? 'Pending initial review and individual officer allocation'
-                    : 'Assigned to institution operational field crew'}
-                </Text>
+                <View style={styles.staffMetaRow}>
+                  <View style={[styles.activeStaffTag, { backgroundColor: '#EFF6FF' }]}>
+                    <Text style={[styles.activeStaffTagText, { color: '#2563EB' }]}>
+                      {report.branch_name ? `${report.branch_name} Branch` : 'Assigned Institution'}
+                    </Text>
+                  </View>
+                  <Text style={[styles.assignedStaffPending, { marginTop: 0, flex: 1 }]} numberOfLines={1}>
+                    {report.status === 'submitted'
+                      ? 'Routed to Bureau Desk'
+                      : report.status === 'under_review'
+                      ? 'Bureau Operations Desk'
+                      : report.status === 'in_progress'
+                      ? 'Field Response Crew'
+                      : 'Active Bureau Assignment'}
+                  </Text>
+                </View>
               )}
+              <Text style={styles.assignedStaffPending}>
+                {report.assigned_staff_name
+                  ? `Directly assigned to officer ${report.assigned_staff_name} for on-site investigation and resolution.`
+                  : report.status === 'submitted'
+                  ? `Directly routed to ${assignedInstitution}. The institution operations team will dispatch a designated officer to inspect and resolve this report.`
+                  : report.status === 'under_review'
+                  ? `Under active assessment by ${assignedInstitution} operations dispatch.`
+                  : report.status === 'in_progress'
+                  ? `Assigned to ${assignedInstitution} field crew for repair.`
+                  : report.status === 'resolved'
+                  ? `Resolved by ${assignedInstitution}.`
+                  : `Assigned to ${assignedInstitution}.`}
+              </Text>
             </View>
           </View>
         </View>

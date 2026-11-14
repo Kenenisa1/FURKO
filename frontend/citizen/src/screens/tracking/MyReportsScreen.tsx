@@ -97,7 +97,13 @@ const ReportCard = ({
   onPress: () => void;
 }) => {
   const meta = STATUS_META[item.status] ?? STATUS_META.submitted;
-  const cat = PROBLEM_CATEGORIES.find((c) => c.id === item.category_id);
+  const cat = PROBLEM_CATEGORIES.find(
+    (c) =>
+      c.id === item.category_id ||
+      c.key === item.category_id ||
+      c.key === item.category_key ||
+      c.name.toLowerCase() === item.category_name?.toLowerCase()
+  );
   const urgColor = item.urgency ? URGENCY_COLOR[item.urgency] : undefined;
 
   const submittedDate = new Date(item.submitted_at);
@@ -169,7 +175,7 @@ const ReportCard = ({
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
           <Ionicons name="business-outline" size={13} color="#6B7280" style={{ marginRight: 4 }} />
           <Text style={styles.instText} numberOfLines={1}>
-            {item.institution_name}
+            {item.institution_name || cat?.responsibleInstitution || 'Jimma City Administration'}
           </Text>
         </View>
         <View style={styles.footerRight}>
