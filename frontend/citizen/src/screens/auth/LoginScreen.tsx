@@ -130,7 +130,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <View style={styles.btnInner}>
-                  <Text style={styles.submitButtonText}>sign in</Text>
+                  <Text style={styles.submitButtonText}>Sign In</Text>
                   <Feather name="arrow-right" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
                 </View>
               )}

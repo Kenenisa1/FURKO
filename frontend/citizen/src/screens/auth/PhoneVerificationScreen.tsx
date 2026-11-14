@@ -187,7 +187,7 @@ export const PhoneVerificationScreen: React.FC<Props> = ({ navigation, route }) 
           {isVerifying ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.verifyButtonText}>verify</Text>
+            <Text style={styles.verifyButtonText}>Verify Code</Text>
           )}
         </TouchableOpacity>
       </View>
