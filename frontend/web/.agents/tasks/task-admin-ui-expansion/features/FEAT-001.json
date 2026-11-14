@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Expand shared layout components (AdminTopBar with functional notifications dropdown, AdminSidebar with collapsible sections, breadcrumb integration) and create reusable admin UI components (summary cards, filter panels, action buttons, notification badges). These components are used across all admin pages",
+  "status": "pending",
+  "steps": [
+    "Expand AdminTopBar in src/components/admin/layout/AdminTopBar.jsx: Add functional notifications dropdown with sample notifications (institution updates, user actions, system alerts), show unread count badge, make notifications dismissable, add 'Mark all as read' action, and ensure breadcrumb navigation displays current page hierarchy",
+    "Update AdminSidebar in src/components/admin/layout/AdminSidebar.jsx: Add collapsible navigation sections (Overview, Management, Operations, System), improve hover states, ensure active page highlighting works across all routes, add tooltip hints when collapsed",
+    "Create FilterPanel component in src/components/admin/ui/FilterPanel.jsx: Reusable filter bar with search input, status dropdown, role/type dropdowns, date range picker (UI only), and clear filters button. Used by Users, Institutions, Categories, Reports pages",
+    "Create SummaryCards component in src/components/admin/ui/SummaryCards.jsx: Grid of stat cards with icons, values, labels, optional trends, and color variants. Used by Dashboard, Users, Institutions, Reports pages",
+    "Create ActionButton component in src/components/admin/ui/ActionButton.jsx: Consistent styled button with icon, loading state, and variants (primary, secondary, danger). Used across all pages",
+    "Expand mockNotifications.js in src/data/mockNotifications.js: Add 15-20 sample admin notifications with timestamps, types (info, warning, alert), read/unread status, and action links",
+    "Add NotificationDropdown component in src/components/admin/ui/NotificationDropdown.jsx: Standalone dropdown component showing recent notifications, supporting mark as read, dismiss, and navigate to related pages",
+    "Update AdminLayout to pass notification state to AdminTopBar and make breadcrumb configurable per page"
+  ],
+  "acceptance_criteria": [
+    "AdminTopBar shows notification bell with red badge when unread notifications exist",
+    "Clicking notification bell opens dropdown with scrollable list of notifications, each dismissable",
+    "AdminSidebar sections collapse/expand smoothly when clicked, active page is highlighted with bg-white/20",
+    "FilterPanel component renders with all filter controls and emits onChange events",
+    "SummaryCards component displays 2, 3, or 4 cards per row based on props",
+    "ActionButton component renders with correct colors and icons for all variants",
+    "All layout changes preserve existing green branding and white card aesthetic"
+  ],
+  "verification": [
+    "Run npm run dev and navigate to /admin",
+    "Click notification bell - dropdown should open with sample notifications",
+    "Click sidebar section headers - sections should collapse/expand",
+    "Navigate to different admin pages - active page should be highlighted in sidebar",
+    "Inspect browser console - no errors should appear"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

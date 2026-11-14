@@ -1,0 +1,46 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Expand Fallback Queue, Reports & Monitoring, and Audit Log pages with detailed review workflows, bulk actions, filtering, export capabilities (UI only), and enhanced activity tracking. These pages support operational oversight",
+  "status": "pending",
+  "steps": [
+    "Expand FallbackQueuePage in src/pages/Admin/FallbackQueue/FallbackQueuePage.jsx: Add summary cards (total in queue, pending review, under review, recently resolved). Expand fallback queue table columns: report ID, title, category, location, submitted by (citizen name - add to mockFallbackQueue), selected institution (if any), reason for fallback (routing conflict, no match, institution inactive, multiple matches), priority (auto-calculated based on age and category), submitted date, review status, assigned reviewer (add to mockFallbackQueue), actions (assign to institution, mark as resolved, escalate). Add bulk actions: assign multiple reports, reassign, mark reviewed. Add filters: review status, reason, date range, priority. Add review modal showing: full report details, citizen info, photos if any, fallback reason, suggested institutions (based on category/location), manual assignment controls, review notes field, action buttons (assign, reassign, close, escalate)",
+    "Expand mockFallbackQueue in src/data/mockFallbackQueue.js: Add 10 more fallback queue entries with varied reasons. Add submittedBy (citizen name), priority field, assignedReviewer, suggestedInstitutions array, reviewNotes",
+    "Expand AdminReportsPage in src/pages/Admin/Reports/AdminReportsPage.jsx: Add comprehensive summary cards (total reports, by status counts, by priority counts, avg resolution time, reports this week). Add analytics section with charts: reports over time (line chart using CSS), reports by category (horizontal bars), reports by institution (horizontal bars), resolution time trend. Add filters: status, priority, category, institution, date range, location/kebele. Expand reports table columns: report ID, title, category, location, submitted by, priority badge, institution assigned, status badge, submitted date, last update, resolution time (for resolved), actions (view details, reassign, update status). Add report details modal showing: full report information, photos, timeline of status changes, institution assignment history, staff actions, resolution details, export report button (downloads JSON - frontend only)",
+    "Expand mockAdminReports in src/data/mockAdminData.js: Add 30 more reports with varied statuses, priorities, categories, institutions. Add submittedBy, priority, resolutionTime, statusHistory array, photos array, assignmentHistory array",
+    "Expand AuditLogPage in src/pages/Admin/AuditLog/AuditLogPage.jsx: Add summary cards (total entries, today's actions, this week's actions, failed actions count). Expand audit log table columns: timestamp (date + time), actor (with avatar/initials), actor role, action type badge, entity type, entity ID (clickable if applicable), description, IP address (add to mockAuditLog), result badge (success/failed), actions (view details). Add filters: date range, actor, action type, entity type, result. Add audit details modal showing: full action details, before/after state (for updates), related entities, session information, export entry button",
+    "Expand mockAuditLog in src/data/mockAuditLog.js: Add 30 more audit entries covering all admin actions. Add actorRole, ipAddress, beforeState, afterState, relatedEntities array, sessionInfo object",
+    "Create FallbackReviewModal component in src/pages/Admin/FallbackQueue/FallbackReviewModal.jsx: Comprehensive review interface for fallback reports",
+    "Create ReportDetailsModal component in src/pages/Admin/Reports/ReportDetailsModal.jsx: Detailed report view with timeline and actions",
+    "Create AuditDetailsModal component in src/pages/Admin/AuditLog/AuditDetailsModal.jsx: Detailed audit entry view"
+  ],
+  "acceptance_criteria": [
+    "FallbackQueuePage displays summary cards with correct queue statistics",
+    "Fallback queue table shows all columns including priority and assigned reviewer",
+    "Bulk actions toolbar appears when reports are selected",
+    "Review modal opens when clicking a fallback report and shows suggested institutions",
+    "AdminReportsPage displays comprehensive summary cards and analytics charts",
+    "Reports table shows all columns including resolution time for resolved reports",
+    "Report filters update the table correctly when changed",
+    "Report details modal displays full report info and timeline",
+    "AuditLogPage displays summary cards with action counts",
+    "Audit log table shows all columns including IP address and result",
+    "Audit filters work correctly to narrow down entries",
+    "Audit details modal shows before/after state for update actions"
+  ],
+  "verification": [
+    "Run npm run dev and navigate to /admin/fallback-queue",
+    "Verify summary cards and expanded table with all columns",
+    "Select multiple reports - bulk actions toolbar should appear",
+    "Click a fallback report - review modal should open with suggested institutions",
+    "Navigate to /admin/reports - verify summary cards, charts, and expanded table",
+    "Apply filters - table should update accordingly",
+    "Click a report row - details modal should open with timeline and photos",
+    "Navigate to /admin/audit-log - verify summary cards and expanded table",
+    "Apply audit filters - should filter entries correctly",
+    "Click an audit entry - details modal should show all action information",
+    "Verify no console errors across all three pages"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

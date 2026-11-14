@@ -1,0 +1,42 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Expand Categories, Service Areas, and Routing Rules pages with dependency tracking, usage statistics, validation warnings, and relationship visualization. These pages manage the platform's routing configuration and need clear visibility into how entities relate",
+  "status": "pending",
+  "steps": [
+    "Expand CategoriesPage in src/pages/Admin/Categories/CategoriesPage.jsx: Add summary cards (total categories, active, inactive, categories without routing rules). Expand category table columns to include: icon, name, description, Amharic/local name (add to mockCategories), assigned routing rules count (clickable to show rules), assigned institutions (show badges), reports count (add to mockCategories), last updated date, status, actions. Add category details modal showing: basic info, routing rules using this category (list with institutions), recent reports in this category, usage statistics (reports per month)",
+    "Expand mockCategories in src/data/mockAdminData.js: Add localName (Amharic), reportsCount, lastUpdated, usageStats fields. Add 2 more categories (parks, public buildings)",
+    "Expand ServiceAreasPage in src/pages/Admin/ServiceAreas/ServiceAreasPage.jsx: Add summary cards (total, active, inactive, areas without institutions). Expand service areas table to show: icon, name, description, institutions using this area (badges showing first 2 + count), categories mapped to this area (badges), routing rules count, status, actions. Add service area details modal with tabs: Overview, Institutions (list all institutions assigned to this area), Categories (categories mapped to this area), Geographic Coverage (text description of coverage area - add to mockServiceAreas)",
+    "Expand mockServiceAreas in src/data/mockAdminData.js (create initialServiceAreas as exportable): Add geographicCoverage field, expand to 10 service areas, add relatedCategories array, add institutionsList array",
+    "Expand RoutingRulesPage in src/pages/Admin/RoutingRules/RoutingRulesPage.jsx: Add summary cards (total rules, active, inactive, rules with conflicts - add conflict detection logic). Expand rules table columns: rule name, category, service area, target institution, priority, condition type (add conditions field to mockRoutingRules - e.g., 'location-based', 'category-only', 'time-based'), fallback institution, status, last updated, actions. Add filters for category, status, institution. Add rule details modal showing: rule configuration, matching criteria, target institution details, recent reports matched by this rule (add matchedReports count to mockRoutingRules), rule effectiveness score",
+    "Expand mockRoutingRules in src/data/mockAdminData.js: Add conditions object, fallbackInstitution, effectiveness score, matchedReportsCount, conflictsWith array (for rules that might conflict). Add 5 more routing rules covering different scenarios",
+    "Create CategoryDetailsModal in src/pages/Admin/Categories/CategoryDetailsModal.jsx: Modal showing category usage and statistics",
+    "Create ServiceAreaDetailsModal in src/pages/Admin/ServiceAreas/ServiceAreaDetailsModal.jsx: Modal showing service area relationships",
+    "Create RoutingRuleDetailsModal in src/pages/Admin/RoutingRules/RoutingRuleDetailsModal.jsx: Modal showing rule configuration and effectiveness"
+  ],
+  "acceptance_criteria": [
+    "CategoriesPage displays summary cards with correct category statistics",
+    "Category table shows routing rules count as clickable badge that highlights related rules",
+    "Category details modal displays usage statistics and related routing rules",
+    "ServiceAreasPage displays summary cards including areas without institutions",
+    "Service area table shows institutions and categories using each area",
+    "Service area details modal displays all tabs with relevant data",
+    "RoutingRulesPage displays summary cards including conflict detection",
+    "Routing rules table shows all columns including condition type and fallback",
+    "Routing rule details modal shows effectiveness score and matched reports count",
+    "All three pages maintain consistent styling and interactions"
+  ],
+  "verification": [
+    "Run npm run dev and navigate to /admin/categories",
+    "Verify summary cards show correct counts",
+    "Click routing rules count badge on a category - should highlight related rules",
+    "Click a category row - details modal should open with usage statistics",
+    "Navigate to /admin/service-areas - verify expanded table and summary cards",
+    "Click a service area row - details modal should open with all tabs",
+    "Navigate to /admin/routing-rules - verify summary cards and expanded table",
+    "Click a routing rule row - details modal should show configuration and effectiveness",
+    "Verify no console errors"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

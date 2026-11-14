@@ -184,6 +184,11 @@ export default function Sidebar({ collapsed, onToggle }) {
           icon={<Settings className="w-5 h-5" />}
           label={collapsed ? '' : 'Settings'}
         />
+        <NavItem
+  to="/categories"
+  icon={<Files className="w-5 h-5" />}
+  label={collapsed ? '' : 'Categories'}
+/>
 
         {/* Support */}
         {!collapsed && <SectionLabel label="Support" />}
