@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import pool from '../config/db';
 import { UserModel } from '../models/userModel';
+import { getPermissionsForRole } from '../config/rbac';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_fallback_key';
 
@@ -73,6 +74,7 @@ export const authController = {
             email: newUser.email,
             phone_number: newUser.phone_number,
             role: newUser.role,
+            permissions: getPermissionsForRole(newUser.role),
             created_at: newUser.created_at,
           },
         },
@@ -121,6 +123,18 @@ export const authController = {
         }
       }
 
+      // 4b. Fetch branch details if user belongs to one
+      let branchInfo: { id: string; name: string; code: string } | null = null;
+      if (user.branch_id) {
+        const branchRes = await pool.query(
+          'SELECT id, name, code FROM branches WHERE id = $1',
+          [user.branch_id]
+        );
+        if (branchRes.rows.length > 0) {
+          branchInfo = branchRes.rows[0];
+        }
+      }
+
       // 5. Generate JWT Token
       const token = jwt.sign(
         {
@@ -128,10 +142,13 @@ export const authController = {
           email: user.email,
           role: user.role,
           institution_id: user.institution_id || null,
+          branch_id: user.branch_id || null,
         },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
+
+      const permissions = getPermissionsForRole(user.role);
 
       res.status(200).json({
         success: true,
@@ -145,9 +162,13 @@ export const authController = {
             phone_number: user.phone_number,
             role: user.role,
             institution_id: user.institution_id || null,
+            branch_id: user.branch_id || null,
             institution: institutionInfo?.name || (user.role === 'admin' ? 'Jimma City Central Administration' : null),
             institution_name: institutionInfo?.name || (user.role === 'admin' ? 'Jimma City Central Administration' : null),
             institution_code: institutionInfo?.code || (user.role === 'admin' ? 'JIMA-ADMIN' : null),
+            branch_name: branchInfo?.name || null,
+            branch_code: branchInfo?.code || null,
+            permissions,
           },
         },
       });

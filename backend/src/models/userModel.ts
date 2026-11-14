@@ -3,12 +3,13 @@ import pool from '../config/db';
 export interface User {
   id?: string;
   institution_id?: string | null;
+  branch_id?: string | null;
   full_name: string;
   fathers_name?: string | null;
   email: string;
   phone_number?: string;
   password_hash: string;
-  role: 'citizen' | 'staff' | 'admin';
+  role: 'citizen' | 'staff' | 'admin' | 'institution_super_admin' | 'institution_staff' | 'branch_manager' | string;
   is_active?: boolean;
   is_verified?: boolean;
   verification_code?: string | null;
@@ -24,7 +25,7 @@ export const UserModel = {
   },
 
   async findById(id: string): Promise<User | null> {
-    const queryText = 'SELECT id, institution_id, full_name, email, phone_number, role, is_active, is_verified, created_at FROM users WHERE id = $1';
+    const queryText = 'SELECT id, institution_id, branch_id, full_name, email, phone_number, role, is_active, is_verified, created_at FROM users WHERE id = $1';
     const result = await pool.query(queryText, [id]);
     return result.rows[0] || null;
   },

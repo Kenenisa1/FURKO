@@ -227,6 +227,8 @@ INSERT INTO routing_rules (category_id, target_institution_id, jurisdiction_name
 INSERT INTO users (id, institution_id, full_name, email, phone_number, password_hash, role, is_active) VALUES
 ('c1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Abebe Bikila (Road Staff)', 'staff.road@jimma.gov.et', '+251911223344', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'staff', TRUE),
 ('c1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000002', 'Fatuma Roba (Water Staff)', 'staff.water@jimma.gov.et', '+251911334455', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'staff', TRUE),
+('c1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000003', 'Tirunesh Dibaba (Waste Staff)', 'staff.waste@jimma.gov.et', '+251911445566', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'staff', TRUE),
+('c1000000-0000-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000004', 'Kenenisa Bekele (Power Staff)', 'staff.eeu@jimma.gov.et', '+251911556677', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'staff', TRUE),
 ('c1000000-0000-0000-0000-000000000003', NULL, 'Municipal System Admin', 'admin@jimma.gov.et', '+251911000000', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'admin', TRUE),
 ('c1000000-0000-0000-0000-000000000004', NULL, 'Dawit Tadesse', 'dawit@example.com', '+251911234567', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'citizen', TRUE)
 ON CONFLICT (email) DO NOTHING;

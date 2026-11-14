@@ -12,8 +12,9 @@
     "test:evidence": "tsx tests/evidence.test.ts",
     "test:routing": "tsx tests/routing.test.ts",
     "test:resolution": "tsx tests/resolution.test.ts",
+    "test:rbac": "tsx tests/rbac_assignment.test.ts",
     "test:integration": "tsx tests/integration.test.ts",
-    "test": "npx tsx tests/evidence.test.ts && npx tsx tests/routing.test.ts && npx tsx tests/resolution.test.ts && npx tsx tests/integration.test.ts"
+    "test": "npx tsx tests/evidence.test.ts && npx tsx tests/routing.test.ts && npx tsx tests/resolution.test.ts && npx tsx tests/rbac_assignment.test.ts && npx tsx tests/integration.test.ts"
   },
   "keywords": [
     "furko",
