@@ -92,7 +92,7 @@ export const EvidenceUploader: React.FC<Props> = ({
           </View>
         </View>
       ) : (
-        /* CAMERA ONLY CAPTURE MODE */
+        /* PHOTO CAPTURE MODE */
         <View style={styles.optionsContainer}>
           <TouchableOpacity
             style={styles.cameraCaptureCard}
@@ -100,19 +100,15 @@ export const EvidenceUploader: React.FC<Props> = ({
             activeOpacity={0.85}
           >
             <View style={styles.cameraCircle}>
-              <Ionicons name="camera" size={36} color="#FFFFFF" />
+              <Ionicons name="camera" size={32} color="#FFFFFF" />
             </View>
             <Text style={styles.cameraTitle}>Take Photo with Camera</Text>
             <Text style={styles.cameraSubtitle}>
-              Capture authentic photographic evidence directly at the site
+              Capture a photo of the problem at the location
             </Text>
-            <View style={styles.cameraPill}>
-              <Ionicons name="shield-checkmark-outline" size={14} color="#008744" />
-              <Text style={styles.cameraPillText}>Camera only — gallery uploads disabled</Text>
-            </View>
           </TouchableOpacity>
 
-          {/* Non-punitive Skip Option */}
+          {/* Skip Option */}
           <TouchableOpacity
             style={[styles.skipCard, isSkipped && styles.skipCardActive]}
             onPress={handleSkip}
@@ -120,16 +116,13 @@ export const EvidenceUploader: React.FC<Props> = ({
           >
             <View style={styles.skipRow}>
               <Ionicons
-                name={isSkipped ? 'checkmark-circle' : 'moon-outline'}
+                name={isSkipped ? 'checkmark-circle' : 'ellipsis-horizontal-circle-outline'}
                 size={20}
                 color={isSkipped ? Colors.primary : '#6B7280'}
               />
               <View style={{ flex: 1, marginLeft: 10 }}>
                 <Text style={[styles.skipTitle, isSkipped && { color: Colors.primary, fontWeight: '800' }]}>
-                  {isSkipped ? 'Photo capture skipped' : 'Skip photo capture'}
-                </Text>
-                <Text style={styles.skipSubtitle}>
-                  For night hazards, low lighting, or immediate safety concerns.
+                  {isSkipped ? 'Photo skipped' : 'Skip photo (optional)'}
                 </Text>
               </View>
             </View>

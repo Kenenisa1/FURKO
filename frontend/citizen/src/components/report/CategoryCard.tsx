@@ -46,23 +46,10 @@ export const CategoryCard: React.FC<Props> = ({
         <CategoryIcon categoryKey={category.key} size={30} color={category.color} />
       </View>
 
-      {/* Centered Category Title */}
+      {/* Category Title */}
       <Text style={styles.title}>{category.name}</Text>
 
-      {/* Centered Multilingual Translations (Afaan Oromoo & Amharic) */}
-      <View style={styles.translationRow}>
-        {category.nameLocal && (
-          <Text style={styles.localText}>{category.nameLocal}</Text>
-        )}
-        {category.nameAmharic && (
-          <>
-            <Text style={styles.dotSeparator}>•</Text>
-            <Text style={styles.amharicText}>{category.nameAmharic}</Text>
-          </>
-        )}
-      </View>
-
-      {/* Centered Description */}
+      {/* Description */}
       <Text style={styles.description}>{category.description}</Text>
 
       {/* Centered Institutional Routing Badge */}

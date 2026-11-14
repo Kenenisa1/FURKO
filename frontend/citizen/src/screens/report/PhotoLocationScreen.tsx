@@ -156,9 +156,6 @@ export const PhotoLocationScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={[styles.categoryPill, { borderLeftColor: category.color }]}>
             <View style={[styles.categoryDot, { backgroundColor: category.color }]} />
             <Text style={styles.categoryPillText}>{category.name}</Text>
-            {category.nameLocal && (
-              <Text style={styles.categoryLocalText}>• {category.nameLocal}</Text>
-            )}
           </View>
         </View>
 
@@ -166,15 +163,15 @@ export const PhotoLocationScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.headingGroup}>
           <Text style={styles.title}>Photo Evidence & Location</Text>
           <Text style={styles.subtitle}>
-            Take a live photo at the site and verify your GPS coordinates so maintenance crews can locate the problem instantly.
+            Take a photo at the site and confirm GPS coordinates so crews can locate the problem quickly.
           </Text>
         </View>
 
-        {/* ── PART 1: Camera Only Photo Evidence ── */}
+        {/* ── PART 1: Photo Evidence ── */}
         <View style={styles.cardSection}>
           <View style={styles.cardSectionHeader}>
             <Ionicons name="camera-outline" size={20} color={Colors.primary} />
-            <Text style={styles.cardSectionTitle}>1. Photographic Evidence (Camera Only)</Text>
+            <Text style={styles.cardSectionTitle}>1. Photo Evidence</Text>
           </View>
 
           <EvidenceUploader
