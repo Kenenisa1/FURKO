@@ -7,6 +7,12 @@ import { getStoredToken } from './authService.js';
 
 const API_BASE = '/api/v1/institutions';
 
+export const INSTITUTION_ROLES = [
+  { value: 'institution_staff', label: 'Institution Staff (Field Operative)' },
+  { value: 'branch_manager', label: 'Branch Manager' },
+  { value: 'institution_super_admin', label: 'Institution Super Admin' },
+];
+
 export const departments = [
   'Operations',
   'Field Inspection',

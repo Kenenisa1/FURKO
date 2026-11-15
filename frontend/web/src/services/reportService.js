@@ -10,15 +10,17 @@ import { getStoredToken } from './authService.js';
 const API_BASE = '/api/v1';
 
 export const REPORT_STATUS = {
-  NEW:          'submitted',
-  UNDER_REVIEW: 'under_review',
-  ACCEPTED:     'accepted',
-  ASSIGNED:     'assigned',
-  IN_PROGRESS:  'in_progress',
-  REDIRECTED:   'redirected',
-  RESOLVED:     'resolved',
-  REJECTED:     'rejected',
-  REOPENED:     'reopened',
+  NEW:                  'submitted',
+  ROUTED:               'routed',
+  UNDER_REVIEW:         'under_review',
+  ACCEPTED:             'accepted',
+  ASSIGNED:             'assigned',
+  IN_PROGRESS:          'in_progress',
+  SUBMITTED_FOR_REVIEW: 'submitted_for_review',
+  REDIRECTED:           'redirected',
+  RESOLVED:             'resolved',
+  REJECTED:             'rejected',
+  REOPENED:             'reopened',
 };
 
 function authHeaders() {
@@ -68,6 +70,13 @@ function normalizeReport(r) {
     })),
     // Timeline: build from audit_history or status_history
     timeline: r.timeline ?? [],
+    // Transfers history
+    transfers: r.transfers ?? [],
+    // Branch & Staff metadata
+    branchName: r.branch_name ?? '—',
+    branchCode: r.branch_code ?? '—',
+    assignedStaffName: r.assigned_staff_name ?? null,
+    assignedStaffPhone: r.assigned_staff_phone ?? null,
     // Photos
     photos: r.photos ?? [],
   };
@@ -75,9 +84,16 @@ function normalizeReport(r) {
 
 // ── READ ─────────────────────────────────────
 
-export async function getReports() {
-  const json = await apiFetch('/institutions/reports');
-  // Backend returns { success, count, reports: [...] }
+export async function getReports(filters = {}) {
+  const query = new URLSearchParams();
+  if (filters.status) query.append('status', filters.status);
+  if (filters.branch_id) query.append('branch_id', filters.branch_id);
+  if (filters.assigned_to_me) query.append('assigned_to_me', 'true');
+  if (filters.unassigned) query.append('unassigned', 'true');
+  if (filters.search) query.append('search', filters.search);
+
+  const qs = query.toString() ? `?${query.toString()}` : '';
+  const json = await apiFetch(`/institutions/reports${qs}`);
   return (json.reports ?? []).map(normalizeReport);
 }
 
@@ -94,6 +110,20 @@ export async function getInstitutions() {
   } catch {
     return [];
   }
+}
+
+// Fetch branches for institution
+export async function getBranches() {
+  const json = await apiFetch('/institutions/branches');
+  return json.data || [];
+}
+
+export async function createBranch(branchData) {
+  const json = await apiFetch('/institutions/branches', {
+    method: 'POST',
+    body: JSON.stringify(branchData),
+  });
+  return json.data;
 }
 
 // Fetch institution profile
@@ -140,16 +170,72 @@ export async function rejectReport(id, { reason, explanation }) {
   return getReportById(id);
 }
 
-export async function assignReport(id, { assignedTo, assignmentNote }) {
+export async function assignReport(id, { assignedTo, branchId, assignmentNote, priority }) {
   await apiFetch(`/institutions/reports/${id}/assign`, {
     method: 'POST',
     body: JSON.stringify({
       staff_user_id: assignedTo,
+      branch_id: branchId || null,
       comment: assignmentNote || null,
+      priority: priority || null,
     }),
   });
-  await postAction(id, 'start');
   return getReportById(id);
+}
+
+export async function submitCompletion(id, { notes, proofUrl }) {
+  const json = await apiFetch(`/institutions/reports/${id}/submit-completion`, {
+    method: 'POST',
+    body: JSON.stringify({ notes, proof_url: proofUrl }),
+  });
+  return json;
+}
+
+export async function reviewCompletion(id, { decision, comment, resolutionNotes }) {
+  const json = await apiFetch(`/institutions/reports/${id}/review-completion`, {
+    method: 'POST',
+    body: JSON.stringify({
+      decision,
+      comment,
+      resolution_notes: resolutionNotes,
+    }),
+  });
+  return json;
+}
+
+export async function transferBranchReport(id, { toBranchId, reason }) {
+  const json = await apiFetch(`/institutions/reports/${id}/transfer-branch`, {
+    method: 'POST',
+    body: JSON.stringify({ to_branch_id: toBranchId, reason }),
+  });
+  return json.data;
+}
+
+export async function getBranchTransfers(status = '') {
+  const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+  const json = await apiFetch(`/institutions/transfers${qs}`);
+  return json.data || [];
+}
+
+export async function reviewBranchTransfer(transferId, { decision, comment }) {
+  const json = await apiFetch(`/institutions/transfers/${transferId}/review`, {
+    method: 'POST',
+    body: JSON.stringify({ decision, comment }),
+  });
+  return json.data;
+}
+
+export async function getAuditLogs(params = {}) {
+  const query = new URLSearchParams();
+  if (params.page) query.append('page', params.page);
+  if (params.limit) query.append('limit', params.limit);
+  if (params.action) query.append('action', params.action);
+  if (params.entityType) query.append('entity_type', params.entityType);
+  if (params.entityId) query.append('entity_id', params.entityId);
+
+  const qs = query.toString() ? `?${query.toString()}` : '';
+  const json = await apiFetch(`/institutions/audit${qs}`);
+  return json;
 }
 
 export async function resolveReport(id, { description, resolvedBy }) {

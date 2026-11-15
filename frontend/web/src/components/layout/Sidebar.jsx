@@ -1,7 +1,8 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { REPORT_STATUS } from '../../services/reportService.js';
+import { isInstitutionSuperAdmin, isInstitutionStaff } from '../../services/authService.js';
 import {
   LayoutDashboard,
   FileText,
@@ -17,7 +18,9 @@ import {
   CircleHelp,
   ChevronDown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ClipboardList,
+  CheckCircle2,
 } from 'lucide-react';
 import furkoLogo from '../../assets/furko-logo.png';
 
@@ -58,12 +61,20 @@ function SectionLabel({ label }) {
 export default function Sidebar({ collapsed, onToggle }) {
   const { reports, currentUser } = useApp();
   const [reportsOpen, setReportsOpen] = useState(true);
-  const location = useLocation();
+
+  const isAdmin = isInstitutionSuperAdmin();
+  const isStaff = isInstitutionStaff();
 
   const count = (status) => reports.filter((r) => r.status === status).length;
   const newCount = count(REPORT_STATUS.NEW);
   const inboxCount = reports.filter(
     (r) => r.status === REPORT_STATUS.NEW || r.status === REPORT_STATUS.UNDER_REVIEW
+  ).length;
+  const reviewAwaitingCount = reports.filter(
+    (r) => r.status === 'submitted_for_review' || r.status === REPORT_STATUS.SUBMITTED_FOR_REVIEW
+  ).length;
+  const myAssignedCount = reports.filter(
+    (r) => r.assigned_staff_id === currentUser?.id && r.status !== REPORT_STATUS.RESOLVED
   ).length;
 
   return (
@@ -77,9 +88,9 @@ export default function Sidebar({ collapsed, onToggle }) {
         {!collapsed && (
           <div className="flex items-center gap-3">
             <div className="bg-white rounded-lg p-1 shadow-sm flex items-center justify-center">
-              <img 
-                src={furkoLogo} 
-                alt="FURKO" 
+              <img
+                src={furkoLogo}
+                alt="FURKO"
                 className="h-9 w-auto object-contain"
               />
             </div>
@@ -109,10 +120,10 @@ export default function Sidebar({ collapsed, onToggle }) {
           label={collapsed ? '' : 'Dashboard'}
         />
 
-        {/* Reports section */}
-        {!collapsed && (
+        {/* ── SUPER ADMIN NAVIGATION ── */}
+        {isAdmin && !collapsed && (
           <>
-            <SectionLabel label="Reports" />
+            <SectionLabel label="Workflow Queues" />
             <button
               onClick={() => setReportsOpen((o) => !o)}
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/75 hover:bg-white/10 hover:text-white w-full transition-colors"
@@ -129,7 +140,7 @@ export default function Sidebar({ collapsed, onToggle }) {
                 <NavItem
                   to="/reports/inbox"
                   icon={<Inbox className="w-4 h-4" />}
-                  label="Inbox"
+                  label="Incoming Inbox"
                   badge={inboxCount}
                 />
                 <NavItem
@@ -157,6 +168,12 @@ export default function Sidebar({ collapsed, onToggle }) {
                   badge={count(REPORT_STATUS.IN_PROGRESS)}
                 />
                 <NavItem
+                  to="/reports?status=submitted_for_review"
+                  icon={<CheckCircle2 className="w-4 h-4" />}
+                  label="Awaiting Review"
+                  badge={reviewAwaitingCount}
+                />
+                <NavItem
                   to="/reports?status=resolved"
                   icon={<CircleCheck className="w-4 h-4" />}
                   label="Resolved"
@@ -164,38 +181,65 @@ export default function Sidebar({ collapsed, onToggle }) {
                 />
               </div>
             )}
+
+            <SectionLabel label="Administration" />
+            <NavItem
+              to="/staff"
+              icon={<Users className="w-5 h-5" />}
+              label="Staff & RBAC"
+            />
+            <NavItem
+              to="/profile"
+              icon={<Building2 className="w-5 h-5" />}
+              label="Institution Profile"
+            />
+            <NavItem
+              to="/categories"
+              icon={<Files className="w-5 h-5" />}
+              label="Routing Rules"
+            />
+            <NavItem
+              to="/settings"
+              icon={<Settings className="w-5 h-5" />}
+              label="Settings"
+            />
           </>
         )}
 
-        {/* Organizations */}
-        {!collapsed && <SectionLabel label="Organization" />}
-        <NavItem
-          to="/profile"
-          icon={<Building2 className="w-5 h-5" />}
-          label={collapsed ? '' : 'Institution Profile'}
-        />
-        <NavItem
-          to="/staff"
-          icon={<Users className="w-5 h-5" />}
-          label={collapsed ? '' : 'Staff'}
-        />
-        <NavItem
-          to="/settings"
-          icon={<Settings className="w-5 h-5" />}
-          label={collapsed ? '' : 'Settings'}
-        />
-        <NavItem
-  to="/categories"
-  icon={<Files className="w-5 h-5" />}
-  label={collapsed ? '' : 'Categories'}
-/>
+        {/* ── STAFF OPERATIVE NAVIGATION ── */}
+        {!isAdmin && (
+          <>
+            {!collapsed && <SectionLabel label="My Tasks" />}
+            <NavItem
+              to="/reports?assigned_to_me=true"
+              icon={<ClipboardList className="w-5 h-5" />}
+              label={collapsed ? '' : 'My Assigned Reports'}
+              badge={myAssignedCount}
+            />
+            <NavItem
+              to="/reports?status=in-progress"
+              icon={<Clock3 className="w-5 h-5" />}
+              label={collapsed ? '' : 'In Progress'}
+            />
+            <NavItem
+              to="/reports?status=submitted_for_review"
+              icon={<CheckCircle2 className="w-5 h-5" />}
+              label={collapsed ? '' : 'Submitted for Review'}
+            />
+            <NavItem
+              to="/reports?status=resolved"
+              icon={<CircleCheck className="w-5 h-5" />}
+              label={collapsed ? '' : 'Completed Tasks'}
+            />
+          </>
+        )}
 
         {/* Support */}
         {!collapsed && <SectionLabel label="Support" />}
         <NavItem
           to="/support"
           icon={<CircleHelp className="w-5 h-5" />}
-          label={collapsed ? '' : 'Support'}
+          label={collapsed ? '' : 'Help & Support'}
         />
       </nav>
 
@@ -208,9 +252,19 @@ export default function Sidebar({ collapsed, onToggle }) {
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-white text-xs font-semibold truncate">{currentUser.full_name || currentUser.name || 'Staff User'}</p>
-                <p className="text-white/50 text-[10px] truncate">{currentUser.role || 'Staff'}</p>
-                <p className="text-white/40 text-[10px] truncate">{currentUser.institution || currentUser.institution_name || 'Jimma Municipality'}</p>
+                <p className="text-white text-xs font-semibold truncate">
+                  {currentUser.full_name || currentUser.name || 'Staff User'}
+                </p>
+                <p className="text-emerald-200 text-[10px] font-medium truncate">
+                  {currentUser.role === 'institution_super_admin'
+                    ? 'Super Administrator'
+                    : currentUser.role === 'branch_manager'
+                    ? 'Branch Manager'
+                    : 'Field Operative'}
+                </p>
+                <p className="text-white/40 text-[10px] truncate">
+                  {currentUser.branch_name ? `${currentUser.branch_name}` : (currentUser.institution || currentUser.institution_name || 'Jimma Municipality')}
+                </p>
               </div>
             )}
           </div>
