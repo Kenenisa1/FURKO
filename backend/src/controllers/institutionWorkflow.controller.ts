@@ -22,15 +22,16 @@ async function getCallerContext(req: RbacRequest) {
   }
   // Fallback: If DB query returned null (e.g. mock DB in integration tests),
   // construct caller context from decoded JWT claims on req.user
-  const role = normalizeRole(req.user.role || 'citizen');
+  const jwtUser = (req.user || {}) as any;
+  const role = normalizeRole(jwtUser.role || 'citizen');
   const fallbackCtx = {
     userId: tokenUserId,
-    email: req.user.email || '',
-    fullName: req.user.full_name || '',
+    email: jwtUser.email || '',
+    fullName: jwtUser.full_name || '',
     role,
     permissions: getPermissionsForRole(role),
-    institutionId: req.user.institution_id || null,
-    branchId: req.user.branch_id || null,
+    institutionId: jwtUser.institution_id || null,
+    branchId: jwtUser.branch_id || null,
     isSystemAdmin: role === ROLES.SYSTEM_ADMIN,
     isSuperAdmin: role === ROLES.INSTITUTION_SUPER_ADMIN,
     isBranchManager: role === ROLES.BRANCH_MANAGER,
@@ -1597,13 +1598,42 @@ export const InstitutionWorkflowController = {
         return;
       }
 
+      // Determine target institution ID (supports system admins passing ?institution_id=...)
+      let targetInstitutionId = req.query.institution_id as string | undefined;
+      if (!targetInstitutionId || !user.isSystemAdmin) {
+        targetInstitutionId = user.institutionId || undefined;
+      }
+
+      // Fetch all active institutions so frontend can render bureau switcher
+      const allInstRes = await pool.query(
+        `SELECT id, name, code, contact_email, contact_phone, is_active
+         FROM institutions
+         WHERE is_active = TRUE
+         ORDER BY name ASC`
+      );
+
+      // If user is system admin and didn't specify an institution, default to the first active institution
+      if (!targetInstitutionId) {
+        if (allInstRes.rows.length > 0) {
+          targetInstitutionId = allInstRes.rows[0].id;
+        } else {
+          res.status(404).json({ success: false, message: 'No active institutions found in system.' });
+          return;
+        }
+      }
+
       const instRes = await pool.query(
         `SELECT i.*,
                 (SELECT COUNT(*)::int FROM users u WHERE u.institution_id = i.id AND u.is_active = TRUE) AS "staffCount",
-                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id) AS "totalReports"
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id) AS "totalReports",
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id AND r.status IN ('submitted', 'under_review')) AS "pendingReports",
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id AND r.status IN ('in_progress', 'accepted', 'assigned')) AS "inProgressReports",
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id AND r.status = 'submitted_for_review') AS "reviewAwaitingReports",
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id AND r.status = 'resolved') AS "resolvedReports",
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id AND r.status = 'rejected') AS "rejectedReports"
          FROM institutions i
          WHERE i.id = $1`,
-        [user.institutionId]
+        [targetInstitutionId]
       );
 
       if (instRes.rows.length === 0) {
@@ -1611,15 +1641,45 @@ export const InstitutionWorkflowController = {
         return;
       }
 
-      const catRes = await pool.query(
-        `SELECT DISTINCT c.name
-         FROM routing_rules rr
-         JOIN categories c ON c.id = rr.category_id
-         WHERE rr.target_institution_id = $1 AND rr.is_active = TRUE`,
-        [user.institutionId]
+      const inst = instRes.rows[0];
+
+      // Fetch branches for this institution
+      const branchRes = await pool.query(
+        `SELECT b.id, b.name, b.code, b.address, b.contact_phone, b.is_active, b.created_at,
+                (SELECT COUNT(*)::int FROM users u WHERE u.branch_id = b.id AND u.is_active = TRUE) AS "staffCount",
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_branch_id = b.id AND r.status NOT IN ('resolved', 'rejected')) AS "activeReportsCount"
+         FROM branches b
+         WHERE b.institution_id = $1
+         ORDER BY b.name ASC`,
+        [targetInstitutionId]
       );
 
-      const inst = instRes.rows[0];
+      // Fetch categories dynamically routed to this institution
+      const catRes = await pool.query(
+        `SELECT DISTINCT c.id, c.name, c.slug, c.description, c.default_priority,
+                         rr.jurisdiction_name, rr.priority_weight
+         FROM routing_rules rr
+         JOIN categories c ON c.id = rr.category_id
+         WHERE rr.target_institution_id = $1 AND rr.is_active = TRUE
+         ORDER BY c.name ASC`,
+        [targetInstitutionId]
+      );
+
+      // Fetch active staff roster assigned to this institution
+      const staffRes = await pool.query(
+        `SELECT u.id, u.full_name, u.email, u.phone_number, u.role, u.branch_id,
+                b.name AS branch_name, b.code AS branch_code, u.is_active, u.created_at
+         FROM users u
+         LEFT JOIN branches b ON b.id = u.branch_id
+         WHERE u.institution_id = $1 AND u.is_active = TRUE
+         ORDER BY u.role ASC, u.full_name ASC
+         LIMIT 60`,
+        [targetInstitutionId]
+      );
+
+      const total = inst.totalReports || 0;
+      const resolved = inst.resolvedReports || 0;
+      const rate = total > 0 ? Math.round((resolved / total) * 100) : 100;
 
       res.status(200).json({
         success: true,
@@ -1627,17 +1687,34 @@ export const InstitutionWorkflowController = {
           id: inst.id,
           name: inst.name,
           code: inst.code,
-          type: 'Municipal Authority',
-          description: inst.description || 'Public service provider for Jimma City.',
+          type: inst.code === 'EEU-JIMMA' ? 'Public Utility Provider' : 'Municipal Authority Bureau',
+          description: inst.description || 'Public utility and infrastructure service provider for Jimma City.',
           email: inst.contact_email,
-          phone: inst.contact_phone || '+251471112222',
-          website: `www.${(inst.code || 'jimma').toLowerCase()}.gov.et`,
-          address: 'Jimma City Administration Building, Jimma, Ethiopia',
-          serviceArea: 'Jimma City (All 17 Kebeles)',
-          established: '1994',
-          staffCount: inst.staffCount || 1,
-          totalReports: inst.totalReports || 0,
+          phone: inst.contact_phone || '+251 47 111 2233',
+          website: `www.${inst.code.toLowerCase().replace(/[^a-z0-9]/g, '')}.jimma.gov.et`,
+          address: 'Jimma City Administration Building, Jimma, Oromia, Ethiopia',
+          serviceArea: 'Jimma City Urban Jurisdiction (17 Kebeles)',
+          established: '2004',
+          isActive: inst.is_active,
+          createdAt: inst.created_at,
+          // Performance and Queues
+          staffCount: inst.staffCount || 0,
+          totalReports: total,
+          pendingReports: inst.pendingReports || 0,
+          inProgressReports: inst.inProgressReports || 0,
+          reviewAwaitingReports: inst.reviewAwaitingReports || 0,
+          resolvedReports: resolved,
+          rejectedReports: inst.rejectedReports || 0,
+          resolutionRate: rate,
+          avgResolutionTime: '2.4 days',
+          // Detailed relations
+          branches: branchRes.rows,
           responsibleCategories: catRes.rows.map((r: any) => r.name),
+          categoriesDetails: catRes.rows,
+          staffRoster: staffRes.rows,
+          // All institutions for switching
+          availableInstitutions: allInstRes.rows,
+          isSystemAdminView: user.isSystemAdmin,
         },
       });
     } catch (error) {
@@ -1648,10 +1725,19 @@ export const InstitutionWorkflowController = {
 
   async updateProfile(req: RbacRequest, res: Response): Promise<void> {
     const user = await getCallerContext(req);
-    const { email, phone, description, name } = req.body;
+    const { email, phone, description, name, institution_id } = req.body;
 
     if (!user) {
       res.status(401).json({ success: false, message: 'Authentication required.' });
+      return;
+    }
+
+    const targetInstitutionId = (user.isSystemAdmin && (institution_id || req.query.institution_id))
+      ? String(institution_id || req.query.institution_id)
+      : user.institutionId;
+
+    if (!targetInstitutionId) {
+      res.status(400).json({ success: false, message: 'Target institution ID is required.' });
       return;
     }
 
@@ -1665,15 +1751,20 @@ export const InstitutionWorkflowController = {
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $5
          RETURNING *`,
-        [email, phone, description, name, user.institutionId]
+        [email, phone, description, name, targetInstitutionId]
       );
+
+      if (result.rows.length === 0) {
+        res.status(404).json({ success: false, message: 'Institution not found.' });
+        return;
+      }
 
       AuditService.log({
         actorId: user.userId,
-        institutionId: user.institutionId,
+        institutionId: targetInstitutionId,
         action: 'INSTITUTION_PROFILE_UPDATED',
         entityType: 'institution',
-        entityId: user.institutionId || '',
+        entityId: targetInstitutionId,
         metadata: { name, email, phone },
       });
 
@@ -1688,23 +1779,106 @@ export const InstitutionWorkflowController = {
     }
   },
 
-  async listInstitutions(_req: any, res: Response): Promise<void> {
+  async listInstitutions(req: any, res: Response): Promise<void> {
     try {
+      const { search, status } = req.query as { search?: string; status?: string };
+      const conditions: string[] = [];
+      const params: any[] = [];
+
+      if (status && status !== 'all') {
+        params.push(status === 'active');
+        conditions.push(`i.is_active = $${params.length}`);
+      }
+
+      if (search) {
+        params.push(`%${search.trim().toLowerCase()}%`);
+        conditions.push(`(LOWER(i.name) LIKE $${params.length} OR LOWER(i.code) LIKE $${params.length})`);
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
       const result = await pool.query(
-        `SELECT id, name, code, contact_email, contact_phone
-         FROM institutions
-         WHERE is_active = TRUE
-         ORDER BY name ASC`
+        `SELECT i.id, i.name, i.code, i.description, i.contact_email, i.contact_phone, i.is_active, i.created_at,
+                (SELECT COUNT(*)::int FROM users u WHERE u.institution_id = i.id AND u.is_active = TRUE) AS "staffCount",
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id) AS "assignedReports",
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id AND r.status IN ('submitted', 'under_review')) AS "newReports",
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id AND r.status IN ('in_progress', 'accepted', 'assigned')) AS "inProgressReports",
+                (SELECT COUNT(*)::int FROM reports r WHERE r.current_institution_id = i.id AND r.status = 'resolved') AS "resolvedReports",
+                (SELECT COUNT(*)::int FROM branches b WHERE b.institution_id = i.id AND b.is_active = TRUE) AS "branchCount"
+         FROM institutions i
+         ${whereClause}
+         ORDER BY i.name ASC`,
+        params
       );
+
+      const mapped = result.rows.map((row: any) => ({
+        ...row,
+        status: row.is_active ? 'active' : 'inactive',
+        type: row.code === 'EEU-JIMMA' ? 'Public Utility' : 'Government',
+        contactPerson: row.contact_email ? row.contact_email.split('@')[0] : 'Operations Desk',
+        contactEmail: row.contact_email,
+        contactPhone: row.contact_phone,
+        serviceAreas: [row.name.replace(/Jimma City | Authority| Bureau| Office/gi, '').trim()],
+        avgResolutionTime: '2.4 days',
+      }));
 
       res.status(200).json({
         success: true,
-        data: result.rows,
-        institutions: result.rows,
+        data: mapped,
+        institutions: mapped,
       });
     } catch (error) {
       console.error('List institutions error:', error);
       res.status(500).json({ success: false, message: 'Failed to list institutions.' });
+    }
+  },
+
+  async toggleStatus(req: RbacRequest, res: Response): Promise<void> {
+    const user = await getCallerContext(req);
+    const { id } = req.params;
+
+    if (!user) {
+      res.status(401).json({ success: false, message: 'Authentication required.' });
+      return;
+    }
+
+    try {
+      const result = await pool.query(
+        `UPDATE institutions
+         SET is_active = NOT is_active,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $1
+         RETURNING *`,
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        res.status(404).json({ success: false, message: 'Institution not found.' });
+        return;
+      }
+
+      const updated = result.rows[0];
+
+      AuditService.log({
+        actorId: user.userId,
+        institutionId: id,
+        action: updated.is_active ? 'INSTITUTION_ACTIVATED' : 'INSTITUTION_DEACTIVATED',
+        entityType: 'institution',
+        entityId: id,
+        metadata: { is_active: updated.is_active },
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Institution ${updated.is_active ? 'activated' : 'deactivated'} successfully.`,
+        data: {
+          ...updated,
+          status: updated.is_active ? 'active' : 'inactive',
+        },
+      });
+    } catch (error) {
+      console.error('Toggle institution status error:', error);
+      res.status(500).json({ success: false, message: 'Failed to toggle institution status.' });
     }
   },
 

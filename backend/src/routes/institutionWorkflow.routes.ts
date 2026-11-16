@@ -6,11 +6,15 @@ import { InstitutionWorkflowController } from '../controllers/institutionWorkflo
 const router = Router();
 
 // Public list of active institutions (for routing, public directory and dropdowns)
+router.get('/', InstitutionWorkflowController.listInstitutions);
 router.get('/list', InstitutionWorkflowController.listInstitutions);
 
 // Institution profile
 router.get('/profile', verifyToken, requirePermission('institutions.view'), InstitutionWorkflowController.getProfile);
 router.put('/profile', verifyToken, requirePermission('institutions.manage'), InstitutionWorkflowController.updateProfile);
+router.get('/:id', verifyToken, requirePermission('institutions.view'), InstitutionWorkflowController.getProfile);
+router.put('/:id', verifyToken, requirePermission('institutions.manage'), InstitutionWorkflowController.updateProfile);
+router.post('/:id/toggle-status', verifyToken, requirePermission('institutions.manage'), InstitutionWorkflowController.toggleStatus);
 
 // Staff management
 router.get('/staff', verifyToken, requirePermission('staff.view'), InstitutionWorkflowController.getStaff);

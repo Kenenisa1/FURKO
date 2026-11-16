@@ -126,17 +126,19 @@ export async function createBranch(branchData) {
   return json.data;
 }
 
-// Fetch institution profile
-export async function getProfile() {
-  const json = await apiFetch('/institutions/profile');
+// Fetch institution profile (supports optional institutionId for admin inspection)
+export async function getProfile(institutionId = null) {
+  const qs = institutionId ? `?institution_id=${encodeURIComponent(institutionId)}` : '';
+  const json = await apiFetch(`/institutions/profile${qs}`);
   return json.data;
 }
 
 // Update institution profile
-export async function updateProfile(updates) {
-  const json = await apiFetch('/institutions/profile', {
+export async function updateProfile(updates, institutionId = null) {
+  const qs = institutionId ? `?institution_id=${encodeURIComponent(institutionId)}` : '';
+  const json = await apiFetch(`/institutions/profile${qs}`, {
     method: 'PUT',
-    body: JSON.stringify(updates),
+    body: JSON.stringify({ ...updates, institution_id: institutionId }),
   });
   return json.data;
 }
