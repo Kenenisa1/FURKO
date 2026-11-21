@@ -1,12 +1,15 @@
-import React, { useState, forwardRef } from 'react';
+import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   KeyboardTypeOptions,
   ReturnKeyTypeOptions,
+  NativeSyntheticEvent,
+  TextInputFocusEventData,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -20,9 +23,15 @@ interface Props {
   keyboardType?: KeyboardTypeOptions;
   secureTextEntry?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  autoCorrect?: boolean;
+  autoComplete?: any;
+  textContentType?: any;
   isPassword?: boolean;
   returnKeyType?: ReturnKeyTypeOptions;
   onSubmitEditing?: () => void;
+  blurOnSubmit?: boolean;
+  onFocus?: (e: any) => void;
+  onBlur?: (e: any) => void;
 }
 
 export const NotchedTextInput = forwardRef<TextInput, Props>(
@@ -36,19 +45,28 @@ export const NotchedTextInput = forwardRef<TextInput, Props>(
       keyboardType = 'default',
       secureTextEntry = false,
       autoCapitalize = 'none',
+      autoCorrect = true,
+      autoComplete,
+      textContentType,
       isPassword = false,
       returnKeyType,
       onSubmitEditing,
+      blurOnSubmit = true,
+      onFocus,
+      onBlur,
     },
     ref
   ) => {
     const [isFocused, setIsFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const inputRef = useRef<TextInput>(null);
+
+    useImperativeHandle(ref, () => inputRef.current as TextInput);
 
     return (
       <View style={styles.container}>
-        {/* Floating Tag over Top-Left Border */}
-        <View style={styles.floatingBadge}>
+        {/* Floating Tag over Top-Left Border - pointerEvents="none" so clicks pass through to input */}
+        <View style={styles.floatingBadge} pointerEvents="none">
           <Feather
             name={iconName}
             size={14}
@@ -60,15 +78,16 @@ export const NotchedTextInput = forwardRef<TextInput, Props>(
           </Text>
         </View>
 
-        {/* Input Box */}
-        <View
+        {/* Input Box - Pressable container to focus text input on any area click */}
+        <Pressable
           style={[
             styles.inputContainer,
             isFocused && styles.inputFocused,
           ]}
+          onPress={() => inputRef.current?.focus()}
         >
           <TextInput
-            ref={ref}
+            ref={inputRef}
             style={styles.textInput}
             value={value}
             onChangeText={onChangeText}
@@ -77,11 +96,20 @@ export const NotchedTextInput = forwardRef<TextInput, Props>(
             keyboardType={keyboardType}
             secureTextEntry={isPassword ? !showPassword : secureTextEntry}
             autoCapitalize={autoCapitalize}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            autoCorrect={autoCorrect}
+            autoComplete={autoComplete}
+            textContentType={textContentType}
+            onFocus={(e) => {
+              setIsFocused(true);
+              onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setIsFocused(false);
+              onBlur?.(e);
+            }}
             returnKeyType={returnKeyType}
             onSubmitEditing={onSubmitEditing}
-            blurOnSubmit={!onSubmitEditing}
+            blurOnSubmit={blurOnSubmit}
           />
 
           {isPassword && (
@@ -89,6 +117,7 @@ export const NotchedTextInput = forwardRef<TextInput, Props>(
               style={styles.eyeButton}
               onPress={() => setShowPassword((prev) => !prev)}
               activeOpacity={0.7}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Ionicons
                 name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -97,7 +126,7 @@ export const NotchedTextInput = forwardRef<TextInput, Props>(
               />
             </TouchableOpacity>
           )}
-        </View>
+        </Pressable>
       </View>
     );
   }
@@ -143,14 +172,11 @@ const styles = StyleSheet.create({
   },
   inputFocused: {
     borderColor: Colors.primary,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: '#FFFFFF',
   },
   textInput: {
     flex: 1,
+    height: '100%',
     fontSize: 15,
     color: '#111827',
   },

@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ScrollView,
   KeyboardAvoidingView,
@@ -12,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { NotchedTextInput } from '../../components/common/NotchedTextInput';
@@ -38,11 +38,11 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await login(identifier.trim(), password);
       setIsSubmitting(false);
-      // Navigation will handle authenticated state automatically, or navigate to Profile/Home
-      navigation.navigate('MainTabs');
-    } catch {
+      // Navigation happens automatically via AuthContext user state
+    } catch (err: any) {
       setIsSubmitting(false);
-      Alert.alert('Login Failed', 'Please check your credentials and try again.');
+      const serverMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Please check your credentials and try again.';
+      Alert.alert('Login Failed', serverMsg);
     }
   };
 
@@ -64,6 +64,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
+        enabled={Platform.OS === 'ios'}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -92,6 +93,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setIdentifier}
               placeholder="Enter email or phone number"
               autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="username"
+              textContentType="username"
             />
 
             {/* Password */}
@@ -102,6 +106,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setPassword}
               placeholder="Enter password"
               isPassword={true}
+              autoCorrect={false}
+              autoComplete="current-password"
+              textContentType="password"
             />
 
             {/* Forgot Password */}
@@ -123,22 +130,10 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <View style={styles.btnInner}>
-                  <Text style={styles.submitButtonText}>sign in</Text>
+                  <Text style={styles.submitButtonText}>Sign In</Text>
                   <Feather name="arrow-right" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
                 </View>
               )}
-            </TouchableOpacity>
-
-            {/* Quick Demo Bypass for Testing */}
-            <TouchableOpacity
-              style={styles.demoButton}
-              onPress={() => {
-                skipAuth();
-                navigation.navigate('MainTabs');
-              }}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.demoButtonText}>⚡ Instant Demo Access</Text>
             </TouchableOpacity>
 
             {/* Switch to Register */}

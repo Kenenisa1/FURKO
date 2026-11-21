@@ -21,16 +21,67 @@ import {
 import furkoLogo from '../../assets/furko-logo.jpg';
 import jimmaCityImage from '../../assets/jimma-city.gif';
 
+const DEMO_INSTITUTIONS = [
+  {
+    name: 'Road & Infrastructure Bureau',
+    code: 'JIMA-ROAD',
+    email: 'staff.road@jimma.gov.et',
+    password: 'Password123!',
+    role: 'Infrastructure Staff',
+    badge: 'Roads',
+  },
+  {
+    name: 'Water & Sewerage Authority',
+    code: 'JIMA-WATER',
+    email: 'staff.water@jimma.gov.et',
+    password: 'Password123!',
+    role: 'Water Operations Staff',
+    badge: 'Water',
+  },
+  {
+    name: 'Sanitation & Waste Management Office',
+    code: 'JIMA-WASTE',
+    email: 'staff.waste@jimma.gov.et',
+    password: 'Password123!',
+    role: 'Sanitation Staff',
+    badge: 'Waste',
+  },
+  {
+    name: 'Ethiopian Electric Utility (EEU)',
+    code: 'EEU-JIMMA',
+    email: 'staff.eeu@jimma.gov.et',
+    password: 'Password123!',
+    role: 'Power Grid Staff',
+    badge: 'Electric',
+  },
+  {
+    name: 'Central Municipal Administration',
+    code: 'JIMA-ADMIN',
+    email: 'admin@jimma.gov.et',
+    password: 'Password123!',
+    role: 'City Super Admin',
+    badge: 'Central Admin',
+  },
+];
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useApp();
 
-  const [email, setEmail] = useState('institution@furko.local');
-  const [password, setPassword] = useState('password');
+  const [selectedInst, setSelectedInst] = useState(DEMO_INSTITUTIONS[0]);
+  const [email, setEmail] = useState(DEMO_INSTITUTIONS[0].email);
+  const [password, setPassword] = useState(DEMO_INSTITUTIONS[0].password);
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  function handleSelectInstitution(inst) {
+    setSelectedInst(inst);
+    setEmail(inst.email);
+    setPassword(inst.password);
+    setError('');
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -65,16 +116,44 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Institution / Government Login</h1>
           <p className="text-sm text-gray-500 mb-6">Access your dashboard and manage community reports.</p>
 
-          {/* Institution selector */}
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-[#1a6b3c]/30 bg-[#f5f9f6] mb-6">
-            <div className="w-9 h-9 rounded-lg bg-[#1a6b3c]/10 flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-5 h-5 text-[#1a6b3c]" />
+          {/* Institution selector & quick switch */}
+          <div className="mb-5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+              Select Institution Account
+            </label>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {DEMO_INSTITUTIONS.map((inst) => {
+                const isActive = email.toLowerCase() === inst.email.toLowerCase();
+                return (
+                  <button
+                    key={inst.code}
+                    type="button"
+                    onClick={() => handleSelectInstitution(inst)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-[#1a6b3c] text-white shadow-sm font-semibold'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {inst.badge}
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">Jimma City Administration</p>
-              <p className="text-xs text-gray-500">Government Institution</p>
+
+            <div className="flex items-center gap-3 p-3 rounded-xl border border-[#1a6b3c]/30 bg-[#f5f9f6]">
+              <div className="w-9 h-9 rounded-lg bg-[#1a6b3c]/10 flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-5 h-5 text-[#1a6b3c]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {selectedInst?.name || 'Jimma City Administration'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {selectedInst?.role || 'Government Institution'} • {selectedInst?.code || 'JIMMA'}
+                </p>
+              </div>
             </div>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

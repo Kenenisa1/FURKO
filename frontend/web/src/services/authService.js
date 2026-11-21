@@ -1,65 +1,40 @@
 // ──────────────────────────────────────────────
-// FURKO — Auth Service (mock)
-// Replace with real API calls when backend is ready
-// POST /auth/login  →  { token, user }
+// FURKO — Auth Service (real API)
+// POST /api/v1/auth/login  →  { success, data: { token, user } }
 // ──────────────────────────────────────────────
 
-const MOCK_CREDENTIALS = [
-  {
-    email: 'institution@furko.local',
-    password: 'password',
-    user: {
-      id: 'STF-002',
-      name: 'Eman Muhammed',
-      role: 'Senior Staff',
-      department: 'Water Services',
-      email: 'institution@furko.local',
-      institution: 'Jimma Water Service',
-      institutionType: 'Government Institution',
-      avatar: null,
-    },
-  },
-  {
-    email: 'admin@furko.local',
-    password: 'password',
-    user: {
-      id: 'STF-001',
-      name: 'Abdullah Ziyad',
-      role: 'Institution Staff',
-      department: 'Water Services',
-      email: 'admin@furko.local',
-      institution: 'Jimma Water Service',
-      institutionType: 'Government Institution',
-      avatar: null,
-    },
-  },
-];
+const API_BASE = '/api/v1';
 
 /**
- * Simulates a login request.
+ * Logs in a staff/admin user.
  * @param {string} email
  * @param {string} password
  * @returns {Promise<{ user: object }>}
  */
 export async function login(email, password) {
-  // Simulate network delay
-  await delay(700);
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+  });
 
-  const match = MOCK_CREDENTIALS.find(
-    (c) => c.email === email.trim().toLowerCase() && c.password === password
-  );
+  const json = await res.json();
 
-  if (!match) {
-    throw new Error('Invalid email or password. Please try again.');
+  if (!res.ok) {
+    throw new Error(json.error || json.message || 'Invalid email or password.');
   }
 
-  // In production: store JWT in httpOnly cookie or secure localStorage
-  sessionStorage.setItem('furko_user', JSON.stringify(match.user));
-  return { user: match.user };
+  const { user, token } = json.data;
+
+  // Store session
+  sessionStorage.setItem('furko_token', token);
+  sessionStorage.setItem('furko_user', JSON.stringify(user));
+
+  return { user };
 }
 
 export async function logout() {
-  await delay(200);
+  sessionStorage.removeItem('furko_token');
   sessionStorage.removeItem('furko_user');
 }
 
@@ -72,7 +47,28 @@ export function getStoredUser() {
   }
 }
 
-// ── helpers ──────────────────────────────────
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export function getStoredToken() {
+  return sessionStorage.getItem('furko_token') || null;
+}
+
+export function hasPermission(permission) {
+  const user = getStoredUser();
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  return Array.isArray(user.permissions) && user.permissions.includes(permission);
+}
+
+export function isInstitutionSuperAdmin() {
+  const user = getStoredUser();
+  return user?.role === 'institution_super_admin' || user?.role === 'admin';
+}
+
+export function isInstitutionStaff() {
+  const user = getStoredUser();
+  return user?.role === 'institution_staff' || user?.role === 'staff';
+}
+
+export function isBranchManager() {
+  const user = getStoredUser();
+  return user?.role === 'branch_manager';
 }

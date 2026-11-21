@@ -5,11 +5,11 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   TextInput,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES } from '../../constants/categories';
@@ -82,26 +82,6 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
         {/* Title & Introduction */}
         <View style={styles.headlineGroup}>
           <Text style={styles.title}>What is the problem?</Text>
-          <Text style={styles.subtitle}>
-            Select the category that best describes the issue. FURKO will automatically route your report to the designated public office in Jimma City.
-          </Text>
-        </View>
-
-        {/* Search Input */}
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={20} color="#9CA3AF" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search category or problem (e.g. water, road, trash, light)..."
-            placeholderTextColor="#9CA3AF"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* 4 Problem Categories List */}
@@ -114,16 +94,6 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
               onSelectCategory={handleSelectCategory}
             />
           ))}
-
-          {filteredCategories.length === 0 && (
-            <View style={styles.emptySearchBox}>
-              <Ionicons name="search" size={36} color="#D1D5DB" />
-              <Text style={styles.emptySearchTitle}>No matching categories</Text>
-              <Text style={styles.emptySearchSubtitle}>
-                Try searching for keywords like "road", "water", "trash", or "power".
-              </Text>
-            </View>
-          )}
         </View>
       </ScrollView>
 
@@ -135,9 +105,12 @@ export const CategorySelectionScreen: React.FC<Props> = ({ navigation, route }) 
               <Text style={styles.selectedLabel}>Selected Category:</Text>
               <Text style={styles.selectedName}>{selectedCategory.name}</Text>
             </View>
-            <Text style={styles.selectedInst} numberOfLines={1}>
-              🏢 {selectedCategory.responsibleInstitution}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+              <Ionicons name="business-outline" size={14} color="#4B5563" style={{ marginRight: 5 }} />
+              <Text style={styles.selectedInst} numberOfLines={1}>
+                {selectedCategory.responsibleInstitution}
+              </Text>
+            </View>
           </View>
         ) : (
           <Text style={styles.hintText}>Tap a category above to select</Text>

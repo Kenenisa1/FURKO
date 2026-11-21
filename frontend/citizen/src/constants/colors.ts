@@ -6,9 +6,12 @@ export const Colors = {
   primaryDark: '#0A5C30',    // Deep green
   primaryLight: '#E6F4EA',   // Light green tint for badges / backgrounds
 
-  // Secondary & Accents
-  accent: '#F5A623',         // Warm amber for CTAs
-  blueAccent: '#1E6FE0',     // Outline blue / track report
+  // Secondary brand (Professional civic blue for secondary actions)
+  secondary: '#1E6FE0',      // Secondary button blue
+  secondaryDark: '#1754AB',  // Deep blue
+  secondaryLight: '#EBF5FF', // Soft blue tint
+  accent: '#1E6FE0',         // Secondary accent blue
+  blueAccent: '#1E6FE0',     // Secondary action blue
   blueLight: '#E8F1FC',
 
   // Category colors (high-contrast accessible)

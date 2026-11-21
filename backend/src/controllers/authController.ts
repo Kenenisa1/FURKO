@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import pool from '../config/db';
 import { UserModel } from '../models/userModel';
+import { getPermissionsForRole } from '../config/rbac';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_fallback_key';
 
@@ -9,16 +11,31 @@ export const authController = {
   // Register a new citizen/user
   async register(req: Request, res: Response): Promise<void> {
     try {
-      const { full_name, email, password, phone_number } = req.body;
+      const { full_name, email, password, phone_number, fathers_name } = req.body;
+      const cleanEmail = email ? email.trim().toLowerCase() : '';
+      const cleanName = full_name ? full_name.trim() : '';
+      const cleanFathersName = fathers_name ? fathers_name.trim() : null;
 
-      // 1. Validate inputs
-      if (!full_name || !email || !password) {
-        res.status(400).json({ error: 'Missing required fields (full_name, email, password)' });
+      // 1. Validate required fields
+      if (!cleanName || cleanName.length < 2) {
+        res.status(400).json({ error: 'Full name must be at least 2 characters.' });
+        return;
+      }
+      if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+        res.status(400).json({ error: 'A valid email address is required.' });
+        return;
+      }
+      if (!password || password.length < 8) {
+        res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+        return;
+      }
+      if (!phone_number || phone_number.replace(/\D/g, '').length < 9) {
+        res.status(400).json({ error: 'A valid phone number is required (e.g., +251 91 234 5678).' });
         return;
       }
 
       // 2. Check for duplicate accounts
-      const existingUser = await UserModel.findByEmail(email);
+      const existingUser = await UserModel.findByEmail(cleanEmail);
       if (existingUser) {
         res.status(409).json({ error: 'An account with this email already exists.' });
         return;
@@ -30,23 +47,37 @@ export const authController = {
 
       // 4. Create user in database (default role: citizen)
       const newUser = await UserModel.create({
-        full_name,
-        email,
-        phone_number,
+        full_name: cleanName,
+        email: cleanEmail,
+        phone_number: phone_number ? phone_number.trim() : undefined,
+        fathers_name: cleanFathersName,
         password_hash,
         role: 'citizen'
       });
 
+      // Issue a JWT immediately on registration so the citizen can use the app right away
+      const token = jwt.sign(
+        { userId: newUser.id, email: newUser.email, role: newUser.role },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
       res.status(201).json({
-        message: 'User registered successfully',
-        user: {
-          id: newUser.id,
-          full_name: newUser.full_name,
-          email: newUser.email,
-          phone_number: newUser.phone_number,
-          role: newUser.role,
-          created_at: newUser.created_at
-        }
+        success: true,
+        data: {
+          token,
+          user: {
+            id: newUser.id,
+            full_name: newUser.full_name,
+            name: newUser.full_name,
+            fathers_name: newUser.fathers_name,
+            email: newUser.email,
+            phone_number: newUser.phone_number,
+            role: newUser.role,
+            permissions: getPermissionsForRole(newUser.role),
+            created_at: newUser.created_at,
+          },
+        },
       });
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -58,15 +89,16 @@ export const authController = {
   async login(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
+      const cleanEmail = email ? email.trim().toLowerCase() : '';
 
       // 1. Validate inputs
-      if (!email || !password) {
+      if (!cleanEmail || !password) {
         res.status(400).json({ error: 'Email and password are required' });
         return;
       }
 
       // 2. Find user by email
-      const user = await UserModel.findByEmail(email);
+      const user = await UserModel.findByEmail(cleanEmail);
       if (!user) {
         res.status(401).json({ error: 'Invalid email or password' });
         return;
@@ -79,22 +111,66 @@ export const authController = {
         return;
       }
 
-      // 4. Generate JWT Token
+      // 4. Fetch institution details if user belongs to one
+      let institutionInfo: { id: string; name: string; code: string } | null = null;
+      if (user.institution_id) {
+        const instRes = await pool.query(
+          'SELECT id, name, code FROM institutions WHERE id = $1',
+          [user.institution_id]
+        );
+        if (instRes.rows.length > 0) {
+          institutionInfo = instRes.rows[0];
+        }
+      }
+
+      // 4b. Fetch branch details if user belongs to one
+      let branchInfo: { id: string; name: string; code: string } | null = null;
+      if (user.branch_id) {
+        const branchRes = await pool.query(
+          'SELECT id, name, code FROM branches WHERE id = $1',
+          [user.branch_id]
+        );
+        if (branchRes.rows.length > 0) {
+          branchInfo = branchRes.rows[0];
+        }
+      }
+
+      // 5. Generate JWT Token
       const token = jwt.sign(
-        { userId: user.id, email: user.email, role: user.role },
+        {
+          userId: user.id,
+          email: user.email,
+          role: user.role,
+          institution_id: user.institution_id || null,
+          branch_id: user.branch_id || null,
+        },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
 
+      const permissions = getPermissionsForRole(user.role);
+
       res.status(200).json({
-        message: 'Login successful',
-        token,
-        user: {
-          id: user.id,
-          full_name: user.full_name,
-          email: user.email,
-          role: user.role
-        }
+        success: true,
+        data: {
+          token,
+          user: {
+            id: user.id,
+            full_name: user.full_name,
+            name: user.full_name,
+            email: user.email,
+            phone_number: user.phone_number,
+            role: user.role,
+            institution_id: user.institution_id || null,
+            branch_id: user.branch_id || null,
+            institution: institutionInfo?.name || (user.role === 'admin' ? 'Jimma City Central Administration' : null),
+            institution_name: institutionInfo?.name || (user.role === 'admin' ? 'Jimma City Central Administration' : null),
+            institution_code: institutionInfo?.code || (user.role === 'admin' ? 'JIMA-ADMIN' : null),
+            branch_name: branchInfo?.name || null,
+            branch_code: branchInfo?.code || null,
+            permissions,
+          },
+        },
       });
     } catch (error: any) {
       console.error('Login error:', error);

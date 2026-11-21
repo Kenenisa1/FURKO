@@ -7,18 +7,19 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES } from '../../constants/categories';
+import { CategoryIcon } from '../../components/common/CategoryIcon';
 import { ReportsApi } from '../../services/api';
 import { ProblemCategory } from '../../types';
 
@@ -236,15 +237,7 @@ export const ReportFormScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={[styles.categoryBanner, { borderLeftColor: category.color }]}>
             <View style={styles.categoryBannerLeft}>
               <View style={[styles.categoryIconCircle, { backgroundColor: category.color + '20' }]}>
-                <Text style={styles.categoryEmoji}>
-                  {category.key === 'roads'
-                    ? '🚧'
-                    : category.key === 'water'
-                    ? '💧'
-                    : category.key === 'waste'
-                    ? '🗑️'
-                    : '💡'}
-                </Text>
+                <CategoryIcon categoryKey={category.key} size={24} color={category.color} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.bannerCategoryName}>{category.name}</Text>
@@ -437,7 +430,10 @@ export const ReportFormScreen: React.FC<Props> = ({ navigation, route }) => {
             {isSubmitting ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.submitButtonText}>🚀 Submit & Dispatch Report</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="paper-plane" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.submitButtonText}>Submit & Dispatch Report</Text>
+              </View>
             )}
           </TouchableOpacity>
         </ScrollView>

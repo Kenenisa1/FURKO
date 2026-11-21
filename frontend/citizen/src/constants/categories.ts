@@ -154,7 +154,7 @@ export const PROBLEM_CATEGORIES: ProblemCategory[] = [
 ];
 
 // Status display metadata
-export const STATUS_META = {
+export const STATUS_META: Record<string, { label: string; color: string; bg: string; step: number; description: string }> = {
   submitted: {
     label: 'Submitted',
     color: Colors.statusSubmitted,
@@ -169,12 +169,33 @@ export const STATUS_META = {
     step: 2,
     description: 'Directly routed to responsible institution inbox',
   },
+  accepted: {
+    label: 'Accepted',
+    color: '#0284C7',
+    bg: '#E0F2FE',
+    step: 2,
+    description: 'Accepted by institution and queued for work',
+  },
+  assigned: {
+    label: 'Assigned',
+    color: '#6366F1',
+    bg: '#EEF2FF',
+    step: 3,
+    description: 'Assigned to field maintenance crew',
+  },
   in_progress: {
     label: 'In Progress',
     color: Colors.statusInProgress,
     bg: '#FEF3C7',
     step: 3,
     description: 'Accepted and assigned to maintenance team',
+  },
+  redirected: {
+    label: 'Redirected',
+    color: '#D97706',
+    bg: '#FEF3C7',
+    step: 2,
+    description: 'Redirected to another responsible department',
   },
   resolved: {
     label: 'Resolved',
@@ -196,5 +217,19 @@ export const STATUS_META = {
     bg: '#EDE9FE',
     step: 2,
     description: 'Citizen raised a new concern — returned to active queue',
+  },
+  closed: {
+    label: 'Closed',
+    color: '#4B5563',
+    bg: '#F3F4F6',
+    step: 4,
+    description: 'Ticket finalized and closed',
+  },
+  pending: {
+    label: 'Pending',
+    color: '#D97706',
+    bg: '#FEF3C7',
+    step: 1,
+    description: 'Pending review or action',
   },
 };

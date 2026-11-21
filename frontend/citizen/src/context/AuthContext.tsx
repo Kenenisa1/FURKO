@@ -8,7 +8,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (identifier: string, password: string) => Promise<boolean>;
-  register: (fullName: string, email: string, password: string, phone: string) => Promise<boolean>;
+  register: (fullName: string, email: string, password: string, phone: string, fathersName?: string) => Promise<boolean>;
   verifyPhone: (code: string) => Promise<boolean>;
   updateProfile: (updatedData: Partial<User>) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -66,18 +66,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await SecureStore.setItemAsync('furko_token', authToken);
       await SecureStore.setItemAsync('furko_user', JSON.stringify(authedUser));
       return true;
-    } catch {
-      // In development / demo mode, allow login with fallback
-      const demoUser: User = {
-        ...DEMO_CITIZEN,
-        email: identifier.includes('@') ? identifier : DEMO_CITIZEN.email,
-        phone_number: !identifier.includes('@') ? identifier : DEMO_CITIZEN.phone_number,
-      };
-      setUser(demoUser);
-      setToken('demo-token-mock');
-      await SecureStore.setItemAsync('furko_token', 'demo-token-mock');
-      await SecureStore.setItemAsync('furko_user', JSON.stringify(demoUser));
-      return true;
+    } catch (error: any) {
+      console.warn('Login request failed:', error?.response?.data || error.message);
+      throw error;
     }
   };
 
@@ -85,26 +76,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fullName: string,
     email: string,
     password: string,
-    phone: string
+    phone: string,
+    fathersName?: string
   ): Promise<boolean> => {
-    const newUser: User = {
-      id: `usr-${Date.now()}`,
-      full_name: fullName,
-      email,
-      phone_number: phone,
-      role: 'citizen',
-      phone_verified: false,
-      subcity: 'Jimma City',
-      kebele: 'Kebele 01',
-      created_at: new Date().toISOString(),
-    };
-
     try {
       const response = await apiClient.post('/auth/register', {
         full_name: fullName,
         email,
         password,
         phone_number: phone,
+        fathers_name: fathersName,
       });
       const { user: registeredUser, token: authToken } = response.data.data;
       setUser(registeredUser);
@@ -112,13 +93,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await SecureStore.setItemAsync('furko_token', authToken);
       await SecureStore.setItemAsync('furko_user', JSON.stringify(registeredUser));
       return true;
-    } catch {
-      // Mock registration fallback
-      setUser(newUser);
-      setToken('demo-token-mock');
-      await SecureStore.setItemAsync('furko_token', 'demo-token-mock');
-      await SecureStore.setItemAsync('furko_user', JSON.stringify(newUser));
-      return true;
+    } catch (error: any) {
+      console.warn('Registration request failed:', error?.response?.data || error.message);
+      throw error;
     }
   };
 

@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Image,
   Animated,
@@ -13,9 +12,11 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES } from '../../constants/categories';
+import { CategoryIcon } from '../../components/common/CategoryIcon';
 import { ReportsApi } from '../../services/api';
 import { ProblemCategory, Report } from '../../types';
 
@@ -425,15 +426,7 @@ export const RoutingPreviewScreen: React.FC<Props> = ({ navigation, route }) => 
             {/* Category row */}
             <View style={styles.summaryRow}>
               <View style={styles.summaryIconWrap}>
-                <Text style={styles.summaryEmoji}>
-                  {category.key === 'roads'
-                    ? '🚧'
-                    : category.key === 'water'
-                    ? '💧'
-                    : category.key === 'waste'
-                    ? '🗑️'
-                    : '💡'}
-                </Text>
+                <CategoryIcon categoryKey={category.key} size={22} color={category.color} />
               </View>
               <View style={styles.summaryContent}>
                 <Text style={styles.summaryRowLabel}>Category</Text>
@@ -460,7 +453,10 @@ export const RoutingPreviewScreen: React.FC<Props> = ({ navigation, route }) => 
                   {addressText}
                 </Text>
                 {landmark ? (
-                  <Text style={styles.summaryRowSub}>📍 {landmark}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                    <Ionicons name="location-sharp" size={12} color="#6B7280" style={{ marginRight: 3 }} />
+                    <Text style={styles.summaryRowSub}>{landmark}</Text>
+                  </View>
                 ) : null}
               </View>
               <View style={[styles.summaryCheck, { backgroundColor: '#D1FAE5' }]}>

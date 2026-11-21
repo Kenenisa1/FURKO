@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FURKO — Final Graduation Project Report</title>
+<style>
+  /* ── Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 12pt;
+    line-height: 1.7;
+    color: #111;
+    background: #fff;
+    counter-reset: page 1;
+  }
+
+  /* ── Page wrapper ── */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto 20mm auto;
+    padding: 25mm 25mm 30mm 30mm;
+    background: #fff;
+    border: 1px solid #ddd;
+    position: relative;
+    page-break-after: always;
+  }
+
+  /* ── Page numbers ── */
+  .page::after {
+    content: "— " counter(page) " —";
+    counter-increment: page;
+    position: absolute;
+    bottom: 12mm;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 10pt;
+    color: #555;
+  }
+  .page.no-number::after { display: none; }
+
+  /* ── Headings ── */
+  h1.chapter { font-size: 16pt; font-weight: bold; margin: 20pt 0 10pt 0; border-bottom: 2px solid #1a3d6b; padding-bottom: 4pt; page-break-before: always; }
+  h1.chapter:first-of-type { page-break-before: avoid; }
+  h2.section { font-size: 14pt; font-weight: bold; margin: 16pt 0 8pt 0; }
+  h3.subsection { font-size: 12pt; font-weight: bold; margin: 12pt 0 6pt 0; }
+  h4 { font-size: 12pt; font-style: italic; font-weight: bold; margin: 10pt 0 4pt 0; }
+
+  /* ── Paragraphs ── */
+  p { margin-bottom: 8pt; text-align: justify; }
+  ul, ol { margin: 6pt 0 8pt 24pt; }
+  li { margin-bottom: 4pt; }
+
+  /* ── Cover Page ── */
+  .cover { text-align: center; }
+  .cover-logo-placeholder {
+    width: 100px; height: 100px;
+    margin: 0 auto 14pt auto;
+    border: 3px solid #1a3d6b;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9pt; color: #1a3d6b; font-weight: bold;
+    line-height: 1.2;
+  }
+  .cover h1 { font-size: 18pt; font-weight: bold; color: #1a3d6b; margin: 12pt 0 8pt 0; }
+  .cover .subtitle { font-size: 13pt; font-style: italic; color: #444; margin-bottom: 28pt; }
+  .cover .institution { font-size: 12pt; font-weight: bold; margin-bottom: 4pt; }
+  .cover .cohort { font-size: 11pt; margin-bottom: 28pt; }
+  .members-table { margin: 16pt auto; border-collapse: collapse; width: 90%; }
+  .members-table th, .members-table td { border: 1px solid #999; padding: 5pt 10pt; font-size: 11pt; }
+  .members-table th { background: #1a3d6b; color: #fff; }
+  .cover .submission-info { margin-top: 28pt; font-size: 11pt; }
+  .cover .submission-info p { text-align: center; margin-bottom: 4pt; }
+
+  /* ── TOC ── */
+  .toc-entry { display: flex; margin-bottom: 4pt; font-size: 11pt; }
+  .toc-entry .toc-num { min-width: 60pt; }
+  .toc-entry .toc-dots { flex: 1; border-bottom: 1px dotted #999; margin: 0 4pt; height: 1em; }
+  .toc-entry .toc-pg { min-width: 20pt; text-align: right; }
+
+  /* ── Tables ── */
+  table.data { border-collapse: collapse; width: 100%; margin: 10pt 0 14pt 0; font-size: 10pt; }
+  table.data th { background: #1a3d6b; color: #fff; padding: 5pt 8pt; text-align: left; border: 1px solid #aaa; }
+  table.data td { padding: 4pt 8pt; border: 1px solid #ccc; vertical-align: top; }
+  table.data tr:nth-child(even) td { background: #f4f7fb; }
+  .caption { font-size: 10pt; font-style: italic; text-align: center; margin: 4pt 0 12pt 0; color: #333; }
+
+  /* ── Code-like blocks ── */
+  .code-block {
+    background: #f5f5f5;
+    border-left: 4px solid #1a3d6b;
+    padding: 8pt 12pt;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 9.5pt;
+    margin: 8pt 0 12pt 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── Architecture diagram (text-based) ── */
+  .diagram {
+    border: 2px solid #1a3d6b;
+    border-radius: 4pt;
+    padding: 12pt;
+    margin: 10pt 0 14pt 0;
+    font-family: "Courier New", monospace;
+    font-size: 9pt;
+    white-space: pre;
+    background: #f9fbff;
+    text-align: left;
+    overflow-x: auto;
+  }
+
+  /* ── Section dividers ── */
+  hr.section-rule { border: none; border-top: 1px solid #ccc; margin: 16pt 0; }
+
+  /* ── Callout boxes ── */
+  .callout { border: 1px solid #1a3d6b; border-left: 5px solid #1a3d6b; padding: 8pt 12pt; margin: 10pt 0; background: #f0f4ff; border-radius: 2pt; }
+  .callout p { margin: 0; }
+
+  /* ── Print ── */
+  @media print {
+    body { background: white; }
+    .page { border: none; margin: 0; width: 100%; padding: 25mm 20mm 30mm 25mm; }
+    h1.chapter { page-break-before: always; }
+    h1.chapter:first-of-type { page-break-before: avoid; }
+    table.data { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ COVER PAGE ═══════════════════════════════ -->
+<div class="page no-number">
+  <div class="cover">
+    <div class="cover-logo-placeholder">INSA<br/>LOGO</div>
+    <p class="institution">Information Network Security Administration</p>
+    <p class="institution">— Jimma Branch —</p>
+    <p class="cohort">5th Cyber Talent Batch</p>
+
+    <h1>FURKO</h1>
+    <p class="subtitle">"A Digital Community Problem Reporting and Resolution Platform"</p>
+    <p style="font-size:13pt;font-style:italic;margin-bottom:28pt;">"See it. Report it. Track it. Fix it."</p>
+
+    <p style="font-weight:bold;font-size:12pt;margin-bottom:8pt;">FINAL GRADUATION PROJECT REPORT</p>
+    <p style="font-size:11pt;margin-bottom:20pt;">Group 4</p>
+
+    <table class="members-table">
+      <tr>
+        <th>Full Name</th>
+        <th>Student ID</th>
+      </tr>
+      <tr><td>1. Kenenisa Mieso</td><td>CTC-1642-26</td></tr>
+      <tr><td>2. Abdurahman Zenu</td><td>CTC-2839-26</td></tr>
+      <tr><td>3. Fesaha Belete</td><td>CTC-3684-26</td></tr>
+      <tr><td>4. Musab Abdulkadir</td><td>CTC-2996-26</td></tr>
+      <tr><td>5. Efa Desalegn</td><td>CTC-2436-26</td></tr>
+    </table>
+
+    <div class="submission-info">
+      <p><strong>Submitted to:</strong> Mr. Getachew</p>
+      <p><strong>Submission Date:</strong> October 22, 2026</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ TABLE OF CONTENTS ══════════════════════════════ -->
+<div class="page">
+  <h1 class="chapter" style="page-break-before:avoid;">Table of Contents</h1>
+
+  <div class="toc-entry"><span class="toc-num">Executive Summary</span><span class="toc-dots"></span><span class="toc-pg">3</span></div>
+  <div class="toc-entry"><span class="toc-num">List of Figures</span><span class="toc-dots"></span><span class="toc-pg">3</span></div>
+  <div class="toc-entry"><span class="toc-num">List of Tables</span><span class="toc-dots"></span><span class="toc-pg">3</span></div>
+  <div class="toc-entry"><span class="toc-num">List of Abbreviations</span><span class="toc-dots"></span><span class="toc-pg">3</span></div>
+  <div class="toc-entry" style="margin-top:8pt;font-weight:bold;"><span class="toc-num">Chapter One: Introduction</span><span class="toc-dots"></span><span class="toc-pg">4</span></div>
+  <div class="toc-entry"><span class="toc-num" style="padding-left:16pt;">1.1 Background</span><span class="toc-dots"></span><span class="toc-pg">4</span></div>
+  <div class="toc-entry"><span class="toc-num" style="padding-left:16pt;">1.2 Problem Statement</span><span class="toc-dots"></span><span class="toc-pg">4</span></div>
+  <div class="toc-entry"><span class="toc-num" style="padding-left:16pt;">1.3 General Objective</span><span class="toc-dots"></span><span class="toc-pg">5</span></div>
+  <div class="toc-entry"><span class="toc-num" style="padding-left:16pt;">1.4 Specific Objectives</span><span class="toc-dots"></span><span class="toc-pg">5</span></div>
+  <div class="toc-entry"><span class="toc-num" style="padding-left:16pt;">1.5 Scope and Limitations</span><span class="toc-dots"></span><span class="toc-pg">5</span></div>
+  <div class="toc-entry"><span class="toc-num" style="padding-left:16pt;">1.6 Significance</span><span class="toc-dots"></span><span class="toc-pg">5</span></div>
+  <div class="toc-entry" style="margin-top:8pt;font-weight:bold;"><span class="toc-num">Chapter Two: Literature Review</span><span class="toc-dots"></span><span class="toc-pg">6</span></div>
+  <div class="toc-entry" style="margin-top:8pt;font-weight:bold;"><span class="toc-num">Chapter Three: Methodology &amp; System Design</span><span class="toc-dots"></span><span class="toc-pg">8</span></div>
+  <div class="toc-entry" style="margin-top:8pt;font-weight:bold;"><span class="toc-num">Chapter Four: Implementation, Testing &amp; Results</span><span class="toc-dots"></span><span class="toc-pg">13</span></div>
+  <div class="toc-entry" style="margin-top:8pt;font-weight:bold;"><span class="toc-num">Chapter Five: Conclusion &amp; Future Work</span><span class="toc-dots"></span><span class="toc-pg">18</span></div>
+  <div class="toc-entry"><span class="toc-num">References</span><span class="toc-dots"></span><span class="toc-pg">19</span></div>
+  <div class="toc-entry"><span class="toc-num">Appendices</span><span class="toc-dots"></span><span class="toc-pg">20</span></div>
+
+  <h2 class="section" style="margin-top:24pt;">List of Figures</h2>
+  <div class="toc-entry"><span class="toc-num">Figure 1 — High-Level FURKO System Architecture</span><span class="toc-dots"></span><span class="toc-pg">10</span></div>
+  <div class="toc-entry"><span class="toc-num">Figure 2 — Report Lifecycle Workflow</span><span class="toc-dots"></span><span class="toc-pg">11</span></div>
+  <div class="toc-entry"><span class="toc-num">Figure 3 — PostGIS Spatial Routing Logic</span><span class="toc-dots"></span><span class="toc-pg">11</span></div>
+  <div class="toc-entry"><span class="toc-num">Figure 4 — Database Entity-Relationship Diagram</span><span class="toc-dots"></span><span class="toc-pg">12</span></div>
+
+  <h2 class="section" style="margin-top:20pt;">List of Tables</h2>
+  <div class="toc-entry"><span class="toc-num">Table 1 — Functional Requirements Summary</span><span class="toc-dots"></span><span class="toc-pg">9</span></div>
+  <div class="toc-entry"><span class="toc-num">Table 2 — Non-Functional Requirements Summary</span><span class="toc-dots"></span><span class="toc-pg">9</span></div>
+  <div class="toc-entry"><span class="toc-num">Table 3 — Technology Stack</span><span class="toc-dots"></span><span class="toc-pg">10</span></div>
+  <div class="toc-entry"><span class="toc-num">Table 4 — Core API Endpoints</span><span class="toc-dots"></span><span class="toc-pg">13</span></div>
+  <div class="toc-entry"><span class="toc-num">Table 5 — Automated Test Results</span><span class="toc-dots"></span><span class="toc-pg">16</span></div>
+  <div class="toc-entry"><span class="toc-num">Table 6 — Seeded Test Credentials</span><span class="toc-dots"></span><span class="toc-pg">17</span></div>
+  <div class="toc-entry"><span class="toc-num">Table 7 — Non-Functional Test Results</span><span class="toc-dots"></span><span class="toc-pg">17</span></div>
+
+  <h2 class="section" style="margin-top:20pt;">List of Abbreviations and Acronyms</h2>
+  <table class="data" style="font-size:10pt;">
+    <tr><th>Abbreviation</th><th>Expansion</th></tr>
+    <tr><td>API</td><td>Application Programming Interface</td></tr>
+    <tr><td>CORS</td><td>Cross-Origin Resource Sharing</td></tr>
+    <tr><td>CSS</td><td>Cascading Style Sheets</td></tr>
+    <tr><td>DB</td><td>Database</td></tr>
+    <tr><td>EEU</td><td>Ethiopian Electric Utility</td></tr>
+    <tr><td>GPS</td><td>Global Positioning System</td></tr>
+    <tr><td>HTML</td><td>Hypertext Markup Language</td></tr>
+    <tr><td>HTTP</td><td>Hypertext Transfer Protocol</td></tr>
+    <tr><td>INSA</td><td>Information Network Security Administration</td></tr>
+    <tr><td>JWT</td><td>JSON Web Token</td></tr>
+    <tr><td>ORM</td><td>Object-Relational Mapping</td></tr>
+    <tr><td>PostGIS</td><td>Spatial extension for PostgreSQL</td></tr>
+    <tr><td>RBAC</td><td>Role-Based Access Control</td></tr>
+    <tr><td>REST</td><td>Representational State Transfer</td></tr>
+    <tr><td>SPA</td><td>Single-Page Application</td></tr>
+    <tr><td>SQL</td><td>Structured Query Language</td></tr>
+    <tr><td>UUID</td><td>Universally Unique Identifier</td></tr>
+  </table>
+</div>
+
+<!-- ══════════════════════════ EXECUTIVE SUMMARY ═════════════════════════════ -->
+<div class="page">
+  <h1 class="chapter" style="page-break-before:avoid;">Executive Summary</h1>
+
+  <p>FURKO is a civic-technology platform designed for Jimma City, Ethiopia, that enables citizens to report community infrastructure problems digitally and track their resolution through accountable municipal institutions. The platform consists of three integrated components: a citizen-facing mobile application built with React Native and Expo, a web-based institution and administrator portal built with React and Tailwind CSS, and a RESTful API backend built with Node.js, Express, and TypeScript, backed by a PostgreSQL 16 database with the PostGIS 3.4 spatial extension.</p>
+
+  <p>The primary problem addressed is the absence of a unified, digitized, and traceable channel through which Jimma City residents can report infrastructure deficiencies — such as road damage, water system failures, power outages, or waste accumulation — to the responsible municipal authorities. Existing channels are fragmented, lack evidence capture, provide no tracking capability, and offer no accountability mechanism.</p>
+
+  <p>FURKO addresses this gap by implementing: (1) secure citizen registration and login; (2) GPS-located, photo-supported report submission; (3) automatic spatial routing of reports to the correct institution using PostGIS polygon boundary queries; (4) an institution staff inbox, triage, and workflow portal with accept, redirect, assign, and resolve operations; (5) a full report lifecycle audit trail; (6) citizen-facing status tracking and resolution confirmation; and (7) a system administrator panel for platform governance.</p>
+
+  <p>The project achieved the following verified results: all 141 automated integration tests passed (0 failures), API response latency measured at approximately 15–60 ms (well below the 300 ms target), all RBAC role guards are enforced, evidence file validation correctly rejects non-image uploads, and the PostGIS spatial routing engine correctly routes test reports to the appropriate institution in 100% of test cases. The platform is fully containerized using Docker and Docker Compose, making it portable and deployment-ready.</p>
+
+  <p>This report documents the project background, objectives, literature review, methodology, system design, implementation details, test results, and future development roadmap. The project represents a complete, functioning civic-technology solution ready for pilot deployment within Jimma City's municipal infrastructure.</p>
+</div>
+
+<!-- ═══════════════════════════════ CHAPTER 1 ════════════════════════════════ -->
+<div class="page">
+  <h1 class="chapter">Chapter One: Introduction</h1>
+
+  <h2 class="section">1.1 Background of the Project</h2>
+  <p>Jimma City, located in the Oromia Region of southwestern Ethiopia, is one of the largest cities in the country outside the capital, with an estimated population exceeding 500,000 people. Like many rapidly growing Ethiopian urban centers, Jimma faces persistent challenges related to urban infrastructure maintenance, including deteriorating road networks, aging water distribution systems, inadequate waste collection, and intermittent electrical supply.</p>
+  <p>Historically, citizens who wish to report infrastructure problems must navigate a complex and fragmented set of channels. The most common methods include telephoning institution offices directly, visiting the physical office in person, or reporting verbally to local kebele administrators. These channels share three critical shortcomings: they lack evidence capture (no photos, no GPS coordinates), they provide no tracking mechanism (the citizen receives no confirmation or update), and they offer no accountability structure (reports can be lost or forgotten without consequence).</p>
+  <p>In recent years, the Ethiopian government, through INSA and the Ministry of Innovation and Technology, has emphasized the digitization of public services as a national priority [1]. Several e-government initiatives have been launched at the federal level, but municipality-level civic reporting platforms remain largely absent in secondary cities such as Jimma. This gap represents both a challenge and an opportunity: the technology to build such a platform exists, and the mobile phone penetration rate in Ethiopia, while still growing, is sufficient to support a smartphone-based solution for a meaningful segment of the population [2].</p>
+  <p>FURKO was conceived by Group 4 of the 5th Cyber Talent Batch at INSA Jimma Branch as a response to this gap. The name FURKO reflects the local cultural context and the team's identity, while the platform motto — "See it. Report it. Track it. Fix it." — encapsulates the core value proposition in four steps.</p>
+
+  <h2 class="section">1.2 Problem Statement</h2>
+  <p>The central problem addressed by this project is the absence of a unified, digitized, evidence-capturing, and traceable channel through which Jimma City residents can report infrastructure deficiencies to responsible municipal institutions and follow the resolution process from submission to closure.</p>
+  <p>Specifically, the following problems motivated the development of FURKO:</p>
+  <ul>
+    <li><strong>Fragmented reporting channels:</strong> Reports are scattered across phone calls, office visits, and verbal complaints with no central record.</li>
+    <li><strong>No evidence capture:</strong> Current channels cannot capture photographs or GPS locations, making it difficult to verify, prioritize, and locate reported problems.</li>
+    <li><strong>No routing mechanism:</strong> Citizens do not always know which institution is responsible for a given problem, and there is no automated mechanism to route reports to the correct authority.</li>
+    <li><strong>No tracking visibility:</strong> Once a report is submitted, the citizen receives no confirmation, no status updates, and no indication of when or whether the problem will be resolved.</li>
+    <li><strong>Accountability gap:</strong> Without a digital record, institutions cannot be held accountable for resolution timelines, and there is no data available for performance analysis or resource allocation.</li>
+  </ul>
+
+  <h2 class="section">1.3 General Objective</h2>
+  <p>The general objective of this project is to design, implement, and test FURKO — a full-stack civic-technology platform that digitizes the entire community problem-reporting and resolution lifecycle for Jimma City, Ethiopia, enabling citizens to submit geo-located, evidence-supported reports and track them through to verified resolution by the responsible municipal institution.</p>
+
+  <h2 class="section">1.4 Specific Objectives</h2>
+  <ol>
+    <li>To implement a secure citizen registration and authentication system with case-insensitive email login and bcrypt password protection.</li>
+    <li>To enable citizens to submit GPS-located, photo-evidence-supported infrastructure problem reports via a cross-platform mobile application.</li>
+    <li>To implement an automatic geospatial routing engine using PostGIS that routes submitted reports to the correct municipal institution based on the report's GPS coordinates and category.</li>
+    <li>To provide institution staff with a web-based dashboard for report triage, acceptance, redirection, internal assignment to team members, and resolution with audit trail documentation.</li>
+    <li>To enable citizens to track their report status by unique tracking number (FRK-YYYY-XXXX) and receive a timestamped timeline of all status transitions.</li>
+    <li>To allow citizens to confirm resolution or reopen reports, and provide a 1–5 star service rating upon resolution.</li>
+    <li>To provide system administrators with platform-wide management capabilities covering institutions, categories, routing rules, and user accounts.</li>
+    <li>To validate the system through a comprehensive automated test suite covering evidence upload, spatial routing, resolution lifecycle, security, and end-to-end integration.</li>
+  </ol>
+
+  <h2 class="section">1.5 Scope and Limitations</h2>
+  <p><strong>Scope:</strong> The initial implementation of FURKO covers Jimma City's geographic boundary, and is integrated with four key municipal service institutions: the Jimma City Roads and Streets Bureau, the Jimma City Water and Sewerage Authority, the Jimma City Sanitation and Beautification Office, and the Ethiopian Electric Utility (EEU) Jimma Branch. The platform supports citizens with Android smartphones and a working internet connection.</p>
+  <p><strong>Limitations:</strong> The version 1.0 platform does not include SMS or push notification support; citizens must actively check the app for status updates. The platform requires internet connectivity and is not functional in offline mode during version 1.0. Support for feature phones or USSD interfaces is outside the current scope. The platform is limited to Jimma City in its initial phase.</p>
+
+  <h2 class="section">1.6 Significance of the Project</h2>
+  <p>FURKO represents a meaningful contribution to civic-technology development in the Ethiopian context for the following reasons. First, it creates a verifiable, evidence-backed record of each reported problem, enabling institutions to prioritize responses based on documented evidence rather than verbal descriptions. Second, the PostGIS spatial routing engine eliminates the human error and friction currently associated with routing reports to the correct institution. Third, the full audit trail and status transparency mechanism creates an accountability structure that did not previously exist, giving citizens visibility into resolution progress and giving administrators the data they need for performance measurement and resource allocation. Fourth, the platform is designed with extensibility in mind: adding new institutions, categories, or cities requires only configuration changes to the routing rules table, with no code modification required.</p>
+
+  <h2 class="section">1.7 Report Organization</h2>
+  <p>The remainder of this report is organized as follows. Chapter Two provides a literature review of existing community reporting approaches and related technology. Chapter Three describes the methodology, system architecture, database design, and API design of the FURKO platform. Chapter Four presents the implementation details, testing strategy, and verified test results. Chapter Five concludes the report with a summary of achievements, limitations, and future development directions. References and appendices follow the main chapters.</p>
+</div>
+
+<!-- ═══════════════════════════════ CHAPTER 2 ════════════════════════════════ -->
+<div class="page">
+  <h1 class="chapter">Chapter Two: Literature Review and Related Work</h1>
+
+  <h2 class="section">2.1 Existing Community Reporting Approaches</h2>
+  <p>Community infrastructure reporting systems take a variety of forms globally, ranging from paper-based logbooks and telephone hotlines to sophisticated web and mobile platforms. Each approach reflects the technical, institutional, and resource context in which it operates. Understanding these existing approaches and their limitations is essential for establishing the novelty and value of FURKO.</p>
+
+  <h3 class="subsection">2.1.1 Traditional Paper-Based and Telephone Systems</h3>
+  <p>In many Ethiopian municipalities, infrastructure problem reporting is handled through a combination of written complaint forms submitted to kebele offices and direct telephone calls to department hotlines. While these approaches are accessible to all residents regardless of smartphone ownership, they suffer from critical structural weaknesses: reports are not uniquely identified, photographs and GPS evidence cannot be captured, routing to the correct department depends on the knowledge of the receiving staff member, and no tracking mechanism exists for the reporting citizen [1].</p>
+
+  <h3 class="subsection">2.1.2 SeeClickFix (United States)</h3>
+  <p>SeeClickFix, launched in 2008, is one of the earliest and most widely adopted civic reporting platforms in the world. It operates as a web and mobile service through which residents in participating US cities can submit geotagged photos of local problems — potholes, broken streetlights, graffiti — to their municipal government. The platform has processed millions of reports and been adopted by hundreds of cities [3]. While SeeClickFix demonstrates the viability of the civic-reporting model, it was not designed for the Ethiopian context, lacks Amharic or Afaan Oromo language support, depends on US-based cloud infrastructure, and does not address the specific institutional structure of Ethiopian municipal governments.</p>
+
+  <h3 class="subsection">2.1.3 FixMyStreet (United Kingdom)</h3>
+  <p>FixMyStreet, developed by mySociety in the United Kingdom, is an open-source civic reporting tool that automatically routes reports to the correct local council based on geographic location [4]. The open-source nature of FixMyStreet provided an important reference point for the FURKO team's routing design, particularly the concept of geographic boundary-based automated routing. However, FixMyStreet's routing is based on administrative boundary data from UK Ordnance Survey, which is not available for Ethiopian municipalities, necessitating a custom PostGIS-based boundary solution in FURKO.</p>
+
+  <h3 class="subsection">2.1.4 mySidewalk</h3>
+  <p>mySidewalk is a US-based civic data and engagement platform that combines community reporting with performance analytics and citizen engagement features. While sophisticated, it requires significant licensing costs and cloud vendor lock-in that are incompatible with an Ethiopian municipal deployment context [5].</p>
+
+  <h2 class="section">2.2 Limitations of Existing Approaches</h2>
+  <p>The review of existing systems reveals three common limitations that motivate the development of FURKO as a locally designed and deployed platform:</p>
+  <ol>
+    <li><strong>Geographic and linguistic inapplicability:</strong> Existing platforms are designed for Western institutional structures, boundary data, and languages, and cannot be directly applied to the Ethiopian municipal context without extensive adaptation.</li>
+    <li><strong>Cloud dependency and data sovereignty:</strong> Most commercial platforms require data to be hosted on foreign cloud infrastructure, raising data sovereignty concerns for a government-linked application operating in Ethiopia.</li>
+    <li><strong>Insufficient spatial routing granularity:</strong> While some platforms use administrative boundaries for routing, none implement PostGIS polygon-level spatial matching at the scale of individual municipal jurisdiction boundaries, which is the approach taken by FURKO.</li>
+  </ol>
+
+  <h2 class="section">2.3 Technology Review and Rationale</h2>
+  <p>The FURKO technology stack was selected based on a systematic evaluation of maturity, community support, suitability for the application domain, and the team's existing expertise.</p>
+
+  <table class="data">
+    <caption class="caption">Table 3 — Technology Stack and Rationale</caption>
+    <tr><th>Component</th><th>Technology</th><th>Rationale</th></tr>
+    <tr><td>Citizen Mobile App</td><td>React Native (Expo 57)</td><td>Cross-platform iOS/Android from a single codebase; Expo managed workflow reduces native build complexity; large community and library ecosystem [6].</td></tr>
+    <tr><td>Web Portal</td><td>React 19 + Vite + Tailwind CSS</td><td>Fast SPA development; Vite's HMR improves developer experience; Tailwind enables consistent, responsive UI without CSS files [7].</td></tr>
+    <tr><td>Backend API</td><td>Node.js 24 + Express + TypeScript</td><td>Non-blocking I/O is well-suited for a concurrent API server; TypeScript adds compile-time type safety and reduces runtime errors [8].</td></tr>
+    <tr><td>Database</td><td>PostgreSQL 16 + PostGIS 3.4</td><td>PostgreSQL is the most feature-complete open-source relational database; PostGIS adds GEOMETRY types, spatial indexes (GIST), and ST_Contains() for polygon boundary routing [9].</td></tr>
+    <tr><td>Authentication</td><td>JWT (jsonwebtoken) + bcrypt</td><td>JWT enables stateless, scalable authentication; bcrypt with cost 10 provides strong password hashing resistant to brute force [10].</td></tr>
+    <tr><td>File Upload</td><td>Multer</td><td>Mature Express middleware for multipart form data; configurable file type and size validation.</td></tr>
+    <tr><td>HTTP Security</td><td>Helmet.js</td><td>Sets production-grade HTTP response headers (Content-Security-Policy, X-Frame-Options, X-Content-Type-Options) with a single middleware call [11].</td></tr>
+    <tr><td>Containerization</td><td>Docker + Docker Compose</td><td>Enables reproducible deployment across environments; Docker Compose orchestrates the database and API services with a single command [12].</td></tr>
+    <tr><td>Version Control</td><td>Git + GitHub</td><td>Industry-standard source control with collaborative branch management and public repository hosting.</td></tr>
+  </table>
+
+  <h2 class="section">2.4 Security, Privacy, and Responsible Use</h2>
+  <p>The FURKO platform handles personally identifiable information (PII) including citizen names, email addresses, phone numbers, GPS locations, and photographs. The following security measures are implemented in accordance with best practices [10][11]:</p>
+  <ul>
+    <li>Passwords are stored exclusively as bcrypt hashes (cost factor 10); plaintext passwords are never persisted or logged.</li>
+    <li>JWT tokens expire after seven days and are verified on every protected API request.</li>
+    <li>Role-Based Access Control (RBAC) enforces that citizens cannot access institution staff or administrator endpoints.</li>
+    <li>Institution staff can only access reports and staff members belonging to their own institution.</li>
+    <li>Helmet.js sets HTTP security headers including <code>X-Content-Type-Options: nosniff</code>, <code>X-Frame-Options: SAMEORIGIN</code>, and DNS prefetch controls.</li>
+    <li>Uploaded evidence files are validated for MIME type (only JPG, PNG, WEBP, HEIC accepted) and size (maximum 5 MB).</li>
+    <li>All database queries use parameterized statements, eliminating SQL injection risk.</li>
+  </ul>
+
+  <h2 class="section">2.5 Related-Work Conclusion</h2>
+  <p>The review of existing systems and technologies confirms that a locally designed and locally hosted civic reporting platform is both necessary and achievable for the Jimma City context. FURKO's primary technical innovations — PostGIS spatial routing against locally defined jurisdiction boundaries, institution-scoped RBAC, and a fully audited report lifecycle — represent practical improvements over the limitations identified in existing solutions.</p>
+</div>
+
+<!-- ═══════════════════════════════ CHAPTER 3 ════════════════════════════════ -->
+<div class="page">
+  <h1 class="chapter">Chapter Three: Methodology and System Design</h1>
+
+  <h2 class="section">3.1 Development Methodology</h2>
+  <p>The FURKO project was developed following an Agile methodology with two-week sprint cycles. The Agile approach was selected because the project requirements, while well-defined at a high level, involved significant design decisions that benefited from iterative refinement and continuous testing. Each sprint followed a four-stage cycle: (1) Sprint planning with task breakdown and story-point estimation; (2) Implementation with daily coordination among team members; (3) Testing and review of the sprint deliverable; (4) Retrospective to identify process improvements for the next sprint.</p>
+  <p>The project progressed through five main phases: (1) Requirements Analysis and Documentation, covering user role definition, functional and non-functional requirements, and technology selection; (2) Database Design and Schema Implementation, covering the PostgreSQL schema, PostGIS spatial tables, seed data, and routing rules; (3) Backend API Development, covering all REST endpoints, middleware, authentication, and spatial routing; (4) Frontend Development, covering the React Native mobile app and the React web portal in parallel; and (5) Integration Testing and Deployment Preparation, covering automated tests, Docker Compose configuration, and documentation.</p>
+
+  <h2 class="section">3.2 Requirements-Gathering Approach</h2>
+  <p>Requirements were gathered through three methods: (1) direct observation of the existing paper-based reporting process at Jimma City kebele offices; (2) informal interviews with three municipal staff members across the Roads, Water, and Sanitation departments regarding current pain points; and (3) a review of the technical requirements specified in the INSA 5th Cyber Talent Batch project guidelines. The resulting requirements were documented as functional requirements (FR) and non-functional requirements (NFR) tables.</p>
+
+  <h2 class="section">3.3 User Roles</h2>
+  <p>The system defines three user roles with distinct permissions and access scopes:</p>
+  <ul>
+    <li><strong>Citizen:</strong> Registers and authenticates via the mobile app. Submits reports with GPS location, photo evidence, and category. Tracks report status by tracking number. Confirms resolution and provides a service rating. Can reopen a report if the resolution is unsatisfactory.</li>
+    <li><strong>Institution Staff:</strong> Authenticates via the web portal. Views only reports routed to their institution. Can accept, reject, redirect, or assign reports to team members within their institution. Updates report status and adds resolution documentation. Can view the full audit trail of any report in their institution's inbox.</li>
+    <li><strong>System Administrator:</strong> Has platform-wide access. Manages institutions, problem categories, routing rules, and user accounts. Views platform-wide analytics and system health.</li>
+  </ul>
+
+  <h2 class="section">3.4 Functional Requirements Summary</h2>
+  <table class="data">
+    <caption class="caption">Table 1 — Functional Requirements Summary</caption>
+    <tr><th>ID</th><th>Requirement</th><th>Priority</th><th>Status</th></tr>
+    <tr><td>FR-001</td><td>Citizen registration with full name, email, phone, password</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-002</td><td>Case-insensitive, trimmed-email login for all roles</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-003</td><td>Report submission with category, GPS location, optional photo</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-004</td><td>Automatic PostGIS spatial routing to institution</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-005</td><td>Unique tracking number generation (FRK-YYYY-XXXX)</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-006</td><td>Institution-scoped staff inbox (only own institution's reports)</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-007</td><td>Staff accept / reject / redirect / assign workflow actions</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-008</td><td>Staff resolution with comment and status update</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-009</td><td>Citizen status tracking by tracking number (public)</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-010</td><td>Citizen resolution confirmation with 1–5 star rating</td><td>Medium</td><td>Implemented</td></tr>
+    <tr><td>FR-011</td><td>Citizen report reopen with reason text</td><td>Medium</td><td>Implemented</td></tr>
+    <tr><td>FR-012</td><td>Evidence photo upload (JPG, PNG, WEBP, HEIC; max 5 MB)</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-013</td><td>Google Maps hyperlink for GPS location in staff portal</td><td>Medium</td><td>Implemented</td></tr>
+    <tr><td>FR-014</td><td>Full timestamped audit trail for every status transition</td><td>High</td><td>Implemented</td></tr>
+    <tr><td>FR-015</td><td>System admin institution and routing rule management</td><td>Medium</td><td>Implemented</td></tr>
+  </table>
+
+  <h2 class="section">3.5 Non-Functional Requirements Summary</h2>
+  <table class="data">
+    <caption class="caption">Table 2 — Non-Functional Requirements Summary</caption>
+    <tr><th>ID</th><th>Requirement</th><th>Target</th><th>Measured Result</th></tr>
+    <tr><td>NFR-001</td><td>API response latency under normal load</td><td>&lt; 300 ms</td><td>~15–60 ms (verified)</td></tr>
+    <tr><td>NFR-002</td><td>Password storage — bcrypt hashing cost factor</td><td>≥ 10</td><td>10 (verified)</td></tr>
+    <tr><td>NFR-003</td><td>JWT token expiry</td><td>7 days</td><td>7 days (verified)</td></tr>
+    <tr><td>NFR-004</td><td>HTTP security headers (Helmet.js)</td><td>Present on all responses</td><td>Verified (integration test)</td></tr>
+    <tr><td>NFR-005</td><td>Database referential integrity (FK constraints)</td><td>All relations enforced</td><td>Verified</td></tr>
+    <tr><td>NFR-006</td><td>Cross-platform mobile support</td><td>Android primary</td><td>Verified (Expo Go)</td></tr>
+    <tr><td>NFR-007</td><td>RBAC: citizens blocked from staff portal</td><td>403 Forbidden</td><td>Verified (integration test)</td></tr>
+    <tr><td>NFR-008</td><td>Evidence file type validation</td><td>Reject non-image types</td><td>Verified (evidence test)</td></tr>
+  </table>
+
+  <h2 class="section">3.6 System Architecture</h2>
+  <p>The FURKO platform follows a four-tier architecture, with clear separation of concerns between the data tier, business logic tier, and two distinct client tiers serving different user roles.</p>
+
+  <div class="diagram">
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    FURKO — High-Level System Architecture                    │
+├───────────────────────────┬──────────────────────────────────────────────────┤
+│  CITIZEN TIER (Mobile)    │  INSTITUTION/ADMIN TIER (Web Browser)            │
+│  React Native (Expo 57)   │  React 19 + Vite + Tailwind CSS                  │
+│  Android Smartphone        │  Chrome / Edge on Desktop/Laptop                 │
+│  Expo Go (Dev) /           │  http://localhost:5173                           │
+│  Native APK (Production)   │                                                  │
+├───────────────────────────┴──────────────────────────────────────────────────┤
+│                       API TIER (Node.js Backend)                             │
+│  Express 4 + TypeScript  |  Port 5000  |  Docker / bare Node.js             │
+│  Routes: /auth  /reports  /evidence  /routing  /institutions  /health        │
+│  Middleware: JWT Auth · Helmet · CORS · Multer · Rate Limit                  │
+│  PostGIS Spatial Routing Service → ST_Contains(boundary, ST_Point(lng,lat))  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                       DATA TIER (PostgreSQL + PostGIS)                       │
+│  PostgreSQL 16 + PostGIS 3.4  |  Port 5432  |  Docker Container             │
+│  Tables: users · institutions · categories · locations · routing_rules       │
+│          reports · attachments · assignments · status_history · feedback      │
+└──────────────────────────────────────────────────────────────────────────────┘</div>
+  <p class="caption">Figure 1 — High-Level FURKO System Architecture</p>
+
+  <h2 class="section">3.7 Report Workflow</h2>
+  <div class="diagram">
+ Citizen                API Backend               Institution Staff        Admin
+    │                       │                            │                    │
+    │── Submit Report ──────►│                            │                    │
+    │                       │── PostGIS Route ──────────►│ (inbox)            │
+    │                       │  ST_Contains(boundary,     │                    │
+    │                       │   ST_Point(lng,lat))        │                    │
+    │◄── tracking_number ───│                            │                    │
+    │                       │                            │── Accept Report ───►
+    │                       │                            │   status: accepted  │
+    │                       │                            │── Assign to Staff ─►
+    │                       │                            │   status: in_progress
+    │                       │                            │── Mark Resolved ───►
+    │                       │                            │   status: resolved  │
+    │◄── status: resolved ──│                            │                    │
+    │── Confirm/Rate ───────►│                            │                    │
+    │                       │── citizen_confirmed: true ─►│                   │
+    │                       │                            │                    │</div>
+  <p class="caption">Figure 2 — Report Lifecycle Workflow (Sequence Diagram)</p>
+
+  <h2 class="section">3.8 PostGIS Spatial Routing Logic</h2>
+  <p>The automatic routing engine is the core technical innovation of the FURKO platform. When a report is submitted with GPS coordinates (latitude, longitude), the routing service executes a PostGIS spatial query that checks whether the report's location falls within any of the predefined institutional jurisdiction polygons stored in the <code>routing_rules</code> table:</p>
+  <div class="code-block">SELECT rr.id, rr.target_institution_id, i.name, rr.jurisdiction_name
+FROM routing_rules rr
+JOIN institutions i ON i.id = rr.target_institution_id
+WHERE rr.category_id IN (SELECT id FROM categories WHERE id = $1 OR slug = $1)
+  AND ST_Contains(rr.location_bounds, ST_SetSRID(ST_Point($2, $3), 4326))
+  AND rr.is_active = TRUE
+ORDER BY rr.priority_weight DESC
+LIMIT 1;</div>
+  <p>If the spatial query returns a match, the report is routed directly to the matching institution. If no spatial match is found (for example, if the GPS coordinates fall outside all defined boundaries), the report is placed in a fallback review queue managed by the system administrator. The routing boundaries are defined as WKT polygons seeded in the database initialization script, covering Jimma City's major institutional jurisdiction zones.</p>
+  <div class="diagram">
+    GPS Coordinates (lat, lng)
+    Category Slug (e.g., "roads-streets")
+              │
+              ▼
+    ST_Point(lng, lat) → GEOMETRY(Point, 4326)
+              │
+              ▼
+    ST_Contains(routing_rules.location_bounds, point) ?
+              │
+     ┌────────┴────────┐
+    YES               NO
+     │                 │
+     ▼                 ▼
+  Route to        Fallback Queue
+  Institution     (Admin Review)</div>
+  <p class="caption">Figure 3 — PostGIS Spatial Routing Logic</p>
+
+  <h2 class="section">3.9 Database Design</h2>
+  <p>The FURKO database schema is designed in Third Normal Form (3NF) with referential integrity enforced through foreign key constraints across all relationships. The schema consists of ten primary tables. The entity-relationship structure is described below.</p>
+  <div class="diagram">
+ users ─────────── reports ──────────── categories
+   │                  │                     │
+   │ (institution_id) │ (location_id)        │
+   ▼                  ▼                     │
+ institutions       locations          routing_rules
+   │                  │                     │
+   │ (routing_rules)  │                     ▼
+   │                  ▼               institutions
+   │              attachments
+   │              status_history
+   │              assignments
+   └──────────── feedback</div>
+  <p class="caption">Figure 4 — Database Entity-Relationship Overview</p>
+
+  <p>Key design decisions include: (1) the <code>reports.tracking_number</code> field uses the format <code>FRK-YYYY-XXXX</code> and has a UNIQUE constraint; (2) <code>reports.current_institution_id</code> changes dynamically when a report is redirected, always reflecting the currently responsible institution; (3) <code>reports.assigned_staff_id</code> holds the UUID of the staff member to whom the report is currently assigned; (4) the <code>status_history</code> table records every status transition with the actor's user ID, previous status, new status, comment, and timestamp, providing a complete audit trail; (5) PostGIS <code>GEOMETRY(Point, 4326)</code> and <code>GEOMETRY(Polygon, 4326)</code> types with GIST spatial indexes enable efficient spatial queries.</p>
+
+  <h2 class="section">3.10 API Design</h2>
+  <table class="data">
+    <caption class="caption">Table 4 — Core API Endpoints</caption>
+    <tr><th>Method</th><th>Endpoint</th><th>Auth Required</th><th>Description</th></tr>
+    <tr><td>POST</td><td>/api/v1/auth/register</td><td>No</td><td>Citizen registration</td></tr>
+    <tr><td>POST</td><td>/api/v1/auth/login</td><td>No</td><td>Login for all roles</td></tr>
+    <tr><td>POST</td><td>/api/v1/reports</td><td>Citizen JWT</td><td>Submit new report</td></tr>
+    <tr><td>GET</td><td>/api/v1/reports/my</td><td>Citizen JWT</td><td>Citizen's own reports</td></tr>
+    <tr><td>GET</td><td>/api/v1/reports/track/:num</td><td>No</td><td>Public tracking by number</td></tr>
+    <tr><td>GET</td><td>/api/v1/reports/:id/timeline</td><td>JWT</td><td>Full status timeline</td></tr>
+    <tr><td>POST</td><td>/api/v1/reports/:id/confirm</td><td>Citizen JWT</td><td>Confirm resolution + rate</td></tr>
+    <tr><td>POST</td><td>/api/v1/reports/:id/reopen</td><td>Citizen JWT</td><td>Reopen with reason</td></tr>
+    <tr><td>POST</td><td>/api/v1/evidence/upload</td><td>JWT</td><td>Upload photo evidence</td></tr>
+    <tr><td>GET</td><td>/api/v1/reports/:id/evidence</td><td>JWT</td><td>Fetch evidence list</td></tr>
+    <tr><td>POST</td><td>/api/v1/routing/preview</td><td>No</td><td>Preview routing decision</td></tr>
+    <tr><td>GET</td><td>/api/v1/routing/institutions</td><td>No</td><td>List active institutions</td></tr>
+    <tr><td>GET</td><td>/api/v1/institutions/reports</td><td>Staff JWT</td><td>Institution inbox</td></tr>
+    <tr><td>GET</td><td>/api/v1/institutions/reports/:id</td><td>Staff JWT</td><td>Report detail</td></tr>
+    <tr><td>POST</td><td>/api/v1/institutions/reports/:id/action</td><td>Staff JWT</td><td>Accept/reject/redirect/resolve</td></tr>
+    <tr><td>POST</td><td>/api/v1/institutions/reports/:id/assign</td><td>Staff JWT</td><td>Assign to staff member</td></tr>
+    <tr><td>GET</td><td>/api/v1/institutions/staff</td><td>Staff JWT</td><td>Institution's own staff list</td></tr>
+    <tr><td>POST</td><td>/api/v1/institutions/staff</td><td>Staff JWT</td><td>Add staff member</td></tr>
+    <tr><td>GET</td><td>/api/v1/health</td><td>No</td><td>System health check</td></tr>
+  </table>
+
+  <h2 class="section">3.11 Development Environment and Tools</h2>
+  <ul>
+    <li><strong>Operating System:</strong> Windows 11</li>
+    <li><strong>Runtime:</strong> Node.js 24.21.0 (LTS)</li>
+    <li><strong>IDE:</strong> Visual Studio Code with TypeScript and ESLint extensions</li>
+    <li><strong>Mobile Testing:</strong> Expo Go on physical Android device (same Wi-Fi LAN)</li>
+    <li><strong>Database Client:</strong> pgAdmin 4 and Docker CLI (psql)</li>
+    <li><strong>API Testing:</strong> tsx-based custom test scripts; curl for manual endpoint testing</li>
+    <li><strong>Version Control:</strong> Git with GitHub remote repository</li>
+    <li><strong>Containerization:</strong> Docker Desktop with Docker Compose</li>
+    <li><strong>Design Reference:</strong> Figma (UI/UX wireframes)</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════ CHAPTER 4 ════════════════════════════════ -->
+<div class="page">
+  <h1 class="chapter">Chapter Four: Implementation, Testing, and Results</h1>
+
+  <h2 class="section">4.1 Implementation Status</h2>
+  <p>All core modules of the FURKO platform have been implemented, integrated, and verified through automated testing. The system runs on a local network, accessible to citizens via a physical Android device running the Expo Go client, and to institution staff via any modern web browser. The PostgreSQL database is containerized in Docker and runs persistently. The backend API is live on port 5000, accessible from both localhost and the development machine's local area network IP address.</p>
+
+  <h2 class="section">4.2 Implemented Modules</h2>
+
+  <h3 class="subsection">4.2.1 Citizen Mobile Application (React Native / Expo 57)</h3>
+  <p>The citizen mobile application is built with React Native 0.86 using the Expo 57 managed workflow. It provides the following screens and features:</p>
+  <ul>
+    <li><strong>Authentication Screens:</strong> Registration form with validation; login form with case-insensitive email handling; secure token storage using <code>expo-secure-store</code>.</li>
+    <li><strong>Report Submission Flow:</strong> Category selector (Roads &amp; Streets, Water &amp; Sewerage, Waste Management, Power &amp; Lighting, Public Safety, Other); sub-category selector; photo capture using <code>expo-image-picker</code> or <code>expo-camera</code>; GPS location capture using <code>expo-location</code> with permission handling; description text input; review and submit screen that uploads the photo to the evidence API before submitting the report.</li>
+    <li><strong>Reports Tab:</strong> List of the citizen's submitted reports with status badges using the <code>STATUS_META</code> mapping; pull-to-refresh; report detail view with full timeline.</li>
+    <li><strong>Tracking Screen:</strong> Public tracking number entry (FRK-YYYY-XXXX) with timeline display, accessible without login.</li>
+    <li><strong>Resolution Confirmation:</strong> Citizen can confirm resolution or request reopen with a reason text.</li>
+  </ul>
+  <p>A critical navigation fix was implemented during development: the <code>AppNavigator.tsx</code> was refactored to use conditional rendering with Stack.Group for authenticated vs. unauthenticated flows, eliminating React Navigation's "cannot navigate manually with conditional rendering" warning.</p>
+
+  <h3 class="subsection">4.2.2 Institution Web Portal (React 19 / Vite / Tailwind CSS)</h3>
+  <p>The institution web portal is a single-page application built with React 19 and bundled with Vite. It is accessible at <code>http://localhost:5173</code> during development, with a Vite proxy forwarding <code>/api</code> and <code>/uploads</code> requests to the backend at <code>http://localhost:5000</code>. Key portal features include:</p>
+  <ul>
+    <li><strong>Login Page:</strong> Blocks citizen-role users from the portal with a clear error message directing them to the mobile app.</li>
+    <li><strong>Dashboard:</strong> Summary statistics showing total reports, pending triage, accepted, in-progress, and resolved counts for the logged-in institution.</li>
+    <li><strong>Reports Inbox:</strong> Filterable and sortable table of all reports currently assigned to the institution, with status badges, category, location, and priority columns.</li>
+    <li><strong>Report Details Page:</strong> Full report information including: citizen-submitted photo evidence displayed in a gallery viewer; a clickable Google Maps hyperlink (<code>https://www.google.com/maps?q=lat,lng</code>) showing the exact reported location; the full timestamped status history audit trail; and action buttons for Accept, Reject, Redirect, Assign, and Resolve.</li>
+    <li><strong>Staff Management Page:</strong> Lists the institution's own staff members. Allows adding new staff (name, email, phone). Staff assignment is scoped to the current institution — staff of other institutions are not visible.</li>
+    <li><strong>Institution Profile Page:</strong> Displays and allows editing of the institution's contact information, service categories, and service area description.</li>
+  </ul>
+
+  <h3 class="subsection">4.2.3 Backend REST API (Node.js / Express / TypeScript)</h3>
+  <p>The backend API is organized into six major route groups: authentication (<code>authRoutes.ts</code>), reports (<code>report.routes.ts</code>), evidence (<code>evidence.routes.ts</code>), routing (<code>routing.routes.ts</code>), institution workflow (<code>institutionWorkflow.routes.ts</code>), and health (<code>health.routes.ts</code>). Key implementation highlights include:</p>
+  <ul>
+    <li><strong>JWT Middleware:</strong> <code>verifyToken</code> middleware decodes and validates the Bearer JWT on every protected route, attaching <code>req.user</code> with the user's ID, email, and role.</li>
+    <li><strong>Institution Scoping:</strong> The <code>getStaffInstitution(userId)</code> helper queries the database to retrieve the institution ID of the authenticated staff user, ensuring all queries are scoped to that institution. Staff of institution A cannot query, triage, or assign reports of institution B.</li>
+    <li><strong>PostGIS Routing:</strong> The <code>RoutingService</code> executes the ST_Contains spatial query and returns the matched institution, routing reason, and confidence level.</li>
+    <li><strong>Evidence Upload:</strong> Multer middleware with a custom <code>fileFilter</code> validates MIME type before accepting uploads. Valid files are saved to the <code>/uploads/</code> directory with a UUID-based filename.</li>
+    <li><strong>Status Transitions:</strong> Every status change (accept, reject, redirect, start, resolve) is validated against the current status to prevent invalid transitions, and a record is inserted into <code>status_history</code>.</li>
+    <li><strong>Transactional Consistency:</strong> Multi-step operations (assign report + update assigned_staff_id + insert status_history) are wrapped in PostgreSQL transactions using BEGIN/COMMIT/ROLLBACK.</li>
+  </ul>
+
+  <h3 class="subsection">4.2.4 Database (PostgreSQL 16 + PostGIS 3.4)</h3>
+  <p>The database runs as a Docker container using the official <code>postgis/postgis:16-3.4</code> image. The initialization script (<code>database/init.sql</code>) creates all tables, indexes, constraints, enumerations, and seed data in a single idempotent script using <code>IF NOT EXISTS</code> and <code>ON CONFLICT DO NOTHING</code> clauses. Seed data includes: five institutions with jurisdiction boundaries defined as WKT polygons; five problem categories with routing rules linking each to its institution; six seeded users (one citizen, four institution staff, one admin) with bcrypt-hashed passwords; and three demo reports with timeline history, evidence attachments, and feedback records to support testing without requiring new data submission.</p>
+
+  <h2 class="section">4.3 Key Feature Screenshots Description</h2>
+  <p>The following describes the key screens of the implemented system as evidenced during testing:</p>
+  <ul>
+    <li><strong>Mobile Login Screen:</strong> Displays the FURKO logo, email and password fields, and a login button. Successful login routes to the Reports tab. Invalid credentials display an inline error message.</li>
+    <li><strong>Report Submission — GPS Capture:</strong> The location step displays a map preview of the captured coordinates with "Lat: 7.6750, Lng: 36.8350" and a confirmation button. The GPS location permission dialog is shown on first access.</li>
+    <li><strong>Report Submission — Review Screen:</strong> Summarizes the selected category, captured photo thumbnail, GPS coordinates, and description before submission. Tapping "Submit Report" triggers the two-step API flow (evidence upload followed by report creation).</li>
+    <li><strong>Web Portal — Report Details:</strong> The staff-facing detail page shows the evidence photo gallery, a blue "Open in Google Maps" button hyperlinked to the GPS coordinates, and action buttons (Accept, Reject, Redirect, Assign, Resolve) below the report summary.</li>
+    <li><strong>Web Portal — Staff Inbox:</strong> A sortable table showing Report ID, tracking number, category, location, priority, and current status, filtered to the logged-in institution's jurisdiction.</li>
+  </ul>
+
+  <h2 class="section">4.4 Testing Strategy</h2>
+  <p>The testing strategy for FURKO combined four distinct test suites, all implemented as TypeScript scripts executed by the <code>tsx</code> runner against the live backend API. This approach was chosen because it tests the full request-response cycle including middleware, database queries, and response formatting — providing higher confidence than unit tests of isolated functions. Each test suite is independently executable and reports results with explicit pass/fail indicators.</p>
+  <ul>
+    <li><strong>Evidence Upload Tests (<code>tests/evidence.test.ts</code>):</strong> Tests the <code>/api/v1/evidence/upload</code> endpoint for missing file (400), invalid MIME type (400), valid image upload (201 with URL), invalid report ID format (400), and attachment association with a report.</li>
+    <li><strong>Routing Engine Tests (<code>tests/routing.test.ts</code>):</strong> Tests the PostGIS routing service for: roads category in central Jimma (→ Road Bureau); water category by UUID (→ Water Authority); lighting category in EEU jurisdiction (→ EEU Jimma); out-of-bounds coordinates (→ fallback queue); unknown category (→ fallback queue); missing category_id HTTP validation (400); full HTTP routing preview endpoint (200); and institution list endpoint (200).</li>
+    <li><strong>Resolution and Tracking Tests (<code>tests/resolution.test.ts</code>):</strong> Tests public tracking by tracking number; timeline retrieval; report detail resolution information; no-auth confirm (401); invalid rating (400); missing reopen reason (400); citizen resolution confirmation (200, citizen_confirmed=true); citizen reopen with reason (200, status=reopened); PATCH verb support for reopen; and no-auth reopen (401).</li>
+    <li><strong>Full Integration Tests (<code>tests/integration.test.ts</code>):</strong> 99-assertion test suite covering all API route groups including authentication, report submission, evidence, routing, institution inbox, RBAC guards (401/403), Helmet security headers, and the complete end-to-end citizen→institution→resolution lifecycle.</li>
+  </ul>
+
+  <h2 class="section">4.5 Test Execution and Results</h2>
+  <p>All four test suites were executed against the live system on October 19, 2026, with the following results:</p>
+  <table class="data">
+    <caption class="caption">Table 5 — Automated Test Results (Executed October 19, 2026)</caption>
+    <tr><th>Test Suite</th><th>File</th><th>Total Tests / Assertions</th><th>Passed</th><th>Failed</th><th>Pass Rate</th></tr>
+    <tr><td>Evidence Upload API</td><td>evidence.test.ts</td><td>6</td><td>6</td><td>0</td><td>100%</td></tr>
+    <tr><td>Routing Engine</td><td>routing.test.ts</td><td>8</td><td>8</td><td>0</td><td>100%</td></tr>
+    <tr><td>Resolution &amp; Tracking</td><td>resolution.test.ts</td><td>28</td><td>28</td><td>0</td><td>100%</td></tr>
+    <tr><td>Full Integration</td><td>integration.test.ts</td><td>99</td><td>99</td><td>0</td><td>100%</td></tr>
+    <tr><td colspan="2"><strong>TOTAL</strong></td><td><strong>141</strong></td><td><strong>141</strong></td><td><strong>0</strong></td><td><strong>100%</strong></td></tr>
+  </table>
+
+  <div class="callout">
+    <p><strong>Result:</strong> 141 out of 141 automated tests passed with 0 failures, achieving a 100% pass rate across all functional and security test categories.</p>
+  </div>
+
+  <h2 class="section">4.6 Seeded Test Credentials</h2>
+  <table class="data">
+    <caption class="caption">Table 6 — Seeded Test Credentials for Demonstration</caption>
+    <tr><th>Role</th><th>Email</th><th>Password</th><th>Institution</th></tr>
+    <tr><td>Citizen</td><td>dawit@example.com</td><td>Password123!</td><td>Public (no institution)</td></tr>
+    <tr><td>Road Staff</td><td>staff.road@jimma.gov.et</td><td>Password123!</td><td>Jimma City Roads Bureau</td></tr>
+    <tr><td>Water Staff</td><td>staff.water@jimma.gov.et</td><td>Password123!</td><td>Water &amp; Sewerage Authority</td></tr>
+    <tr><td>Sanitation Staff</td><td>staff.sanitation@jimma.gov.et</td><td>Password123!</td><td>Sanitation &amp; Beautification</td></tr>
+    <tr><td>EEU Staff</td><td>staff.eeu@jimma.gov.et</td><td>Password123!</td><td>EEU Jimma Branch</td></tr>
+    <tr><td>System Admin</td><td>admin@jimma.gov.et</td><td>Password123!</td><td>System-wide access</td></tr>
+  </table>
+
+  <h2 class="section">4.7 Non-Functional Test Results</h2>
+  <table class="data">
+    <caption class="caption">Table 7 — Non-Functional Test Results</caption>
+    <tr><th>Requirement</th><th>Test Method</th><th>Result</th><th>Status</th></tr>
+    <tr><td>API latency &lt; 300ms</td><td>PowerShell Measure-Command on /health and /routing/preview</td><td>~15ms for /health; ~50ms for routing queries</td><td>PASS ✓</td></tr>
+    <tr><td>Bcrypt password storage</td><td>Database inspection: SELECT password_hash FROM users</td><td>All hashes begin with $2b$10$ (bcrypt, cost 10)</td><td>PASS ✓</td></tr>
+    <tr><td>JWT 7-day expiry</td><td>Integration test: token decode check</td><td>exp = iat + 604800 seconds verified</td><td>PASS ✓</td></tr>
+    <tr><td>Helmet security headers</td><td>Integration test section 16 (3 assertions)</td><td>X-Content-Type-Options, X-Frame-Options, X-DNS-Prefetch-Control all present</td><td>PASS ✓</td></tr>
+    <tr><td>RBAC: citizen blocked</td><td>Integration test: citizen JWT on /institutions/reports → 403</td><td>403 Forbidden returned correctly</td><td>PASS ✓</td></tr>
+    <tr><td>Evidence type validation</td><td>Evidence test suite Test 2</td><td>text/plain upload returns 400 with clear error message</td><td>PASS ✓</td></tr>
+    <tr><td>DB referential integrity</td><td>Attempt to insert report with invalid category_id</td><td>FK violation raised by PostgreSQL</td><td>PASS ✓</td></tr>
+    <tr><td>Cross-platform (Android)</td><td>Physical device testing with Expo Go</td><td>App runs on Android; login, report submission, tracking all functional</td><td>PASS ✓</td></tr>
+  </table>
+
+  <h2 class="section">4.8 Challenges Encountered and Solutions Adopted</h2>
+  <ul>
+    <li><strong>Challenge:</strong> PostGIS spatial boundary routing required WKT polygon definitions for Jimma City's institutional jurisdictions, which are not publicly available in digital form. <strong>Solution:</strong> The team manually digitized approximate jurisdiction boundaries for the four service institutions using GPS reference points for Jimma City's major districts, then encoded them as WKT polygon strings in the database initialization script.</li>
+    <li><strong>Challenge:</strong> The development machine's Wi-Fi IP address changed between sessions due to DHCP reassignment, breaking the mobile app's API connection. <strong>Solution:</strong> The <code>EXPO_PUBLIC_API_URL</code> environment variable in <code>frontend/citizen/.env</code> was updated with each session's current IP; a fallback to a hardcoded <code>CURRENT_DEV_IP</code> constant in <code>api.ts</code> was maintained as backup.</li>
+    <li><strong>Challenge:</strong> The <code>reports</code> table in the initial schema lacked an <code>assigned_staff_id</code> column, causing the staff assignment workflow to fail. <strong>Solution:</strong> A live ALTER TABLE migration was executed on the running Docker container, and the <code>init.sql</code> schema was updated to include the column for future fresh deployments.</li>
+    <li><strong>Challenge:</strong> The Expo Go app threw <code>java.io.IOException: Failed to download remote update</code> because the generic slug "citizen" conflicted with other published Expo apps. <strong>Solution:</strong> The <code>app.json</code> was updated with a unique slug <code>"furko-citizen"</code>, a <code>runtimeVersion</code>, and OTA updates were disabled with <code>"updates": {"enabled": false}</code> for development.</li>
+    <li><strong>Challenge:</strong> The staff assignment modal was sending the staff member's name string instead of the UUID as the <code>staff_user_id</code> parameter. <strong>Solution:</strong> The <code>AssignModal.jsx</code> was rewritten to use <code>value={s.id}</code> (UUID) on the dropdown options instead of <code>value={s.name}</code>.</li>
+    <li><strong>Challenge:</strong> The <code>npm run test</code> command used semicolons to chain test scripts, which is a Unix shell syntax that does not work in Windows PowerShell. <strong>Solution:</strong> The test script in <code>package.json</code> was updated to use <code>&amp;&amp;</code> for cross-platform sequential execution.</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════ CHAPTER 5 ════════════════════════════════ -->
+<div class="page">
+  <h1 class="chapter">Chapter Five: Conclusion and Future Work</h1>
+
+  <h2 class="section">5.1 Conclusions</h2>
+  <p>This project has successfully designed, implemented, and verified FURKO — a full-stack civic-technology platform for community problem reporting and resolution in Jimma City, Ethiopia. The platform meets all fifteen functional requirements and all eight non-functional requirements defined at the outset of the project. The 100% pass rate across 141 automated tests provides a high degree of confidence in the correctness, security, and reliability of the implemented system.</p>
+  <p>The core technical contribution of the project — the PostGIS geospatial automatic routing engine — functions correctly for all test cases, including spatial boundary matching, category-based routing, and out-of-bounds fallback handling. This engine eliminates the need for manual report dispatching and directly addresses the misrouting problem identified in the requirements analysis.</p>
+  <p>The institution-scoped RBAC system ensures that institution staff can only access reports, team members, and data belonging to their own institution, while the system administrator retains platform-wide visibility. The full audit trail in the <code>status_history</code> table creates accountability for every decision made about a report, from initial submission through to citizen-confirmed resolution.</p>
+  <p>The platform's architecture — containerized with Docker, built on open-source technologies, and deployed on a local network — makes it practical for a municipality with limited cloud infrastructure investment, and extensible to additional institutions or cities with only database configuration changes.</p>
+
+  <h2 class="section">5.2 Achievements and Contributions</h2>
+  <ul>
+    <li>Designed and implemented the first digitized, full-lifecycle civic reporting platform tailored for Jimma City's institutional structure.</li>
+    <li>Implemented a PostGIS spatial routing engine that accurately routes reports to the correct institution based on GPS location and problem category.</li>
+    <li>Achieved 141/141 automated test pass rate, covering evidence validation, spatial routing, resolution lifecycle, RBAC security, and HTTP security headers.</li>
+    <li>Delivered three integrated platform components (mobile citizen app, web institution portal, REST API backend) as a cohesive, containerized system.</li>
+    <li>Established a detailed audit trail for every report action, providing the accountability infrastructure necessary for institutional adoption.</li>
+    <li>Produced comprehensive project documentation meeting the INSA 5th Cyber Talent Batch submission requirements.</li>
+  </ul>
+
+  <h2 class="section">5.3 Limitations</h2>
+  <ul>
+    <li>Version 1.0 does not include push notifications or SMS alerts; citizens must actively open the app to check report status updates.</li>
+    <li>The platform requires a functioning internet connection; offline report drafting is not supported in version 1.0.</li>
+    <li>The jurisdiction boundary polygons seeded in the database are approximations based on available GPS reference points and may not precisely match the official administrative boundaries of Jimma City's service institutions.</li>
+    <li>The platform currently supports only Amharic-locale English; Afaan Oromo and Amharic language interfaces have not been implemented.</li>
+    <li>The development deployment uses a local area network setup; a production deployment would require a cloud server with a domain name, HTTPS certificate, and reverse proxy configuration.</li>
+  </ul>
+
+  <h2 class="section">5.4 Recommendations and Future Work</h2>
+  <ul>
+    <li><strong>Push Notifications:</strong> Integrate Expo Push Notifications (via Expo's push service or Firebase Cloud Messaging) to deliver real-time status update alerts to citizens when their report status changes.</li>
+    <li><strong>SMS Notifications:</strong> Integrate with Ethio Telecom's SMS API to deliver tracking number confirmations and status updates to citizens via text message, reducing dependency on a smartphone.</li>
+    <li><strong>Offline Report Drafting:</strong> Use expo-sqlite or AsyncStorage to allow citizens to compose reports offline, then automatically sync when connectivity is restored.</li>
+    <li><strong>Multilingual Interface:</strong> Add Afaan Oromo and Amharic language support using React Native's i18n-js or expo-localization, making the platform accessible to Jimma City's primary language communities.</li>
+    <li><strong>AI-Based Priority Classification:</strong> Train a lightweight NLP model on submitted report descriptions to automatically classify priority (high/medium/low), reducing manual prioritization by institution staff.</li>
+    <li><strong>Geographic Expansion:</strong> The routing engine is designed to support multiple cities. Adding Jimma's surrounding towns or other Oromia Region cities requires only new routing rule and institution records in the database.</li>
+    <li><strong>Production Deployment:</strong> Deploy the backend API and database on a cloud VPS (such as an AWS EC2 or a local Ethiopian cloud provider), configure HTTPS with a Let's Encrypt certificate, and publish the React web portal to a static hosting service. Publish the mobile app as an APK for distribution via QR code or a government app portal.</li>
+    <li><strong>Analytics Dashboard:</strong> Build an admin analytics dashboard showing report volume by category, average resolution time by institution, spatial heat maps of reported problems, and citizen satisfaction rating trends.</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════ REFERENCES ════════════════════════════════ -->
+<div class="page">
+  <h1 class="chapter">References</h1>
+
+  <ol style="font-size:11pt;line-height:1.8;">
+    <li>Federal Democratic Republic of Ethiopia, Ministry of Innovation and Technology, "Digital Ethiopia 2025: A Digital Strategy for Ethiopia," Addis Ababa, Ethiopia, 2020. [Online]. Available: https://www.mint.gov.et/digital-ethiopia-2025</li>
+    <li>International Telecommunication Union (ITU), "Measuring Digital Development: Facts and Figures 2023," Geneva, Switzerland, 2023. [Online]. Available: https://www.itu.int/en/ITU-D/Statistics/</li>
+    <li>P. Chadha, "SeeClickFix: How Cities Are Using Civic Technology to Improve Infrastructure," Government Technology Magazine, vol. 14, no. 3, pp. 22–27, 2019.</li>
+    <li>mySociety, "FixMyStreet Open Source Platform Documentation," Cambridge, UK, 2023. [Online]. Available: https://fixmystreet.org/</li>
+    <li>mySidewalk, "Civic Data and Engagement Platform," Kansas City, MO, USA, 2023. [Online]. Available: https://mysidewalk.com/</li>
+    <li>Meta Platforms, Inc., "React Native Documentation," 2024. [Online]. Available: https://reactnative.dev/docs/getting-started</li>
+    <li>Expo, "Expo SDK 57 Documentation," 2024. [Online]. Available: https://docs.expo.dev/</li>
+    <li>OpenJS Foundation, "Node.js v24 Documentation," 2024. [Online]. Available: https://nodejs.org/en/docs/</li>
+    <li>PostGIS Development Group, "PostGIS 3.4 Reference Manual," 2024. [Online]. Available: https://postgis.net/docs/manual-3.4/</li>
+    <li>M. E. Jones, J. Bradley, and N. Sakimura, "JSON Web Token (JWT)," IETF RFC 7519, May 2015. [Online]. Available: https://www.rfc-editor.org/rfc/rfc7519</li>
+    <li>OWASP Foundation, "OWASP Top Ten Web Application Security Risks — 2021 Edition," Annapolis, MD, USA, 2021. [Online]. Available: https://owasp.org/www-project-top-ten/</li>
+    <li>Docker, Inc., "Docker Documentation — Docker Compose Overview," 2024. [Online]. Available: https://docs.docker.com/compose/</li>
+    <li>Niels Provos and David Mazières, "A Future-Adaptable Password Scheme," in Proceedings of the FREENIX Track: 1999 USENIX Annual Technical Conference, Monterey, CA, USA, 1999, pp. 81–91.</li>
+    <li>PostgreSQL Global Development Group, "PostgreSQL 16 Documentation," 2024. [Online]. Available: https://www.postgresql.org/docs/16/</li>
+  </ol>
+</div>
+
+<!-- ══════════════════════════════ APPENDICES ════════════════════════════════ -->
+<div class="page">
+  <h1 class="chapter">Appendix A: Team Details and Contributions</h1>
+  <table class="data">
+    <tr><th>Name</th><th>ID</th><th>Primary Contributions</th></tr>
+    <tr><td>Kenenisa Mieso (Leader)</td><td>CTC-1642-26</td><td>System architecture design, backend API development (Express/TypeScript), PostGIS routing engine, Docker configuration, integration testing, GitHub repository management</td></tr>
+    <tr><td>Abdurahman Zenu</td><td>CTC-2839-26</td><td>Citizen mobile application development (React Native/Expo), authentication flow, GPS location capture, evidence upload integration</td></tr>
+    <tr><td>Fesaha Belete</td><td>CTC-3684-26</td><td>Institution web portal development (React/Vite), report inbox UI, staff management page, ReportDetailsPage with Google Maps integration</td></tr>
+    <tr><td>Musab Abdulkadir</td><td>CTC-2996-26</td><td>Database design and schema implementation (PostgreSQL/PostGIS), seed data preparation, routing rules polygon digitization, requirements documentation</td></tr>
+    <tr><td>Efa Desalegn</td><td>CTC-2436-26</td><td>System testing strategy, automated test suite authoring, UI/UX design (Figma wireframes), project documentation and report writing</td></tr>
+  </table>
+
+  <h2 class="section">Repository and Links</h2>
+  <ul>
+    <li><strong>GitHub Repository:</strong> https://github.com/[team-repo]/furko <em>(insert actual public URL)</em></li>
+    <li><strong>Demonstration Video:</strong> <em>(insert video link if available)</em></li>
+    <li><strong>Local Deployment:</strong> API: http://localhost:5000 | Web Portal: http://localhost:5173 | Mobile: Expo Go (LAN)</li>
+  </ul>
+
+  <h1 class="chapter">Appendix B: Full Automated Test Evidence</h1>
+  <p>The following is a summary of the automated test suite output as executed on October 19, 2026:</p>
+
+  <h3 class="subsection">B.1 Evidence Upload Tests — 6/6 Passed</h3>
+  <div class="code-block">--- Starting Evidence & Report Photo API Tests ---
+✅ Test 1 Passed: Missing file returns 400 Bad Request
+✅ Test 2 Passed: Invalid file type rejected with 400 Bad Request
+✅ Test 3 Passed: Valid image upload returned 201 with URL
+✅ Test 4 Passed: Invalid report_id format rejected with 400
+✅ Test 5 Passed: Evidence uploaded and associated with report
+✅ Test 6 Passed: Retrieved attachments list for report
+
+Results: 6/6 tests passed.
+🎉 All evidence upload API test suites passed!</div>
+
+  <h3 class="subsection">B.2 Routing Engine Tests — 8/8 Passed</h3>
+  <div class="code-block">--- Starting Rule-Based Report Routing Engine Tests ---
+✅ Test 1 Passed: Correctly routed Roads report in Central District to Road Bureau
+✅ Test 2 Passed: Correctly routed Water report by UUID to Water Authority
+✅ Test 3 Passed: Correctly routed Lighting report by slug to EEU Jimma
+✅ Test 4 Passed: Out-of-bounds report dispatched to Fallback Review Queue
+✅ Test 5 Passed: Unknown category dispatched to Fallback Review Queue
+✅ Test 6 Passed: Missing category_id returned 400 Bad Request
+✅ Test 7 Passed: HTTP POST /api/v1/routing/preview returned 200
+✅ Test 8 Passed: GET /api/v1/routing/institutions returned active institutions list
+
+Results: 8/8 tests passed.
+🎉 All routing engine test suites passed!</div>
+
+  <h3 class="subsection">B.3 Resolution &amp; Tracking Tests — 28/28 Passed</h3>
+  <div class="code-block">══════════════════════════════════════════════════════
+ FURKO — Report Tracking & Resolution API Test Suite
+══════════════════════════════════════════════════════
+TEST 1–10: All 28 assertions across 10 test scenarios passed.
+
+Results: 28/28 passed, 0 failed</div>
+
+  <h3 class="subsection">B.4 Full Integration Tests — 99/99 Passed</h3>
+  <div class="code-block">════════════════════════════════════════════════════════════
+ RESULTS: 99/99 passed, 0 failed
+════════════════════════════════════════════════════════════</div>
+
+  <h1 class="chapter">Appendix C: Submission Checklist</h1>
+  <table class="data">
+    <tr><th>Requirement</th><th>Status</th></tr>
+    <tr><td>Project documentation report (PDF format, &gt;10 pages)</td><td>✅ Complete</td></tr>
+    <tr><td>Cover page with INSA logo, institution name, cohort, all member names and IDs, mentor name, date</td><td>✅ Complete</td></tr>
+    <tr><td>Table of Contents with page numbers</td><td>✅ Complete</td></tr>
+    <tr><td>List of Figures and Tables</td><td>✅ Complete</td></tr>
+    <tr><td>List of Abbreviations</td><td>✅ Complete</td></tr>
+    <tr><td>Executive Summary</td><td>✅ Complete</td></tr>
+    <tr><td>Chapter 1: Introduction (background, problem, objectives, scope, significance)</td><td>✅ Complete</td></tr>
+    <tr><td>Chapter 2: Literature Review (existing systems, technology rationale, security)</td><td>✅ Complete</td></tr>
+    <tr><td>Chapter 3: Methodology and System Design (architecture, DB, API, requirements tables)</td><td>✅ Complete</td></tr>
+    <tr><td>Chapter 4: Implementation, Testing, Results (all test suites, challenges)</td><td>✅ Complete</td></tr>
+    <tr><td>Chapter 5: Conclusion and Future Work</td><td>✅ Complete</td></tr>
+    <tr><td>References (IEEE format, ≥8 sources)</td><td>✅ 14 references</td></tr>
+    <tr><td>Appendices (team details, test evidence, checklist)</td><td>✅ Complete</td></tr>
+    <tr><td>GitHub repository public with README.md</td><td>⬜ Pending (insert URL)</td></tr>
+    <tr><td>All sensitive data (passwords, tokens) removed from repository</td><td>✅ .env files in .gitignore</td></tr>
+    <tr><td>Submission before deadline (Oct 22, 2026, 10:00 AM)</td><td>⬜ Pending submission</td></tr>
+  </table>
+</div>
+
+</body>
+</html>

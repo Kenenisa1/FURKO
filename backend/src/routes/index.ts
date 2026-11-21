@@ -35,6 +35,7 @@ router.use('/reports', reportRoutes);
 
 // Institution workflow routes
 router.use('/institutions', institutionWorkflowRoutes);
+router.use('/admin/institutions', institutionWorkflowRoutes);
 
 // Rule-based routing engine routes
 router.use('/routing', routingRoutes);

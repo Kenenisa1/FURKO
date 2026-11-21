@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import {
-  acceptReport, redirectReport, rejectReport, getReportById,
+  acceptReport, redirectReport, rejectReport, getReportById, getInstitutions,
 } from '../../services/reportService.js';
-import { REPORT_STATUS, mockInstitutions } from '../../data/mockReports.js';
-import { mockStaff } from '../../data/mockStaff.js';
+import { REPORT_STATUS } from '../../services/reportService.js';
+import { isInstitutionSuperAdmin, isInstitutionStaff } from '../../services/authService.js';
 
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import PriorityBadge from '../../components/ui/PriorityBadge.jsx';
@@ -16,12 +16,22 @@ import PhotoGallery from '../../components/ui/PhotoGallery.jsx';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
 import AssignModal from './modals/AssignModal.jsx';
 import ResolveModal from './modals/ResolveModal.jsx';
+import SubmitCompletionModal from './modals/SubmitCompletionModal.jsx';
+import ReviewCompletionModal from './modals/ReviewCompletionModal.jsx';
+import TransferBranchModal from './modals/TransferBranchModal.jsx';
+
 import {
   ArrowLeft,
   MapPin,
   Check,
   CircleCheck,
-  Loader2
+  Loader2,
+  ExternalLink,
+  Building2,
+  UserCheck,
+  SendHorizontal,
+  ArrowRightLeft,
+  ClipboardCheck,
 } from 'lucide-react';
 
 function formatDateTime(iso) {
@@ -43,14 +53,17 @@ function timeAgo(iso) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-const TIMELINE_STAGES = ['Submitted', 'Under Review', 'Accepted', 'Assigned', 'In Progress', 'Resolved'];
+const TIMELINE_STAGES = ['Submitted', 'Under Review', 'Accepted', 'Assigned', 'In Progress', 'Submitted For Review', 'Resolved'];
 const REJECTION_REASONS = ['Duplicate report', 'Insufficient information', 'Invalid report', 'Outside jurisdiction', 'Other'];
 
-// ── Map placeholder ────────────────────────────────────────────────────────
+// ── Map placeholder with Google Maps Link ──────────────────────────────────
 function MapPlaceholder({ location }) {
+  const lat = location?.coordinates?.lat;
+  const lng = location?.coordinates?.lng;
+  const mapsUrl = (lat && lng) ? `https://www.google.com/maps?q=${lat},${lng}` : null;
+
   return (
-    <div className="w-full h-48 rounded-xl bg-[#e8f5ee] border border-[#1a6b3c]/20 relative overflow-hidden flex items-center justify-center">
-      {/* Grid lines for map feel */}
+    <div className="w-full rounded-xl bg-[#e8f5ee] border border-[#1a6b3c]/20 relative overflow-hidden flex flex-col items-center justify-center p-6 min-h-[190px]">
       <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
@@ -59,94 +72,49 @@ function MapPlaceholder({ location }) {
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
       </svg>
-      {/* Pin marker */}
       <div className="relative z-10 flex flex-col items-center">
-        <div className="w-8 h-8 rounded-full bg-[#1a6b3c] flex items-center justify-center shadow-lg mb-1">
-          <MapPin className="w-4 h-4 text-white fill-white" />
+        <div className="w-9 h-9 rounded-full bg-[#1a6b3c] flex items-center justify-center shadow-lg mb-2 ring-4 ring-white">
+          <MapPin className="w-5 h-5 text-white fill-white" />
         </div>
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center shadow-sm border border-[#1a6b3c]/20">
-          <p className="text-xs font-semibold text-[#1a6b3c]">{location?.kebele}</p>
-          <p className="text-[10px] text-gray-500">{location?.city}</p>
-          {location?.coordinates && (
-            <p className="text-[9px] text-gray-400 mt-0.5 font-mono">
-              {location.coordinates.lat}°N, {location.coordinates.lng}°E
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2 text-center shadow-sm border border-[#1a6b3c]/20 max-w-sm">
+          <p className="text-xs font-bold text-[#1a6b3c]">{location?.kebele || location?.address || 'Jimma City'}</p>
+          <p className="text-[11px] text-gray-500">{location?.address || location?.city}</p>
+          {lat && lng && (
+            <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
+              {Number(lat).toFixed(5)}°N, {Number(lng).toFixed(5)}°E
             </p>
           )}
         </div>
+
+        {mapsUrl && (
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#1a6b3c] hover:bg-[#14532d] text-white text-xs font-semibold shadow-sm transition-all"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Open in Google Maps
+          </a>
+        )}
       </div>
-    </div>
-  );
-}
-
-// ── Status Timeline ────────────────────────────────────────────────────────
-function StatusTimeline({ timeline, status }) {
-  const completedStages = timeline?.map((t) => t.stage) || [];
-  const rejectedOrRedirected = status === REPORT_STATUS.REJECTED || status === REPORT_STATUS.REDIRECTED;
-
-  return (
-    <div className="flex items-start gap-0">
-      {TIMELINE_STAGES.map((stage, i) => {
-        const isCompleted = completedStages.includes(stage);
-        const isCurrent   = !isCompleted && TIMELINE_STAGES[i - 1] && completedStages.includes(TIMELINE_STAGES[i - 1]);
-        const entry       = timeline?.find((t) => t.stage === stage);
-
-        return (
-          <div key={stage} className="flex flex-col items-center flex-1">
-            {/* Connector line + circle row */}
-            <div className="flex items-center w-full">
-              {i > 0 && (
-                <div className={`flex-1 h-0.5 ${isCompleted ? 'bg-[#1a6b3c]' : 'bg-gray-200'}`} />
-              )}
-              <div
-                className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                  isCompleted
-                    ? 'bg-[#1a6b3c] border-[#1a6b3c] text-white'
-                    : isCurrent
-                    ? 'bg-white border-[#1a6b3c] text-[#1a6b3c]'
-                    : 'bg-white border-gray-300 text-gray-400'
-                }`}
-              >
-                {isCompleted ? (
-                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
-                ) : (
-                  <span className="text-[10px] font-bold">{i + 1}</span>
-                )}
-              </div>
-              {i < TIMELINE_STAGES.length - 1 && (
-                <div className={`flex-1 h-0.5 ${isCompleted ? 'bg-[#1a6b3c]' : 'bg-gray-200'}`} />
-              )}
-            </div>
-            {/* Label */}
-            <p className={`text-[10px] mt-1.5 text-center px-1 font-medium leading-tight ${
-              isCompleted ? 'text-[#1a6b3c]' : isCurrent ? 'text-gray-700' : 'text-gray-400'
-            }`}>
-              {stage}
-            </p>
-            {entry && (
-              <p className="text-[9px] text-gray-400 text-center px-1 mt-0.5 leading-tight">
-                {new Date(entry.completedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-              </p>
-            )}
-          </div>
-        );
-      })}
     </div>
   );
 }
 
 // ── Activity Log ───────────────────────────────────────────────────────────
 function ActivityLog({ activity }) {
-  if (!activity?.length) return <p className="text-sm text-gray-400">No activity yet.</p>;
+  if (!activity || activity.length === 0) {
+    return <p className="text-sm text-gray-400">No activity recorded yet.</p>;
+  }
 
   return (
     <div className="space-y-3">
-      {[...activity].reverse().map((item, i) => (
-        <div key={i} className="flex items-start gap-3">
-          <div className="w-7 h-7 rounded-full bg-[#e8f5ee] flex items-center justify-center flex-shrink-0 mt-0.5">
-            <div className="w-2 h-2 rounded-full bg-[#1a6b3c]" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-800">{item.action}</p>
+      {activity.map((item, idx) => (
+        <div key={idx} className="flex items-start gap-3 text-sm">
+          <div className="w-2 h-2 rounded-full bg-[#1a6b3c] mt-1.5 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-gray-800">{item.action}</p>
             <p className="text-xs text-gray-400">{formatDateTime(item.time)}</p>
           </div>
         </div>
@@ -155,45 +123,59 @@ function ActivityLog({ activity }) {
   );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────
 export default function ReportDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { updateReportInState, showToast, addNotification, currentUser } = useApp();
+  const { showToast, addNotification, updateReportInState, currentUser } = useApp();
 
   const [report, setReport] = useState(null);
+  const [institutions, setInstitutions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Modal visibility
-  const [showAcceptModal, setShowAcceptModal]   = useState(false);
-  const [showRejectModal, setShowRejectModal]   = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [showRedirectModal, setShowRedirectModal] = useState(false);
-  const [showAssignModal, setShowAssignModal]   = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const [showResolveModal, setShowResolveModal] = useState(false);
+  const [showSubmitCompletionModal, setShowSubmitCompletionModal] = useState(false);
+  const [showReviewCompletionModal, setShowReviewCompletionModal] = useState(false);
+  const [showTransferBranchModal, setShowTransferBranchModal] = useState(false);
 
-  // Redirect form state
+  // Forms
   const [redirectForm, setRedirectForm] = useState({ destination: '', reason: '' });
-  // Reject form state
-  const [rejectForm, setRejectForm]   = useState({ reason: '', explanation: '' });
+  const [rejectForm, setRejectForm] = useState({ reason: '', explanation: '' });
+
+  function reloadReport() {
+    return getReportById(id).then((r) => {
+      setReport(r);
+      updateReportInState(r);
+    });
+  }
 
   useEffect(() => {
     setLoading(true);
-    getReportById(id)
-      .then((r) => setReport(r))
+    Promise.all([getReportById(id), getInstitutions()])
+      .then(([r, insts]) => {
+        setReport(r);
+        setInstitutions(insts);
+      })
       .catch(() => setReport(null))
       .finally(() => setLoading(false));
   }, [id]);
 
   if (loading) return <LoadingSpinner message="Loading report..." />;
-  if (!report) return (
-    <div className="text-center py-20">
-      <p className="text-gray-500 text-lg">Report not found.</p>
-      <button onClick={() => navigate('/reports')} className="mt-4 text-[#1a6b3c] hover:underline text-sm">
-        ← Back to Reports
-      </button>
-    </div>
-  );
+  if (!report) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-gray-500 text-lg">Report not found.</p>
+        <button onClick={() => navigate('/reports')} className="mt-4 text-[#1a6b3c] hover:underline text-sm">
+          ← Back to Reports
+        </button>
+      </div>
+    );
+  }
 
   // ── Action handlers ──────────────────────────────────────────────────────
   async function handleAccept() {
@@ -217,14 +199,17 @@ export default function ReportDetailsPage() {
       showToast('Please fill in all fields.', 'error');
       return;
     }
-    const dest = mockInstitutions.find((i) => String(i.id) === redirectForm.destination);
+    const dest = institutions.find((i) => i.id === redirectForm.destination);
     setActionLoading(true);
     try {
-      const updated = await redirectReport(id, { destinationName: dest?.name || redirectForm.destination, reason: redirectForm.reason });
+      const updated = await redirectReport(id, {
+        destinationName: dest?.name || redirectForm.destination,
+        destinationId: redirectForm.destination,
+        reason: redirectForm.reason,
+      });
       setReport(updated);
       updateReportInState(updated);
       showToast(`Report redirected to ${dest?.name || redirectForm.destination}.`, 'success');
-      addNotification({ type: 'redirect', title: 'Report Redirected', message: `Report ${id} redirected to ${dest?.name}.`, reportId: id });
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -254,19 +239,29 @@ export default function ReportDetailsPage() {
     }
   }
 
-  const canAccept   = [REPORT_STATUS.NEW, REPORT_STATUS.UNDER_REVIEW].includes(report.status);
-  const canAssign   = [REPORT_STATUS.NEW, REPORT_STATUS.UNDER_REVIEW, REPORT_STATUS.ACCEPTED].includes(report.status);
-  const canResolve  = [REPORT_STATUS.IN_PROGRESS, REPORT_STATUS.ASSIGNED].includes(report.status);
-  const canRejectRedirect = [REPORT_STATUS.NEW, REPORT_STATUS.UNDER_REVIEW].includes(report.status);
+  // RBAC permissions check
+  const isAdmin = isInstitutionSuperAdmin();
+  const isStaff = isInstitutionStaff();
+  const isAssignedToCurrentStaff = report.assigned_staff_id === currentUser?.id;
+
+  const canAccept = isAdmin && [REPORT_STATUS.NEW, REPORT_STATUS.UNDER_REVIEW].includes(report.status);
+  const canAssign = isAdmin && [REPORT_STATUS.NEW, REPORT_STATUS.UNDER_REVIEW, REPORT_STATUS.ACCEPTED, REPORT_STATUS.ASSIGNED, REPORT_STATUS.IN_PROGRESS].includes(report.status);
+  const canTransferBranch = isAdmin && ![REPORT_STATUS.RESOLVED, REPORT_STATUS.REJECTED].includes(report.status);
+  const canSubmitCompletion = (isAssignedToCurrentStaff || isAdmin) && ['assigned', 'in_progress', 'under_review'].includes(report.status);
+  const canReviewCompletion = isAdmin && report.status === 'submitted_for_review';
+  const canDirectResolve = isAdmin && [REPORT_STATUS.IN_PROGRESS, REPORT_STATUS.ASSIGNED].includes(report.status);
+  const canRejectRedirect = isAdmin && [REPORT_STATUS.NEW, REPORT_STATUS.UNDER_REVIEW].includes(report.status);
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pb-12">
       {/* Breadcrumb */}
-      <Breadcrumb items={[
-        { label: 'Dashboard', to: '/dashboard' },
-        { label: 'Reports', to: '/reports' },
-        { label: report.id },
-      ]} />
+      <Breadcrumb
+        items={[
+          { label: 'Dashboard', to: '/dashboard' },
+          { label: 'Reports', to: '/reports' },
+          { label: report.tracking_number || report.id },
+        ]}
+      />
 
       {/* Page header */}
       <div className="flex items-start justify-between mb-6 gap-4">
@@ -276,7 +271,7 @@ export default function ReportDetailsPage() {
             <StatusBadge status={report.status} size="lg" />
           </div>
           <p className="text-sm text-gray-500">
-            Report ID: <span className="font-mono font-semibold text-[#1a6b3c]">{report.id}</span>
+            Tracking Number: <span className="font-mono font-semibold text-[#1a6b3c]">{report.tracking_number || report.id}</span>
             {' · '}Submitted {timeAgo(report.submittedAt)}
           </p>
         </div>
@@ -290,12 +285,11 @@ export default function ReportDetailsPage() {
       </div>
 
       {/* Main grid */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Left column (main content) ── */}
-        <div className="col-span-2 space-y-6">
-
+        <div className="lg:col-span-2 space-y-6">
           {/* Report Information */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Report Information</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -311,25 +305,35 @@ export default function ReportDetailsPage() {
                 <p className="text-sm text-gray-900">{formatDateTime(report.submittedAt)}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Submitted By</p>
-                <p className="text-sm font-medium text-gray-900">{report.submittedBy?.name}</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Reporter</p>
+                <p className="text-sm font-medium text-gray-900">{report.submittedBy?.name || 'Citizen'}</p>
                 <p className="text-xs text-gray-500">{report.submittedBy?.phone}</p>
               </div>
               <div className="col-span-2">
                 <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Description</p>
-                <p className="text-sm text-gray-800 leading-relaxed">{report.description}</p>
+                <p className="text-sm text-gray-800 leading-relaxed bg-gray-50 p-3.5 rounded-xl border border-gray-100">
+                  {report.description}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Photos */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Photos</h2>
-            <PhotoGallery photos={report.photos} />
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+            <h2 className="text-base font-semibold text-gray-900 mb-4">Photos & Evidence</h2>
+            <PhotoGallery
+              photos={
+                report.photos && report.photos.length > 0
+                  ? report.photos
+                  : report.photo_url
+                  ? [report.photo_url]
+                  : []
+              }
+            />
           </div>
 
           {/* Location */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Location</h2>
             <MapPlaceholder location={report.location} />
             <div className="mt-4 grid grid-cols-2 gap-3">
@@ -341,54 +345,67 @@ export default function ReportDetailsPage() {
                 <p className="text-xs text-gray-500 mb-0.5">City</p>
                 <p className="text-sm font-medium text-gray-900">{report.location?.city}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 mb-0.5">Woreda</p>
-                <p className="text-sm font-medium text-gray-900">{report.location?.woreda}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 mb-0.5">Address</p>
+              <div className="col-span-2">
+                <p className="text-xs text-gray-500 mb-0.5">Address / Landmark</p>
                 <p className="text-sm text-gray-900">{report.location?.address}</p>
               </div>
-              {report.location?.coordinates && (
-                <div className="col-span-2">
-                  <p className="text-xs text-gray-500 mb-0.5">GPS Coordinates</p>
-                  <p className="text-sm font-mono text-gray-900">
-                    {report.location.coordinates.lat}°N, {report.location.coordinates.lng}°E
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
+          {/* Branch Transfers History (if any) */}
+          {report.transfers && report.transfers.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <ArrowRightLeft className="w-5 h-5 text-blue-600" />
+                <h2 className="text-base font-semibold text-gray-900">Branch Transfers History</h2>
+              </div>
+              <div className="space-y-3">
+                {report.transfers.map((t) => (
+                  <div key={t.id} className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-gray-800">
+                        {t.from_branch_name || 'Central'} → {t.to_branch_name}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[10px] ${
+                        t.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                        t.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {t.status}
+                      </span>
+                    </div>
+                    <p className="text-gray-600">Reason: {t.reason}</p>
+                    <p className="text-gray-400 text-[10px]">
+                      Requested by {t.requested_by_name} on {formatDateTime(t.created_at)}
+                    </p>
+                    {t.review_comment && (
+                      <p className="text-gray-600 italic mt-1">Review note: {t.review_comment}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Activity Log */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Activity History</h2>
             <ActivityLog activity={report.activity} />
           </div>
 
-          {/* Resolution */}
-          {report.resolution && (
-            <div className="bg-green-50 rounded-2xl border border-green-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <CircleCheck className="w-5 h-5 text-green-600" />
-                <h2 className="text-base font-semibold text-green-800">Resolution</h2>
+          {/* Resolution Card */}
+          {report.status === 'resolved' && (
+            <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <CircleCheck className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-base font-semibold text-emerald-900">Authoritative Resolution</h2>
               </div>
-              <p className="text-sm text-gray-800 mb-3 leading-relaxed">{report.resolution.description}</p>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-xs text-gray-500">Resolved By</p>
-                  <p className="font-medium text-gray-800">{report.resolution.resolvedBy}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Resolved At</p>
-                  <p className="font-medium text-gray-800">{formatDateTime(report.resolution.resolvedAt)}</p>
-                </div>
-              </div>
-              {report.resolution.photos?.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-xs text-gray-500 mb-2">Resolution Evidence</p>
-                  <PhotoGallery photos={report.resolution.photos} />
-                </div>
+              <p className="text-sm text-gray-800 mb-3 leading-relaxed">
+                {report.resolution_notes || 'Civic issue was inspected, resolved, and verified by institutional administration.'}
+              </p>
+              {report.resolved_at && (
+                <p className="text-xs text-gray-500">
+                  Resolved on: <span className="font-medium text-gray-800">{formatDateTime(report.resolved_at)}</span>
+                </p>
               )}
             </div>
           )}
@@ -396,78 +413,138 @@ export default function ReportDetailsPage() {
 
         {/* ── Right column (sidebar) ── */}
         <div className="space-y-6">
-
-          {/* Status */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Current Status</h3>
+          {/* Status Card */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Current Status</h3>
             <StatusBadge status={report.status} size="lg" />
-            {report.dueDate && (
-              <div className="mt-3 text-xs text-gray-500">
-                Due: <span className="font-medium text-gray-800">{report.dueDate}</span>
+            {report.status === 'submitted_for_review' && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
+                <ClipboardCheck className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <span>Field work completed. Awaiting Super Admin review and closure approval.</span>
               </div>
             )}
           </div>
 
-          {/* Assignment */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Assignment</h3>
-            {report.assignedTo ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-[#1a6b3c] text-white text-xs font-bold flex items-center justify-center">
-                    {report.assignedTo.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">{report.assignedTo}</p>
-                    <p className="text-xs text-gray-500">{report.department}</p>
-                  </div>
-                </div>
-                {report.assignmentNote && (
-                  <p className="text-xs text-gray-600 bg-gray-50 rounded-lg p-2 mt-2 border border-gray-100">
-                    {report.assignmentNote}
-                  </p>
+          {/* Institutional Allocation Card */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Institutional Ownership</h3>
+
+            {/* Branch */}
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Responsible Branch</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {report.branchName && report.branchName !== '—' ? report.branchName : 'Central Administration Branch'}
+                </p>
+                {report.branchCode && (
+                  <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                    {report.branchCode}
+                  </span>
                 )}
               </div>
-            ) : (
-              <p className="text-sm text-gray-400">Not assigned yet</p>
-            )}
+            </div>
+
+            {/* Staff Operative */}
+            <div className="flex items-start gap-3 pt-3 border-t border-gray-100">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                <UserCheck className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-gray-500">Assigned Operative</p>
+                {report.assignedStaffName || report.assignedTo ? (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {report.assignedStaffName || report.assignedTo}
+                    </p>
+                    {report.assignedStaffPhone && (
+                      <p className="text-xs text-gray-500">{report.assignedStaffPhone}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-amber-600 font-medium">Unassigned (Awaiting allocation)</p>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Actions */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Actions</h3>
-            <div className="space-y-2">
+          {/* Actions Card */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Workflow Actions</h3>
+            <div className="space-y-2.5">
+              {/* Super Admin: Accept */}
               {canAccept && (
                 <button
                   onClick={() => setShowAcceptModal(true)}
-                  className="w-full py-2.5 bg-[#1a6b3c] hover:bg-[#145230] text-white font-semibold rounded-lg text-sm transition-colors"
+                  className="w-full py-2.5 bg-[#1a6b3c] hover:bg-[#145230] text-white font-semibold rounded-lg text-sm transition-colors shadow-sm"
                 >
-                  Accept Report
+                  Accept Report Responsibility
                 </button>
               )}
+
+              {/* Staff Operative: Submit Work for Review */}
+              {canSubmitCompletion && (
+                <button
+                  onClick={() => setShowSubmitCompletionModal(true)}
+                  className="w-full py-2.5 bg-[#1a6b3c] hover:bg-[#145230] text-white font-semibold rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2"
+                >
+                  <SendHorizontal className="w-4 h-4" />
+                  Submit Work for Review
+                </button>
+              )}
+
+              {/* Super Admin: Completion Review */}
+              {canReviewCompletion && (
+                <button
+                  onClick={() => setShowReviewCompletionModal(true)}
+                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2"
+                >
+                  <ClipboardCheck className="w-4 h-4" />
+                  Review Completion (Approve / Return)
+                </button>
+              )}
+
+              {/* Super Admin: Assign / Reassign Staff */}
               {canAssign && (
                 <button
                   onClick={() => setShowAssignModal(true)}
-                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition-colors"
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition-colors shadow-sm"
                 >
-                  Assign to Staff
+                  {report.assigned_staff_id ? 'Reassign Staff Operative' : 'Assign to Staff Operative'}
                 </button>
               )}
-              {canResolve && (
+
+              {/* Super Admin: Branch Transfer */}
+              {canTransferBranch && (
+                <button
+                  onClick={() => setShowTransferBranchModal(true)}
+                  className="w-full py-2.5 border border-blue-300 text-blue-700 hover:bg-blue-50 font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  Transfer to Another Branch
+                </button>
+              )}
+
+              {/* Direct Resolve (Super Admin emergency closure) */}
+              {canDirectResolve && (
                 <button
                   onClick={() => setShowResolveModal(true)}
-                  className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg text-sm transition-colors"
+                  className="w-full py-2.5 border border-emerald-300 text-emerald-800 hover:bg-emerald-50 font-medium rounded-lg text-sm transition-colors"
                 >
-                  Mark as Resolved
+                  Direct Resolve (Admin Override)
                 </button>
               )}
+
+              {/* Redirect & Reject */}
               {canRejectRedirect && (
                 <>
                   <button
                     onClick={() => setShowRedirectModal(true)}
                     className="w-full py-2.5 border border-orange-300 text-orange-700 hover:bg-orange-50 font-medium rounded-lg text-sm transition-colors"
                   >
-                    Redirect Report
+                    Redirect Report (Wrong Institution)
                   </button>
                   <button
                     onClick={() => setShowRejectModal(true)}
@@ -477,23 +554,18 @@ export default function ReportDetailsPage() {
                   </button>
                 </>
               )}
-              {![REPORT_STATUS.NEW, REPORT_STATUS.UNDER_REVIEW, REPORT_STATUS.ACCEPTED, REPORT_STATUS.ASSIGNED, REPORT_STATUS.IN_PROGRESS].includes(report.status) && (
-                <p className="text-xs text-gray-400 text-center py-2">No further actions available.</p>
+
+              {report.status === REPORT_STATUS.RESOLVED && (
+                <p className="text-xs text-emerald-700 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200 text-center font-medium">
+                  ✓ Report successfully resolved and verified.
+                </p>
               )}
             </div>
-          </div>
-
-          {/* Progress timeline */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Progress</h3>
-            <StatusTimeline timeline={report.timeline} status={report.status} />
           </div>
         </div>
       </div>
 
       {/* ── Modals ── */}
-
-      {/* Accept */}
       <ConfirmationModal
         isOpen={showAcceptModal}
         onClose={() => setShowAcceptModal(false)}
@@ -505,7 +577,7 @@ export default function ReportDetailsPage() {
         loading={actionLoading}
       />
 
-      {/* Redirect */}
+      {/* Redirect Modal */}
       <Modal
         isOpen={showRedirectModal}
         onClose={() => setShowRedirectModal(false)}
@@ -526,7 +598,7 @@ export default function ReportDetailsPage() {
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a6b3c]/30 focus:border-[#1a6b3c]"
             >
               <option value="">Select institution or department</option>
-              {mockInstitutions.map((inst) => (
+              {institutions.map((inst) => (
                 <option key={inst.id} value={inst.id}>{inst.name}</option>
               ))}
             </select>
@@ -562,7 +634,7 @@ export default function ReportDetailsPage() {
         </div>
       </Modal>
 
-      {/* Reject */}
+      {/* Reject Modal */}
       <Modal
         isOpen={showRejectModal}
         onClose={() => setShowRejectModal(false)}
@@ -623,32 +695,61 @@ export default function ReportDetailsPage() {
         </div>
       </Modal>
 
-      {/* Assign */}
+      {/* Assign Modal */}
       <AssignModal
         isOpen={showAssignModal}
         onClose={() => setShowAssignModal(false)}
         report={report}
-        onAssigned={(updated) => {
-          setReport(updated);
-          updateReportInState(updated);
-          showToast(`Report assigned to ${updated.assignedTo}.`, 'success');
-          addNotification({ type: 'status_update', title: 'Report Assigned', message: `Report ${id} assigned to ${updated.assignedTo}.`, reportId: id });
+        onAssigned={() => {
+          reloadReport();
+          showToast('Staff operative assigned successfully.', 'success');
           setShowAssignModal(false);
         }}
       />
 
-      {/* Resolve */}
+      {/* Resolve Modal */}
       <ResolveModal
         isOpen={showResolveModal}
         onClose={() => setShowResolveModal(false)}
         report={report}
         currentUser={currentUser}
-        onResolved={(updated) => {
-          setReport(updated);
-          updateReportInState(updated);
+        onResolved={() => {
+          reloadReport();
           showToast('Report marked as Resolved.', 'success');
-          addNotification({ type: 'resolved', title: 'Report Resolved', message: `Report ${id} has been resolved.`, reportId: id });
           setShowResolveModal(false);
+        }}
+      />
+
+      {/* Submit Completion Modal */}
+      <SubmitCompletionModal
+        isOpen={showSubmitCompletionModal}
+        onClose={() => setShowSubmitCompletionModal(false)}
+        report={report}
+        onSubmitted={() => {
+          reloadReport();
+          showToast('Completion report submitted for admin review.', 'success');
+        }}
+      />
+
+      {/* Review Completion Modal */}
+      <ReviewCompletionModal
+        isOpen={showReviewCompletionModal}
+        onClose={() => setShowReviewCompletionModal(false)}
+        report={report}
+        onReviewed={() => {
+          reloadReport();
+          showToast('Completion review processed.', 'success');
+        }}
+      />
+
+      {/* Branch Transfer Modal */}
+      <TransferBranchModal
+        isOpen={showTransferBranchModal}
+        onClose={() => setShowTransferBranchModal(false)}
+        report={report}
+        onTransferred={() => {
+          reloadReport();
+          showToast('Branch transfer initiated.', 'success');
         }}
       />
     </div>

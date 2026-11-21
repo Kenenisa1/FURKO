@@ -3,8 +3,7 @@ import { Search, Filter, Inbox, Clock, CheckCircle, AlertCircle } from 'lucide-r
 import ReportTable from '../../components/reports/ReportTable';
 import FilterBar from '../../components/reports/FilterBar';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import { getReports } from '../../services/reportService';
-import { REPORT_STATUS } from '../../data/mockReports';
+import { getReports, REPORT_STATUS } from '../../services/reportService';
 
 const InboxPage = () => {
   const [activeTab, setActiveTab] = useState('new');

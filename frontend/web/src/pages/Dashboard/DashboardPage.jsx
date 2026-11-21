@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
-import { REPORT_STATUS, PRIORITY } from '../../data/mockReports.js';
+import { REPORT_STATUS } from '../../services/reportService.js';
 import SummaryCard from '../../components/ui/SummaryCard.jsx';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
@@ -27,19 +27,19 @@ export default function DashboardPage() {
     inProgress:  reports.filter((r) => r.status === REPORT_STATUS.IN_PROGRESS).length,
     underReview: reports.filter((r) => r.status === REPORT_STATUS.UNDER_REVIEW).length,
     resolved:    reports.filter((r) => r.status === REPORT_STATUS.RESOLVED).length,
-    highPriority: reports.filter((r) => r.priority === PRIORITY.HIGH || r.priority === PRIORITY.CRITICAL).length,
+    highPriority: reports.filter((r) => r.priority === 'high' || r.priority === 'critical').length,
   }), [reports]);
 
-  const recentReports = useMemo(() => 
+  const recentReports = useMemo(() =>
     [...reports]
-      .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
+      .sort((a, b) => new Date(b.submittedAt || b.submitted_at) - new Date(a.submittedAt || a.submitted_at))
       .slice(0, 5),
     [reports]
   );
 
   const urgentReports = useMemo(() =>
-    reports.filter((r) => 
-      (r.priority === PRIORITY.HIGH || r.priority === PRIORITY.CRITICAL) &&
+    reports.filter((r) =>
+      (r.priority === 'high' || r.priority === 'critical') &&
       r.status !== REPORT_STATUS.RESOLVED
     ).slice(0, 3),
     [reports]
@@ -63,7 +63,7 @@ export default function DashboardPage() {
       {/* Welcome header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {currentUser?.name?.split(' ')[0] || 'User'}
+          Welcome back, {(currentUser?.full_name || currentUser?.name)?.split(' ')[0] || 'User'}
         </h1>
         <p className="text-sm text-gray-500 mt-1">
           Here's what's happening with your institution's reports today.

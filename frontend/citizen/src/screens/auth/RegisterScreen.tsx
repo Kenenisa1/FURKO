@@ -1,10 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ScrollView,
   KeyboardAvoidingView,
@@ -12,8 +11,8 @@ import {
   ActivityIndicator,
   Alert,
   Keyboard,
-  TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { FurkoLogo } from '../../components/common/FurkoLogo';
@@ -26,51 +25,55 @@ interface Props {
 
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [fullName, setFullName] = useState('');
+  const [fathersName, setFathersName] = useState('');
   const [phone, setPhone] = useState('+251 9');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register } = useAuth();
 
-  // Refs for sequential field focus
-  const phoneRef = useRef<TextInput>(null);
-  const emailRef = useRef<TextInput>(null);
-  const passwordRef = useRef<TextInput>(null);
-
   const handleRegister = async () => {
-    // Dismiss keyboard immediately to prevent auto-focus toggling
     Keyboard.dismiss();
 
-    if (!fullName.trim()) {
-      Alert.alert('Missing Field', 'Please enter your full name.');
+    if (!fullName.trim() || fullName.trim().length < 2) {
+      Alert.alert('Missing Field', 'Please enter your first name (at least 2 characters).');
       return;
     }
-    if (!phone.trim() || phone.trim().length < 8) {
+    if (!fathersName.trim() || fathersName.trim().length < 2) {
+      Alert.alert('Missing Field', "Please enter your father's name.");
+      return;
+    }
+    if (!phone.trim() || phone.replace(/\D/g, '').length < 9) {
       Alert.alert('Invalid Phone', 'Please enter a valid phone number (e.g., +251 91 123 4567).');
       return;
     }
-    if (!email.trim() || !email.includes('@')) {
+    if (!email.trim() || !email.includes('@') || !email.includes('.')) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
-    if (!password.trim() || password.length < 6) {
-      Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+    if (!password || password.length < 8) {
+      Alert.alert('Weak Password', 'Password must be at least 8 characters.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert('Password Mismatch', 'The passwords you entered do not match. Please try again.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await register(fullName.trim(), email.trim(), password, phone.trim());
+      const combinedName = `${fullName.trim()} ${fathersName.trim()}`;
+      await register(combinedName, email.trim(), password, phone.trim(), fathersName.trim());
       setIsSubmitting(false);
-
-      // Go directly to MainTabs — no SMS verification in MVP
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MainTabs' }],
-      });
-    } catch {
+    } catch (err: any) {
       setIsSubmitting(false);
-      Alert.alert('Registration Error', 'Could not create account. Please try again.');
+      const serverMsg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Could not create account. Please try again.';
+      Alert.alert('Registration Error', serverMsg);
     }
   };
 
@@ -92,6 +95,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
+        enabled={Platform.OS === 'ios'}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -106,84 +110,134 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           {/* Headline & Subtitle */}
           <View style={styles.headingGroup}>
             <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join FURKO to start making a difference</Text>
+            <Text style={styles.subtitle}>Join FURKO to start making a difference in Jimma City</Text>
           </View>
 
-          {/* Form Fields */}
-          <View style={styles.form}>
-            {/* 1. Full Name */}
+          {/* Section: Personal Information */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="person-circle-outline" size={20} color={Colors.primary} />
+              <Text style={styles.sectionTitle}>Personal Information</Text>
+            </View>
+
+            {/* 1. First Name */}
             <NotchedTextInput
               iconName="user"
-              label="full name"
+              label="first name"
               value={fullName}
               onChangeText={setFullName}
-              placeholder="Enter full name"
+              placeholder="Enter your first name"
               autoCapitalize="words"
-              returnKeyType="next"
-              onSubmitEditing={() => phoneRef.current?.focus()}
+              autoCorrect={false}
+              autoComplete="name"
+              textContentType="givenName"
             />
 
-            {/* 2. Phone Number */}
+            {/* 2. Father's Name */}
             <NotchedTextInput
-              ref={phoneRef}
+              iconName="users"
+              label="father's name"
+              value={fathersName}
+              onChangeText={setFathersName}
+              placeholder="Enter your father's name"
+              autoCapitalize="words"
+              autoCorrect={false}
+              autoComplete="name-family"
+              textContentType="familyName"
+            />
+
+            {/* 3. Phone Number */}
+            <NotchedTextInput
               iconName="phone"
               label="phone number"
               value={phone}
               onChangeText={setPhone}
-              placeholder="Enter phone number"
+              placeholder="+251 91 234 5678"
               keyboardType="phone-pad"
-              returnKeyType="next"
-              onSubmitEditing={() => emailRef.current?.focus()}
+              autoComplete="tel"
+              textContentType="telephoneNumber"
             />
+          </View>
 
-            {/* 3. Email */}
+          {/* Section: Account Credentials */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
+              <Text style={styles.sectionTitle}>Account Credentials</Text>
+            </View>
+
+            {/* 4. Email */}
             <NotchedTextInput
-              ref={emailRef}
               iconName="mail"
-              label="email"
+              label="email address"
               value={email}
               onChangeText={setEmail}
-              placeholder="Enter email address"
+              placeholder="Enter your email address"
               keyboardType="email-address"
               autoCapitalize="none"
-              returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
+              autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
             />
 
-            {/* 4. Password */}
+            {/* 5. Password */}
             <NotchedTextInput
-              ref={passwordRef}
               iconName="lock"
               label="password"
               value={password}
               onChangeText={setPassword}
-              placeholder="Enter password"
+              placeholder="At least 8 characters"
               isPassword={true}
-              returnKeyType="done"
-              onSubmitEditing={handleRegister}
+              autoCorrect={false}
+              autoComplete="new-password"
+              textContentType="newPassword"
             />
 
-            {/* Create Account Primary Button */}
-            <TouchableOpacity
-              style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
-              onPress={handleRegister}
-              disabled={isSubmitting}
-              activeOpacity={0.85}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.submitButtonText}>Create Account</Text>
-              )}
-            </TouchableOpacity>
+            {/* 6. Confirm Password */}
+            <NotchedTextInput
+              iconName="check-circle"
+              label="confirm password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Re-enter your password"
+              isPassword={true}
+              autoCorrect={false}
+              autoComplete="new-password"
+              textContentType="newPassword"
+            />
+          </View>
 
-            {/* Already have an account footer */}
-            <View style={styles.footerRow}>
-              <Text style={styles.footerText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.signInLink}>Sign in</Text>
-              </TouchableOpacity>
-            </View>
+          {/* Password strength hint */}
+          <View style={styles.hintBox}>
+            <Ionicons name="information-circle-outline" size={15} color="#6B7280" style={{ marginRight: 6 }} />
+            <Text style={styles.hintText}>
+              Use at least 8 characters including letters and numbers for a strong password.
+            </Text>
+          </View>
+
+          {/* Create Account Primary Button */}
+          <TouchableOpacity
+            style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
+            onPress={handleRegister}
+            disabled={isSubmitting}
+            activeOpacity={0.85}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <Ionicons name="person-add-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.submitButtonText}>Create Account</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Already have an account footer */}
+          <View style={styles.footerRow}>
+            <Text style={styles.footerText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.signInLink}>Sign in</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -194,11 +248,12 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
   },
   topHeader: {
     paddingHorizontal: 20,
     paddingVertical: 12,
+    backgroundColor: '#F9FAFB',
   },
   backButton: {
     width: 44,
@@ -207,15 +262,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 40,
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 48,
   },
   logoRow: {
     marginBottom: 16,
   },
   headingGroup: {
-    marginBottom: 28,
+    marginBottom: 20,
   },
   title: {
     fontSize: 28,
@@ -227,9 +282,55 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginTop: 6,
+    lineHeight: 20,
   },
-  form: {
-    marginTop: 6,
+  sectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 6,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary,
+    marginLeft: 8,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  hintBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F0F9FF',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#374151',
+    flex: 1,
+    lineHeight: 17,
   },
   submitButton: {
     backgroundColor: Colors.primary,
@@ -237,7 +338,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    flexDirection: 'row',
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,

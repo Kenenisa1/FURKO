@@ -5,47 +5,68 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ImageBackground,
-  Dimensions,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { PROBLEM_CATEGORIES, STATUS_META } from '../../constants/categories';
 import { FurkoLogo } from '../../components/common/FurkoLogo';
+import { CategoryIcon } from '../../components/common/CategoryIcon';
 import { useAuth } from '../../context/AuthContext';
 import { ReportsApi } from '../../services/api';
 import { Report } from '../../types';
-
-const { width } = Dimensions.get('window');
 
 interface Props {
   navigation: any;
 }
 
+interface PublicStats {
+  total: number;
+  submitted: number;
+  inProgress: number;
+  resolved: number;
+  resolutionRate: number;
+  institutionsCount?: number;
+}
+
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { user } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
+  const [publicStats, setPublicStats] = useState<PublicStats>({
+    total: 0,
+    submitted: 0,
+    inProgress: 0,
+    resolved: 0,
+    resolutionRate: 0,
+    institutionsCount: 4,
+  });
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadReports = async () => {
+  const loadData = async () => {
     try {
-      const data = await ReportsApi.getMyReports();
-      setReports(data);
+      const [userReports, stats] = await Promise.all([
+        ReportsApi.getMyReports(),
+        ReportsApi.getPublicStats(),
+      ]);
+      setReports(userReports || []);
+      if (stats) {
+        setPublicStats(stats);
+      }
     } catch {
       // ignore
     }
   };
 
   useEffect(() => {
-    loadReports();
+    loadData();
   }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadReports();
+    await loadData();
     setRefreshing(false);
   };
 
@@ -53,7 +74,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Top Header: Logo on Left, Sign In / Profile on Right */}
+      {/* Top Header: Brand Logo & User Profile / Sign In */}
       <View style={styles.topHeader}>
         <FurkoLogo size="small" showTagline={false} centered={false} />
 
@@ -65,13 +86,16 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           >
             <View style={styles.profileAvatarMini}>
               <Text style={styles.profileAvatarText}>
-                {user.full_name?.charAt(0) || 'C'}
+                {user.full_name?.charAt(0)?.toUpperCase() || 'C'}
               </Text>
             </View>
-            <Text style={styles.profileHeaderText} numberOfLines={1}>
-              {user.full_name?.split(' ')[0]}
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color={Colors.primary} />
+            <View>
+              <Text style={styles.profileGreeting}>Welcome</Text>
+              <Text style={styles.profileHeaderText} numberOfLines={1}>
+                {user.full_name?.split(' ')[0] || 'Citizen'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={14} color={Colors.primary} style={{ marginLeft: 2 }} />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -79,8 +103,8 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => navigation.navigate('Login')}
             activeOpacity={0.8}
           >
-            <Text style={styles.signInHeaderText}>Sign in</Text>
-            <Ionicons name="chevron-forward" size={16} color="#111827" />
+            <Text style={styles.signInHeaderText}>Sign In</Text>
+            <Ionicons name="arrow-forward" size={15} color="#008744" />
           </TouchableOpacity>
         )}
       </View>
@@ -88,196 +112,236 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#008744']} />}
       >
-        {/* Hero Section with Landscape Background */}
+        {/* Hero Section */}
         <ImageBackground
           source={require('../../../assets/homebackround.png')}
           style={styles.heroBackground}
           resizeMode="cover"
         >
-          {/* Subtle overlay */}
           <View style={styles.heroOverlay}>
-            <View style={styles.headlineBox}>
-              <Text style={styles.heroTitleGreen}>Your Voice</Text>
-              <Text style={styles.heroTitleBlack}>Can Improve{'\n'}Your Community.</Text>
-
-              {/* Accent callout */}
-              <View style={styles.heroCalloutRow}>
-                <View style={styles.verticalBlueBar} />
-                <Text style={styles.heroCalloutText}>
-                  Report community problems, track their progress, and help create real change.
-                </Text>
+            <View style={styles.heroContent}>
+              <View style={styles.heroBadge}>
+                <View style={styles.heroBadgeDot} />
+                <Text style={styles.heroBadgeText}>JIMMA CIVIC PLATFORM</Text>
               </View>
 
-              {/* Hero Action Buttons */}
+              <Text style={styles.heroTitleGreen}>Report Issues.</Text>
+              <Text style={styles.heroTitleBlack}>Shape Your City.</Text>
+
+              <Text style={styles.heroSubtitle}>
+                Directly route municipal problems to responsible authorities and track real-time resolution.
+              </Text>
+
+              {/* Action Buttons: Green Primary, Blue Secondary */}
               <View style={styles.heroBtnGroup}>
-                {/* 1. Report a problem */}
+                {/* 1. Primary Button (Green) */}
                 <TouchableOpacity
-                  style={styles.reportBtn}
+                  style={styles.primaryBtn}
                   onPress={() => navigation.navigate('CategorySelection')}
-                  activeOpacity={0.85}
+                  activeOpacity={0.88}
                 >
-                  <View style={styles.whiteCirclePlus}>
-                    <Ionicons name="add" size={18} color={Colors.primary} />
+                  <View style={styles.btnIconCircleWhite}>
+                    <Ionicons name="add" size={18} color="#008744" />
                   </View>
-                  <Text style={styles.reportBtnText}>Report a problem</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                  <Text style={styles.primaryBtnText}>Report a Problem</Text>
+                  <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                {/* 2. Track a report */}
+                {/* 2. Secondary Button (Blue) */}
                 <TouchableOpacity
-                  style={styles.trackBtn}
+                  style={styles.secondaryBtn}
                   onPress={() => navigation.navigate('ReportsTab')}
-                  activeOpacity={0.85}
+                  activeOpacity={0.88}
                 >
-                  <Text style={styles.trackBtnText}>Track a report</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#1E6FE0" style={{ marginLeft: 6 }} />
+                  <View style={styles.btnIconCircleWhite}>
+                    <Ionicons name="document-text" size={16} color="#1E6FE0" />
+                  </View>
+                  <Text style={styles.secondaryBtnText}>Track My Reports</Text>
+                  <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </ImageBackground>
 
-        {/* 4 Core Problem Categories Launchpad (Centered Icons & Text) */}
+        {/* 4 Core Problem Categories Launchpad */}
         <View style={styles.categoriesSection}>
-          <View style={styles.sectionTitleRow}>
-            <Text style={styles.sectionHeaderTitle}>Select Problem Category</Text>
-            <Text style={styles.sectionHeaderSubtitleLight}>Direct dispatch to responsible office</Text>
+          <View style={styles.sectionHeaderRow}>
+            <View>
+              <Text style={styles.sectionTitle}>Report by Category</Text>
+              <Text style={styles.sectionSubtitle}>Select category to start direct routing</Text>
+            </View>
           </View>
 
           <View style={styles.categoryGrid}>
             {PROBLEM_CATEGORIES.map((cat) => (
               <TouchableOpacity
                 key={cat.id}
-                style={[styles.categoryCard, { borderLeftColor: cat.color }]}
+                style={[styles.categoryCard, { borderTopColor: cat.color }]}
                 onPress={() => navigation.navigate('PhotoLocation', { categoryId: cat.id })}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
               >
-                <View style={[styles.categoryIconCircle, { backgroundColor: cat.color + '18' }]}>
-                  <Text style={styles.categoryEmoji}>
-                    {cat.key === 'roads'
-                      ? '🚧'
-                      : cat.key === 'water'
-                      ? '💧'
-                      : cat.key === 'waste'
-                      ? '🗑️'
-                      : '💡'}
-                  </Text>
+                <View style={[styles.categoryIconCircle, { backgroundColor: cat.color + '16' }]}>
+                  <CategoryIcon categoryKey={cat.key} size={26} color={cat.color} />
                 </View>
                 <Text style={styles.categoryName} numberOfLines={1}>{cat.name}</Text>
-                <Text style={styles.categoryLocal} numberOfLines={1}>{cat.nameLocal}</Text>
-                <Text style={styles.categoryInst} numberOfLines={2}>
-                  🏢 {cat.responsibleInstitution}
-                </Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        {/* Section: How Furko works */}
-        <View style={styles.howItWorksSection}>
-          <Text style={styles.sectionHeaderTitle}>How Furko works</Text>
-          <View style={styles.blueDivider} />
-          <Text style={styles.sectionHeaderSubtitle}>Turning community problems into action.</Text>
-
-          {/* 3 Step Connected Diagram */}
-          <View style={styles.stepsDiagram}>
-            {/* Step 1: Report */}
-            <View style={styles.stepCol}>
-              <View style={styles.stepIconWrapper}>
-                <Ionicons name="phone-portrait-outline" size={28} color="#1E6FE0" />
-              </View>
-              <Text style={styles.stepTitle}>Report</Text>
-              <Text style={styles.stepDesc}>Tell us what happened and where.</Text>
-            </View>
-
-            {/* Connecting Line */}
-            <View style={styles.stepLine} />
-
-            {/* Step 2: Track */}
-            <View style={styles.stepCol}>
-              <View style={styles.stepIconWrapper}>
-                <Ionicons name="clipboard-outline" size={28} color="#1E6FE0" />
-              </View>
-              <Text style={styles.stepTitle}>Track</Text>
-              <Text style={styles.stepDesc}>Follow updates and progress</Text>
-            </View>
-
-            {/* Connecting Line */}
-            <View style={styles.stepLine} />
-
-            {/* Step 3: Resolve */}
-            <View style={styles.stepCol}>
-              <View style={styles.stepIconWrapper}>
-                <Ionicons name="checkmark-circle-outline" size={32} color="#1E6FE0" />
-              </View>
-              <Text style={styles.stepTitle}>Resolve</Text>
-              <Text style={styles.stepDesc}>See action taken on your report</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Recent Reports Live Feed Preview */}
+        {/* Recent Active Tickets Preview (when user has reports) */}
         {reports.length > 0 && (
-          <View style={styles.recentFeedSection}>
-            <View style={styles.recentFeedHeader}>
-              <Text style={styles.sectionHeaderTitle}>Your Active Tickets</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('ReportsTab')}>
-                <Text style={styles.viewAllLink}>View All ({reports.length}) →</Text>
+          <View style={styles.recentSection}>
+            <View style={styles.recentHeaderRow}>
+              <View>
+                <Text style={styles.sectionTitle}>Active Tickets</Text>
+                <Text style={styles.sectionSubtitle}>Your recently submitted reports</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.viewAllBtn}
+                onPress={() => navigation.navigate('ReportsTab')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.viewAllText}>View All ({reports.length})</Text>
+                <Ionicons name="chevron-forward" size={14} color="#1E6FE0" />
               </TouchableOpacity>
             </View>
 
             {reports.slice(0, 2).map((rep) => {
-              const meta = STATUS_META[rep.status];
+              const meta = STATUS_META[rep.status] || STATUS_META.submitted;
               return (
                 <TouchableOpacity
                   key={rep.id}
                   style={styles.recentCard}
                   onPress={() => navigation.navigate('ReportDetail', { reportId: rep.id })}
-                  activeOpacity={0.8}
+                  activeOpacity={0.85}
                 >
                   <View style={styles.recentCardTop}>
                     <Text style={styles.recentTracking}>{rep.tracking_number}</Text>
-                    <View style={[styles.recentStatusBadge, { backgroundColor: meta.bg }]}>
-                      <Text style={[styles.recentStatusText, { color: meta.color }]}>
+                    <View style={[styles.statusBadge, { backgroundColor: meta.bg }]}>
+                      <View style={[styles.statusDot, { backgroundColor: meta.color }]} />
+                      <Text style={[styles.statusBadgeText, { color: meta.color }]}>
                         {meta.label}
                       </Text>
                     </View>
                   </View>
+
                   <Text style={styles.recentTitle} numberOfLines={1}>{rep.title}</Text>
-                  <Text style={styles.recentLoc} numberOfLines={1}>📍 {rep.address_text}</Text>
+
+                  <View style={styles.recentFooterRow}>
+                    <View style={styles.recentMetaCol}>
+                      <Ionicons name="location-outline" size={13} color="#6B7280" />
+                      <Text style={styles.recentMetaText} numberOfLines={1}>
+                        {rep.address_text || 'Jimma City'}
+                      </Text>
+                    </View>
+                    <View style={styles.recentMetaCol}>
+                      <Ionicons name="business-outline" size={13} color="#6B7280" />
+                      <Text style={styles.recentMetaText} numberOfLines={1}>
+                        {rep.institution_name ? rep.institution_name.split(' ')[2] || 'Bureau' : 'Bureau'}
+                      </Text>
+                    </View>
+                  </View>
                 </TouchableOpacity>
               );
             })}
           </View>
         )}
 
-        {/* Curved Green Impact Banner */}
-        <View style={styles.impactWaveContainer}>
-          <Text style={styles.impactHeader}>building better communities</Text>
-          <View style={styles.whiteDividerMini} />
+        {/* How It Works Section (Minimal & Professional) */}
+        <View style={styles.howItWorksSection}>
+          <Text style={styles.sectionTitleCenter}>How FURKO Works</Text>
+          <Text style={styles.sectionSubtitleCenter}>From citizen report to verified municipal resolution</Text>
 
-          {/* 4 Stats */}
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Ionicons name="people" size={26} color="#FFFFFF" />
-              <Text style={styles.statNumber}>100 submitted</Text>
+          <View style={styles.stepsContainer}>
+            <View style={styles.stepCard}>
+              <View style={[styles.stepIconBox, { backgroundColor: '#E6F4EA' }]}>
+                <Ionicons name="camera-outline" size={22} color="#008744" />
+              </View>
+              <Text style={styles.stepNum}>01</Text>
+              <Text style={styles.stepTitle}>Capture & Report</Text>
+              <Text style={styles.stepText}>Take a photo and tag GPS coordinates.</Text>
             </View>
 
-            <View style={styles.statItem}>
-              <Ionicons name="time-outline" size={26} color="#FFFFFF" />
-              <Text style={styles.statNumber}>2300 in progress</Text>
+            <View style={styles.stepArrow}>
+              <Ionicons name="arrow-forward" size={18} color="#D1D5DB" />
             </View>
 
-            <View style={styles.statItem}>
-              <Ionicons name="checkmark-circle-outline" size={26} color="#FFFFFF" />
-              <Text style={styles.statNumber}>600 resolved</Text>
+            <View style={styles.stepCard}>
+              <View style={[styles.stepIconBox, { backgroundColor: '#EBF5FF' }]}>
+                <Ionicons name="navigate-outline" size={22} color="#1E6FE0" />
+              </View>
+              <Text style={[styles.stepNum, { color: '#1E6FE0' }]}>02</Text>
+              <Text style={styles.stepTitle}>Direct Routing</Text>
+              <Text style={styles.stepText}>Dispatched directly to the responsible bureau.</Text>
             </View>
 
-            <View style={styles.statItem}>
-              <Ionicons name="chatbubble-ellipses-outline" size={26} color="#FFFFFF" />
-              <Text style={styles.statNumber}>85% citizen success</Text>
+            <View style={styles.stepArrow}>
+              <Ionicons name="arrow-forward" size={18} color="#D1D5DB" />
+            </View>
+
+            <View style={styles.stepCard}>
+              <View style={[styles.stepIconBox, { backgroundColor: '#DCFCE7' }]}>
+                <Ionicons name="checkmark-done-circle-outline" size={22} color="#16A34A" />
+              </View>
+              <Text style={[styles.stepNum, { color: '#16A34A' }]}>03</Text>
+              <Text style={styles.stepTitle}>Verified Fix</Text>
+              <Text style={styles.stepText}>Resolved with photo verification proof.</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Building Better Communities - Live Real Reports Information Across All Institutions */}
+        <View style={styles.impactContainer}>
+          <View style={styles.impactHeaderBox}>
+            <View style={styles.impactPill}>
+              <Ionicons name="stats-chart" size={13} color="#008744" />
+              <Text style={styles.impactPillText}>CITY-WIDE IMPACT</Text>
+            </View>
+            <Text style={styles.impactTitle}>Building Better Communities</Text>
+            <Text style={styles.impactSubtitle}>
+              Live municipal progress across all institutions in Jimma
+            </Text>
+          </View>
+
+          {/* Row 1: Submitted & In Progress */}
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <View style={[styles.statIconBadge, { backgroundColor: '#F1F5F9' }]}>
+                <Ionicons name="paper-plane-outline" size={18} color="#475569" />
+              </View>
+              <Text style={styles.statValue}>{publicStats.submitted}</Text>
+              <Text style={styles.statTitle}>Submitted</Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <View style={[styles.statIconBadge, { backgroundColor: '#EFF6FF' }]}>
+                <Ionicons name="construct-outline" size={18} color="#1E6FE0" />
+              </View>
+              <Text style={[styles.statValue, { color: '#1E6FE0' }]}>{publicStats.inProgress}</Text>
+              <Text style={styles.statTitle}>In Progress</Text>
+            </View>
+          </View>
+
+          {/* Row 2: Resolved & Resolution Rate */}
+          <View style={[styles.statsRow, { marginTop: 10 }]}>
+            <View style={styles.statCard}>
+              <View style={[styles.statIconBadge, { backgroundColor: '#E6F4EA' }]}>
+                <Ionicons name="checkmark-circle-outline" size={18} color="#008744" />
+              </View>
+              <Text style={[styles.statValue, { color: '#008744' }]}>{publicStats.resolved}</Text>
+              <Text style={styles.statTitle}>Resolved</Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <View style={[styles.statIconBadge, { backgroundColor: '#F0FDF4' }]}>
+                <Ionicons name="trending-up-outline" size={18} color="#15803D" />
+              </View>
+              <Text style={[styles.statValue, { color: '#15803D' }]}>{publicStats.resolutionRate}%</Text>
+              <Text style={styles.statTitle}>Resolution Rate</Text>
             </View>
           </View>
         </View>
@@ -296,7 +360,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
@@ -304,27 +368,33 @@ const styles = StyleSheet.create({
   signInHeaderLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    backgroundColor: '#E6F4EA',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
   },
   signInHeaderText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#111827',
+    color: '#008744',
   },
   profileHeaderBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6F4EA',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    gap: 6,
+    paddingVertical: 5,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 8,
   },
   profileAvatarMini: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.primary,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#008744',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -333,124 +403,149 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
+  profileGreeting: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: '#64748B',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   profileHeaderText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: Colors.primaryDark,
+    color: '#0F172A',
     maxWidth: 90,
   },
   scroll: {
-    paddingBottom: 40,
+    paddingBottom: 36,
   },
   heroBackground: {
     width: '100%',
-    minHeight: 390,
+    minHeight: 380,
   },
   heroOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.72)',
+    backgroundColor: 'rgba(255, 255, 255, 0.78)',
     paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 28,
+    paddingVertical: 24,
     justifyContent: 'center',
   },
-  headlineBox: {},
+  heroContent: {},
+  heroBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#E6F4EA',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
+    marginBottom: 12,
+    gap: 6,
+  },
+  heroBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#008744',
+  },
+  heroBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#008744',
+    letterSpacing: 0.5,
+  },
   heroTitleGreen: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '900',
     color: '#008744',
     letterSpacing: -0.5,
   },
   heroTitleBlack: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '900',
-    color: '#111827',
+    color: '#0F172A',
     letterSpacing: -0.5,
     marginTop: -2,
-    lineHeight: 40,
+    lineHeight: 38,
   },
-  heroCalloutRow: {
-    flexDirection: 'row',
-    marginTop: 14,
-    marginBottom: 20,
-    paddingRight: 20,
-  },
-  verticalBlueBar: {
-    width: 3.5,
-    backgroundColor: '#1E6FE0',
-    borderRadius: 2,
-    marginRight: 10,
-  },
-  heroCalloutText: {
+  heroSubtitle: {
     fontSize: 13.5,
-    color: '#1F2937',
-    lineHeight: 19,
+    color: '#475569',
+    lineHeight: 20,
     fontWeight: '500',
-    flex: 1,
+    marginTop: 10,
+    marginBottom: 20,
   },
   heroBtnGroup: {
-    gap: 12,
-    marginTop: 4,
+    gap: 10,
   },
-  reportBtn: {
+  primaryBtn: {
     backgroundColor: '#008744',
-    height: 52,
-    borderRadius: 14,
+    height: 50,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     shadowColor: '#008744',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  whiteCirclePlus: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  btnIconCircleWhite: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
-  reportBtnText: {
+  primaryBtnText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14.5,
     fontWeight: '800',
     flex: 1,
   },
-  trackBtn: {
-    backgroundColor: '#FFFFFF',
+  secondaryBtn: {
+    backgroundColor: '#1E6FE0',
     height: 50,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#1E6FE0',
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     paddingHorizontal: 16,
+    shadowColor: '#1E6FE0',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  trackBtnText: {
-    color: '#1E6FE0',
-    fontSize: 15,
+  secondaryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14.5,
     fontWeight: '800',
+    flex: 1,
   },
   categoriesSection: {
     paddingHorizontal: 20,
-    paddingTop: 28,
-    paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
+    paddingTop: 26,
+    paddingBottom: 6,
   },
-  sectionTitleRow: {
-    marginBottom: 16,
-    alignItems: 'center',
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 14,
   },
-  sectionHeaderSubtitleLight: {
-    fontSize: 13,
-    color: '#6B7280',
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    color: '#64748B',
     marginTop: 2,
-    textAlign: 'center',
   },
   categoryGrid: {
     flexDirection: 'row',
@@ -458,145 +553,64 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   categoryCard: {
-    width: (width - 52) / 2,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  categoryIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  categoryEmoji: {
-    fontSize: 24,
-  },
-  categoryName: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#111827',
-    textAlign: 'center',
-  },
-  categoryLocal: {
-    fontSize: 11,
-    color: '#008744',
-    marginTop: 2,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  categoryInst: {
-    fontSize: 11,
-    color: '#6B7280',
-    marginTop: 6,
-    lineHeight: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  howItWorksSection: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    paddingBottom: 28,
-    alignItems: 'center',
-  },
-  sectionHeaderTitle: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#111827',
-    textAlign: 'center',
-  },
-  blueDivider: {
-    width: 44,
-    height: 3,
-    backgroundColor: '#1E6FE0',
-    borderRadius: 2,
-    marginTop: 6,
-    marginBottom: 6,
-  },
-  sectionHeaderSubtitle: {
-    fontSize: 13,
-    color: '#4B5563',
-    marginBottom: 26,
-    textAlign: 'center',
-  },
-  stepsDiagram: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  stepCol: {
-    flex: 1,
-    alignItems: 'center',
-    paddingHorizontal: 4,
-  },
-  stepIconWrapper: {
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  stepTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#008744',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  stepDesc: {
-    fontSize: 11,
-    color: '#4B5563',
-    textAlign: 'center',
-    lineHeight: 14,
-  },
-  stepLine: {
-    width: 24,
-    height: 1.5,
-    backgroundColor: '#111827',
-    marginTop: 18,
-  },
-  recentFeedSection: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  recentFeedHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  viewAllLink: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  recentCard: {
+    width: '48%',
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    borderTopWidth: 3,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
+  },
+  categoryIconCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  categoryName: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  recentSection: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 10,
+  },
+  recentHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  viewAllText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#1E6FE0',
+  },
+  recentCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   recentCardTop: {
     flexDirection: 'row',
@@ -605,73 +619,189 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   recentTracking: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.primary,
-    backgroundColor: '#E6F4EA',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#0F172A',
   },
-  recentStatusBadge: {
-    paddingHorizontal: 8,
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: 10,
+    gap: 4,
   },
-  recentStatusText: {
-    fontSize: 11,
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  statusBadgeText: {
+    fontSize: 10.5,
     fontWeight: '700',
   },
   recentTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  recentLoc: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  impactWaveContainer: {
-    backgroundColor: '#008744',
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    paddingBottom: 36,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: 8,
-    alignItems: 'center',
-  },
-  impactHeader: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  whiteDividerMini: {
-    width: 48,
-    height: 2.5,
-    backgroundColor: '#FFFFFF',
-    marginTop: 6,
-    marginBottom: 20,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 16,
-    width: '100%',
-  },
-  statItem: {
-    width: (width - 64) / 2,
-    alignItems: 'center',
-    gap: 4,
-  },
-  statNumber: {
-    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700',
-    marginTop: 2,
+    color: '#1E293B',
+    marginBottom: 6,
+  },
+  recentFooterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  recentMetaCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+  },
+  recentMetaText: {
+    fontSize: 11,
+    color: '#64748B',
+  },
+  howItWorksSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    backgroundColor: '#F8FAFC',
+    marginTop: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  sectionTitleCenter: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#0F172A',
     textAlign: 'center',
+  },
+  sectionSubtitleCenter: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 2,
+    marginBottom: 18,
+  },
+  stepsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stepCard: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  stepIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  stepNum: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#008744',
+    marginBottom: 2,
+  },
+  stepTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  stepText: {
+    fontSize: 10,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 13,
+  },
+  stepArrow: {
+    paddingHorizontal: 2,
+    marginBottom: 18,
+  },
+  impactContainer: {
+    marginHorizontal: 20,
+    marginTop: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  impactHeaderBox: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  impactPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E6F4EA',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    gap: 4,
+    marginBottom: 6,
+  },
+  impactPillText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#008744',
+    letterSpacing: 0.5,
+  },
+  impactTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  impactSubtitle: {
+    fontSize: 11.5,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  statIconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  statValue: {
+    fontSize: 19,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  statTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+    marginTop: 2,
   },
 });

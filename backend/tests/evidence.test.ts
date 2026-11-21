@@ -93,9 +93,12 @@ async function runTests() {
   // Test 5: Upload directly for a report via /api/v1/reports/:id/evidence
   total++;
   const sampleReportId = 'rep-demo-001';
+  const jwt = await import('jsonwebtoken');
+  const token = jwt.default.sign({ userId: 'usr-demo-001', role: 'citizen' }, process.env.JWT_SECRET || 'super_secret_fallback_key', { expiresIn: '1h' });
   try {
     const res = await request(app)
       .post(`/api/v1/reports/${sampleReportId}/evidence`)
+      .set('Authorization', `Bearer ${token}`)
       .attach('evidence', validImagePath);
 
     if (res.status === 201 && res.body.success === true && res.body.data.report_id === sampleReportId) {
@@ -111,7 +114,9 @@ async function runTests() {
   // Test 6: Query evidence attachments for a report
   total++;
   try {
-    const res = await request(app).get(`/api/v1/reports/${sampleReportId}/evidence`);
+    const res = await request(app)
+      .get(`/api/v1/reports/${sampleReportId}/evidence`)
+      .set('Authorization', `Bearer ${token}`);
     if (res.status === 200 && res.body.success === true && Array.isArray(res.body.data)) {
       console.log('✅ Test 6 Passed: Retrieved attachments list for report');
       passed++;

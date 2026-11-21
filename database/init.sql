@@ -28,11 +28,15 @@ CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     institution_id UUID REFERENCES institutions(id) ON DELETE SET NULL,
     full_name VARCHAR(150) NOT NULL,
+    fathers_name VARCHAR(100),
     email VARCHAR(255) NOT NULL UNIQUE,
     phone_number VARCHAR(50),
     password_hash VARCHAR(255) NOT NULL,
     role user_role NOT NULL DEFAULT 'citizen',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    verification_code VARCHAR(255),
+    verification_expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -103,12 +107,17 @@ CREATE TABLE IF NOT EXISTS reports (
     status report_status NOT NULL DEFAULT 'submitted',
     verification_status verification_status NOT NULL DEFAULT 'pending',
     priority VARCHAR(20) DEFAULT 'medium',
+    urgency VARCHAR(20) DEFAULT 'medium',
     resolution_information TEXT,
+    photo_url VARCHAR(500),
+    assigned_staff_id UUID REFERENCES users(id) ON DELETE SET NULL,
     is_fallback BOOLEAN DEFAULT FALSE,
     submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     resolved_at TIMESTAMP WITH TIME ZONE,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_reports_assigned_staff ON reports(assigned_staff_id);
 
 CREATE INDEX IF NOT EXISTS idx_reports_institution ON reports(current_institution_id);
 CREATE INDEX IF NOT EXISTS idx_reports_citizen ON reports(citizen_id);
@@ -213,3 +222,13 @@ INSERT INTO routing_rules (category_id, target_institution_id, jurisdiction_name
     ST_GeomFromText('POLYGON((36.80 7.64, 36.88 7.64, 36.88 7.72, 36.80 7.72, 36.80 7.64))', 4326),
     10
 );
+
+-- 4. Initial Users & Staff (Password: Password123!)
+INSERT INTO users (id, institution_id, full_name, email, phone_number, password_hash, role, is_active) VALUES
+('c1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Abebe Bikila (Road Staff)', 'staff.road@jimma.gov.et', '+251911223344', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'staff', TRUE),
+('c1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000002', 'Fatuma Roba (Water Staff)', 'staff.water@jimma.gov.et', '+251911334455', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'staff', TRUE),
+('c1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000003', 'Tirunesh Dibaba (Waste Staff)', 'staff.waste@jimma.gov.et', '+251911445566', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'staff', TRUE),
+('c1000000-0000-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000004', 'Kenenisa Bekele (Power Staff)', 'staff.eeu@jimma.gov.et', '+251911556677', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'staff', TRUE),
+('c1000000-0000-0000-0000-000000000003', NULL, 'Municipal System Admin', 'admin@jimma.gov.et', '+251911000000', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'admin', TRUE),
+('c1000000-0000-0000-0000-000000000004', NULL, 'Dawit Tadesse', 'dawit@example.com', '+251911234567', '$2b$10$fTICTP0mGXc/fhl4b7oAZ.xfydVvHuYxfzGmp8UWT1GdDd0Fmndai', 'citizen', TRUE)
+ON CONFLICT (email) DO NOTHING;

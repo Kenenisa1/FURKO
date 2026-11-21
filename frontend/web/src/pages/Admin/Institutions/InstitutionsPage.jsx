@@ -155,21 +155,27 @@ export default function InstitutionsPage() {
     {
       key: 'serviceAreas',
       label: 'Service Areas',
-      render: (inst) => (
-        <div className="flex flex-wrap gap-1">
-          {inst.serviceAreas.slice(0, 2).map((area) => (
-            <span
-              key={area}
-              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-            >
-              {area}
-            </span>
-          ))}
-          {inst.serviceAreas.length > 2 && (
-            <span className="text-xs text-gray-500">+{inst.serviceAreas.length - 2}</span>
-          )}
-        </div>
-      ),
+      render: (inst) => {
+        const areas = Array.isArray(inst.serviceAreas) ? inst.serviceAreas : [];
+        return (
+          <div className="flex flex-wrap gap-1">
+            {areas.slice(0, 2).map((area) => (
+              <span
+                key={area}
+                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                {area}
+              </span>
+            ))}
+            {areas.length > 2 && (
+              <span className="text-xs text-gray-500">+{areas.length - 2}</span>
+            )}
+            {areas.length === 0 && (
+              <span className="text-xs text-gray-400">Jimma City</span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'staff',

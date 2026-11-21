@@ -8,6 +8,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { ProblemCategory } from '../../types';
+import { CategoryIcon } from '../common/CategoryIcon';
 
 interface Props {
   category: ProblemCategory;
@@ -20,21 +21,6 @@ export const CategoryCard: React.FC<Props> = ({
   isSelected,
   onSelectCategory,
 }) => {
-  const getEmoji = (key: string) => {
-    switch (key) {
-      case 'roads':
-        return '🚧';
-      case 'water':
-        return '💧';
-      case 'waste':
-        return '🗑️';
-      case 'lighting':
-        return '💡';
-      default:
-        return '📍';
-    }
-  };
-
   return (
     <TouchableOpacity
       style={[
@@ -55,28 +41,15 @@ export const CategoryCard: React.FC<Props> = ({
         {isSelected && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
       </View>
 
-      {/* Centered Top Icon & Emoji */}
+      {/* Centered Top Icon */}
       <View style={[styles.iconBox, { backgroundColor: category.color + '1F' }]}>
-        <Text style={styles.emoji}>{getEmoji(category.key)}</Text>
+        <CategoryIcon categoryKey={category.key} size={30} color={category.color} />
       </View>
 
-      {/* Centered Category Title */}
+      {/* Category Title */}
       <Text style={styles.title}>{category.name}</Text>
 
-      {/* Centered Multilingual Translations (Afaan Oromoo & Amharic) */}
-      <View style={styles.translationRow}>
-        {category.nameLocal && (
-          <Text style={styles.localText}>{category.nameLocal}</Text>
-        )}
-        {category.nameAmharic && (
-          <>
-            <Text style={styles.dotSeparator}>•</Text>
-            <Text style={styles.amharicText}>{category.nameAmharic}</Text>
-          </>
-        )}
-      </View>
-
-      {/* Centered Description */}
+      {/* Description */}
       <Text style={styles.description}>{category.description}</Text>
 
       {/* Centered Institutional Routing Badge */}

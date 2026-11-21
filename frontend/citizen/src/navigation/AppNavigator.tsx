@@ -122,97 +122,98 @@ export const AppNavigator = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
+    return <View style={{ flex: 1, backgroundColor: '#052416' }} />;
   }
 
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName={user ? 'MainTabs' : 'Welcome'}
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
         }}
       >
-        {/* Onboarding & Authentication Stack */}
-        <Stack.Screen name="Welcome" component={WelcomeScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
+        {!user ? (
+          <Stack.Group>
+            {/* Onboarding & Authentication Stack */}
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </Stack.Group>
+        ) : (
+          <Stack.Group>
+            {/* Citizen Main 3-Tab Navigation (Home, Reports, Profile) */}
+            <Stack.Screen name="MainTabs" component={MainTabs} />
 
-        {/* Citizen Main 3-Tab Navigation (Home, Reports, Profile) */}
-        <Stack.Screen name="MainTabs" component={MainTabs} />
-
-        {/* Modal / Push Screens */}
-        {/* Core Reporting Architecture Flow */}
-        <Stack.Screen
-          name="CategorySelection"
-          component={CategorySelectionScreen}
-          options={{
-            animation: 'slide_from_bottom',
-          }}
-        />
-        <Stack.Screen
-          name="PhotoLocation"
-          component={PhotoLocationScreen}
-          options={{
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="PhotoEvidence"
-          component={PhotoLocationScreen}
-          options={{
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="LocationCapture"
-          component={LocationCaptureScreen}
-          options={{
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="ReportDetails"
-          component={ReportDetailsScreen}
-          options={{
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="RoutingPreview"
-          component={RoutingPreviewScreen}
-          options={{
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="ReviewSubmit"
-          component={ReviewSubmitScreen}
-          options={{
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="ReportForm"
-          component={ReportFormScreen}
-          options={{
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="ReportWizard"
-          component={ReportWizardScreen}
-          options={{
-            animation: 'slide_from_bottom',
-          }}
-        />
-        <Stack.Screen name="ReportDetail" component={ReportDetailScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
+            {/* Modal / Push Screens */}
+            {/* Core Reporting Architecture Flow */}
+            <Stack.Screen
+              name="CategorySelection"
+              component={CategorySelectionScreen}
+              options={{
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen
+              name="PhotoLocation"
+              component={PhotoLocationScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="PhotoEvidence"
+              component={PhotoLocationScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="LocationCapture"
+              component={LocationCaptureScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="ReportDetails"
+              component={ReportDetailsScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="RoutingPreview"
+              component={RoutingPreviewScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="ReviewSubmit"
+              component={ReviewSubmitScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="ReportForm"
+              component={ReportFormScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="ReportWizard"
+              component={ReportWizardScreen}
+              options={{
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen name="ReportDetail" component={ReportDetailScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+          </Stack.Group>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

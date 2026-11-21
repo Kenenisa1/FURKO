@@ -1,5 +1,4 @@
-// Status badge — colour-coded per FURKO design
-import { REPORT_STATUS } from '../../data/mockReports.js';
+import { REPORT_STATUS } from '../../services/reportService.js';
 
 const CONFIG = {
   [REPORT_STATUS.NEW]:          { bg: 'bg-red-50',     text: 'text-red-600',    border: 'border-red-200',    dot: 'bg-red-500' },
@@ -10,6 +9,7 @@ const CONFIG = {
   [REPORT_STATUS.RESOLVED]:     { bg: 'bg-green-50',   text: 'text-green-700',  border: 'border-green-200',  dot: 'bg-green-500' },
   [REPORT_STATUS.REJECTED]:     { bg: 'bg-gray-100',   text: 'text-gray-600',   border: 'border-gray-300',   dot: 'bg-gray-500' },
   [REPORT_STATUS.REDIRECTED]:   { bg: 'bg-yellow-50',  text: 'text-yellow-700', border: 'border-yellow-200', dot: 'bg-yellow-500' },
+  [REPORT_STATUS.REOPENED]:     { bg: 'bg-red-50',     text: 'text-red-700',    border: 'border-red-300',    dot: 'bg-red-600' },
 };
 
 const FALLBACK = { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-300', dot: 'bg-gray-400' };

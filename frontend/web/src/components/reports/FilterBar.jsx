@@ -1,9 +1,10 @@
-import { REPORT_STATUS, PRIORITY } from '../../data/mockReports.js';
+import { REPORT_STATUS } from '../../services/reportService.js';
 import { Search, X } from 'lucide-react';
+
+const priorities = ['low', 'medium', 'high', 'critical'];
 
 export default function FilterBar({ filters, onChange, onClear }) {
   const statuses = Object.values(REPORT_STATUS);
-  const priorities = Object.values(PRIORITY);
 
   return (
     <div className="flex flex-wrap items-center gap-3">
